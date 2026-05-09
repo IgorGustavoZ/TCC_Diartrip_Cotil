@@ -135,6 +135,7 @@
         colocarDados()
 
         btnSave.addEventListener("click", async ()=>{
+<<<<<<< HEAD
     if(passwordInput.value.length >= 6){
         const respPutUsuario = await fetch(`http://127.0.0.1:8000/usuarios/${sessionStorage.getItem("id")}`, {
             method: 'PUT', 
@@ -165,6 +166,40 @@
         msgError.innerHTML = "A senha deve ter no mínimo 6 caracteres."
     } 
 })
+=======
+            if(passwordInput.value >= 6){
+                const respPutUsuario = await fetch(`http://127.0.0.1:8000/usuarios/${sessionStorage.getItem("id")}?nome=${nomeInput.value}&email=${emailInput.value}&senha=${passwordInput.value}`, {
+                method: 'PUT', 
+                headers: {
+                    'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
+                    'Content-Type': 'application/json'
+                }
+                })
+
+                if(respPutUsuario.ok){
+                    esconderAvisos()
+
+                    msgSucess.style.display = "block"
+                    msgSucess.innerHTML = "Usuário atualizado com sucesso!"
+
+                    limparCampos()
+                    colocarDados()
+                }
+                else{
+                    esconderAvisos()
+
+                    msgError.style.display = "block"
+                    msgError.innerHTML = "Aconteceu algum erro ao atualizar o usuário. Tente novamente."
+                } 
+            }else{
+                esconderAvisos()
+
+                msgError.style.display = "block"
+                msgError.innerHTML = "Aconteceu algum erro ao atualizar o usuário. Verifique as informações."
+            } 
+            
+        })
+>>>>>>> f9150286333db347bedea43552b64ba3b169b168
 
         btnDelete.addEventListener("click", async ()=>{
             const respDeleteUsuario = await fetch(`http://127.0.0.1:8000/usuarios/${sessionStorage.getItem("id")}`, {

@@ -6,13 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-app.include_router(usuarios.router)
-app.include_router(login.router)
-app.include_router(grupos_viagem.router)
-app.include_router(roteiros.router)
-app.include_router(grupos_membros.router)
-app.include_router(gastos.router)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,6 +13,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(usuarios.router)
+app.include_router(login.router)
+app.include_router(grupos_viagem.router)
+app.include_router(roteiros.router)
+app.include_router(grupos_membros.router)
+app.include_router(gastos.router)
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
