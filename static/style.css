@@ -113,7 +113,7 @@ nav a:hover{
     border:none;
     background:linear-gradient(#f79748, #fff05a);
     /* background-color: #f79748; */
-    color:black;
+    color:#fff;
     cursor:pointer;
     box-shadow:0 10px 30px rgba(0, 0, 0, 0.63);
     transition: .5s ease;

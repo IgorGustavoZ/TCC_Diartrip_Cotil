@@ -3,6 +3,9 @@ import os
 from routes import usuarios, login, grupos_viagem, roteiros, grupos_membros, gastos, chat_ia
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 

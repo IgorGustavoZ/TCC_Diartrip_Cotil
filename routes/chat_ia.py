@@ -2,12 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from database import get_db
 from utils.auth import get_usuario_logado
-from dotenv import load_dotenv
 from openai import OpenAI
-
 import os
-
-load_dotenv()
 
 router = APIRouter()
 
