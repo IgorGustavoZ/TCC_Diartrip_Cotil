@@ -23,7 +23,9 @@ dist/
 
 # Unit test / coverage reports
 .coverage
+.coverage.*
 .pytest_cache/
+htmlcov/
 
 # mypy
 .mypy_cache/
@@ -34,5 +36,17 @@ uploads/
 # Sistema operacional
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# IDEs
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Variáveis de ambiente alternativas
+.env.*
+!.env.example
 
 .claude/
