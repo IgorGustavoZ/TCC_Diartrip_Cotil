@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <title>Diartrip - Login</title>
+    <link rel="shortcut icon" href="imagens/favicon-diartrip.png" type="image/x-icon">
+</head>
+<body>
+    <header>
+        <a href="index.html"><div class="logo"><img src="imagens/logo-diartrip.png" alt=""></div></a>
+    </header>
+    <section style="padding:100px 20px; max-width:600px; max-height: 550px; margin:auto; position: relative; bottom: 70px;">
+        <h2 class="section-title titulo" style="margin-bottom:20px;">Login</h2>
+        <form id="signupForm" style="display:flex; flex-direction:column; gap:22px; background:rgba(255,255,255,0.05); padding:40px; border-radius:16px; border:1px solid rgba(255,255,255,0.08); backdrop-filter:blur(6px); position:relative;">
+
+            <div class="field">
+                <label>Email</label>
+                <input id="email" type="email" placeholder="Digite seu email" required>
+            </div>
+
+            <div class="field" style="position:relative">
+                <label>Senha</label>
+                <input id="password" type="password" placeholder="Digite sua senha" required>
+                <span class="togglePassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:#94a3b8;">mostrar</span>  
+            </div>
+
+            <span class="error" id="submitError" style="display: none;">Não foi possível realizar o login, tente novamente.</span>
+            
+            <button class="cta" id="submit" type="submit">Entrar conta</button>
+
+            <div class="login"><a href="form.html">Não tem uma conta? Clique aqui.</a></div>
+
+        </form>
+    </section>
+    <footer>
+    © 2026 Diartrip — Planejamento Inteligente de Viagens
+    </footer>
+
+    <script>
+        const togglePassword = document.querySelector(".togglePassword")
+        const emailInput = document.getElementById("email")
+        const passwordInput = document.getElementById("password")
+        const submit = document.querySelector("#submit")
+
+
+
+        togglePassword.addEventListener("click", () => {
+            if(passwordInput.type === "password"){
+                passwordInput.type = "text"
+                togglePassword.textContent = "ocultar"
+            }else{
+                passwordInput.type = "password"
+                togglePassword.textContent = "mostrar"
+            } 
+        })
+
+        submit.addEventListener("click", async (e)=>{
+            e.preventDefault()
+            const submitError = document.querySelector("#submitError")
+            if(emailInput.value != "" && passwordInput.value != ""){
+                const resp = await fetch("http://127.0.0.1:8000/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+                body: JSON.stringify({
+                    email: emailInput.value,
+                    senha: passwordInput.value
+                })
+            })
+                    
+                if(resp.ok){
+                    const dados = await resp.text()
+
+                    console.log("Dados do login: "+dados)
+
+                    const respJson = JSON.parse(dados)
+
+                    sessionStorage.setItem("token", respJson.token)
+                    sessionStorage.setItem("id", respJson.usuario_id)
+
+                    window.location.href = "lobby.html"  
+                }          
+                else if(resp.status === 401) submitError.style.display = "block"
+            }                            
+        })
+    </script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+   
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diartrip</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=arrow_back" />
+<link rel="stylesheet" href="../static/style.css">
+<link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
+</head>
+<body>
+    <div class="app">
+
+    <div class="sidebar">
+
+    <a href="../lobby.html">
+        <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
+    </a>
+
+    <a href="../lobby.html">
+        <div class="menu-item">✈ Minhas viagens</div>
+    </a>
+    <div class="menu-item">💬 Chat IA</div>
+
+    <a href="config.html">
+        <div class="menu-item">⚙ Configurações</div>
+    </a>
+
+    <a href="#">
+        <button class="new-trip">+ Nova viagem</button>
+    </a>
+
+    </div>
+        
+    <div class="main">
+
+        <h1>+ Nova viagem</h1>
+
+        <div class="container" style="display: flex;flex-direction: column;gap: 20px;">
+
+            <h2>Planejar Viagem ✈️</h2>
+
+            <div class="field">
+                <label for="cidade">Cidade</label>
+
+                <input id="cidade" placeholder="Ex: Paris" required>
+
+                <div class="sugestoes" id="sugest-cidade">
+                    
+                </div>
+            </div>
+
+            <div class="field" style="flex:1">
+                <label for="inicio">Data de início</label>
+                <input id="inicio" type="date" required>
+            </div>
+
+            <div class="field" style="flex:1">
+                <label for="fim">Data de fim</label>
+                <input id="fim" type="date" required>
+            </div>
+            
+
+            <div class="field">
+                <label for="orcamento">Orçamento</label>
+
+                <select id="orcamento">
+                    <option value="economico">Econômico</option>
+                    <option value="medio">Médio</option>
+                    <option value="luxo">Luxo</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="tipo">Tipo de viagem</label>
+
+                <select id="tipo">
+                    <option value="gastronomico">Gastronômico</option>
+                    <option value="aventura">Aventura</option>
+                    <option value="cultural">Cultural</option>
+                    <option value="relax">Relaxamento</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="preferencias">Preferências</label>
+
+                <input id="preferencias" placeholder="Ex: museus, restaurantes...">
+            </div>
+
+            <div class="error" style="margin-bottom: 20px;">
+                
+            </div>
+
+            <div class="sucess">
+                
+            </div>
+
+            <button type="submit">Gerar Roteiro</button>
+
+            <div id="result" class="result" style="display: none;">
+                Roteiro sendo gerado...
+            </div>
+
+        </div>       
+    </div>
+
+<script>
+
+    // fetch(`https://api.openweathermap.org/data/2.5/forecast?q=Limeira&appid=82c889fafda006a44acac820fd8a2791&units=metric&lang=pt_br`)
+    // .then(resp => resp.json())
+    // .then(dados => {
+    //     console.log(dados)
+    // })
+
+    // pode ser usado o amadeus ainda
+    // fetch("https://nominatim.openstreetmap.org/search?q=restaurants in London&format=json&addressdetails=1")
+    // .then(resp => resp.json())
+    // .then(dados=>console.log(dados))
+
+    const viagem = {
+        paisIng: "",
+        cidade: ""
+    }
+
+    // const inputPais = document.querySelector("#pais")
+
+    const inputCidade = document.querySelector("#cidade")
+    const inputDataInicio = document.querySelector("#inicio")
+    const inputDataFim = document.querySelector("#fim")
+
+    const orcamento = document.querySelector("#orcamento")
+    const tipoViagem = document.querySelector("#tipo")
+
+    const prefs = document.querySelector("#preferencias")
+
+    const divError = document.querySelector(".error")
+    const divSucess = document.querySelector(".sucess")
+
+    document.addEventListener("click", (e)=>{
+
+        if(!e.target.closest("#cidade")){
+
+            const sugestCidades = document.querySelector("#sugest-cidade")
+
+            const cidades = [...sugestCidades.childNodes]
+
+            if(cidades.length > 0){
+                cidades[0].click()
+            }
+
+            sugestCidades.innerHTML = ''
+        }
+    })
+
+    inputCidade.addEventListener("input", ()=>{
+
+        setTimeout(async ()=>{
+
+            if(inputCidade.value.trim() == ""){
+                document.querySelector("#sugest-cidade").innerHTML = ""
+                return
+            }
+
+            const resp = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${inputCidade.value}&apiKey=803e071045c64d13a3dbb8c9058c323a&lang=pt`, {
+                method: 'GET',
+            })
+
+            if(!resp.ok){
+                console.log("Erro na requisição autocomplete: "+resp)
+                return
+            }
+
+            const dados = await resp.json()
+
+            mostrarCidades(dados['features'])
+
+        },300)
+
+    })
+
+    const mostrarCidades = (array)=>{
+
+        const sugestCidades = document.querySelector("#sugest-cidade")
+
+        sugestCidades.innerHTML = ''
+
+        array.forEach(item => {
+
+            const props = item.properties
+
+            const cidade =
+                props.city ||
+                props.town ||
+                props.village ||
+                props.name ||
+                ""
+
+            const estado = props.state || ""
+            const pais = props.country || ""
+
+            if(cidade != ""){
+
+                const div = document.createElement('div')
+
+                div.innerHTML = props.formatted
+
+                div.classList.add("item-sugest")
+
+                div.addEventListener("click", ()=>{
+
+                    if(cidade == ""){
+
+                        // console.log("Erro: cidade desconhecida.")
+
+                        // inputCidade.value = props.formatted.split(",")[0]
+
+                        return
+                    }
+
+                    inputCidade.value = props.formatted
+
+                    viagem.cidade = cidade
+                    viagem.paisIng = pais
+
+                    sugestCidades.innerHTML = ''
+
+                })
+
+                sugestCidades.append(div)
+            }
+
+        })
+
+    }
+
+    document.querySelector("button[type='submit']").addEventListener('click', async ()=>{
+
+        const dataInc = inputDataInicio.value.split("-")
+        const dataFim = inputDataFim.value.split("-")
+
+        console.log(dataInc) // data de início
+        console.log(dataFim) // data de fim
+
+        const anoAtual = new Date().getFullYear() // pega o ano atual.
+        const diaAtual = new Date().getDate()
+        const mesAtual = new Date().getMonth() + 1
+
+        console.log(diaAtual)
+
+        divError.innerHTML = ""
+        divSucess.innerHTML = ""
+
+        // data[2] - dias
+        // data[1] - meses
+        // data[0] - ano
+
+        if(
+            inputCidade.value.trim() == "" ||
+            inputDataInicio.value == "" ||
+            inputDataFim.value == ""
+        ){
+            divError.innerHTML = "Preencha todos os campos."
+            return
+        }
+
+        if(
+            (dataInc[2] >= dataFim[2] && dataInc[1] == dataFim[1]) ||
+            dataInc[0] > dataFim[0] ||
+            dataInc[1] > dataFim[1] ||
+            (dataInc[0] < anoAtual || dataFim[0] < anoAtual) ||
+            (dataInc[2] < diaAtual && dataInc[1] == mesAtual) ||
+            (dataFim[2] < diaAtual && dataFim[1] == mesAtual)
+        ){
+
+            divError.innerHTML = "Informações inválidas"
+
+            console.log("Data inválida.")
+
+            return
+        }
+
+        try {
+
+            console.log("Cidade: "+inputCidade.value)
+            console.log("Data de início: "+inputDataInicio.value)
+            console.log("Data final: "+inputDataFim.value)
+            console.log("Orçamento: "+orcamento.value)
+            console.log("Tipo de viagem: "+tipoViagem.value)
+            console.log("Preferências: "+prefs.value)
+
+            const resp = await fetch("http://127.0.0.1:8000/grupos", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${sessionStorage.getItem("token")}`
+                },
+
+                body: JSON.stringify({
+
+                    nome_grupo: `Viagem para ${viagem.cidade || inputCidade.value}`,
+
+                    destino_principal: inputCidade.value,
+
+                    data_inicio: inputDataInicio.value,
+
+                    data_fim: inputDataFim.value,
+
+                    orcamento: orcamento.value,
+
+                    tipo_viagem: tipoViagem.value,
+
+                    preferencias: prefs.value
+                })
+            })
+
+            const dados = await resp.json()
+
+            if(!resp.ok){
+
+                divError.innerHTML =
+                    dados.detail || "Erro ao criar viagem"
+
+                return
+            }
+
+            divSucess.innerHTML = "Viagem criada com sucesso!"
+
+            fetch(`https://nominatim.openstreetmap.org/search?q=restaurants in ${inputCidade.value}&format=json&addressdetails=1`)
+            .then(resp => resp.json())
+            .then(dados=>console.log(dados))
+
+            setTimeout(()=>{
+
+                window.location.href = "../lobby.html"
+
+            },1200)
+
+        } catch(e){
+
+            console.log(e)
+
+            divError.innerHTML =
+                "Erro ao conectar com servidor"
+        }
+
+    })
+
+</script>
+</body>
+</html>

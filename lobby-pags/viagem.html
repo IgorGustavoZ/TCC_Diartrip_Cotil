@@ -1,0 +1,161 @@
+# viagem.html
+
+```html
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diartrip - Viagem</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../static/style.css">
+</head>
+<body>
+
+<div class="app">
+
+    <div class="sidebar">
+
+        <a href="../lobby.html">
+            <div class="logo">
+                <img src="../imagens/logo-diartrip.png" alt="">
+            </div>
+        </a>
+
+        <div class="menu-item">✈ Minhas viagens</div>
+        <div class="menu-item">💬 Chat IA</div>
+
+        <a href="config.html">
+            <div class="menu-item">⚙ Configurações</div>
+        </a>
+
+    </div>
+
+    <div class="main">
+
+        <div class="trip-banner">
+            <div>
+                <h1 id="nomeViagem">Carregando...</h1>
+                <p id="destinoViagem"></p>
+                <span id="datasViagem"></span>
+            </div>
+
+            <div class="trip-actions">
+                <button class="btn-convite" onclick="copiarCodigo()">
+                    📋 Copiar código convite
+                </button>
+            </div>
+        </div>
+
+        <div class="trip-content">
+
+            <div class="trip-card-expanded">
+                <h2>📌 Informações da viagem</h2>
+
+                <div class="info-item">
+                    <strong>Destino:</strong>
+                    <span id="infoDestino"></span>
+                </div>
+
+                <div class="info-item">
+                    <strong>Período:</strong>
+                    <span id="infoPeriodo"></span>
+                </div>
+
+                <div class="info-item">
+                    <strong>Código convite:</strong>
+                    <span id="codigoConvite"></span>
+                </div>
+            </div>
+
+            <div class="trip-card-expanded">
+                <h2>👥 Convidar pessoas</h2>
+
+                <p>
+                    Compartilhe este código com seus amigos para que eles possam entrar na viagem.
+                </p>
+
+                <div class="invite-box">
+                    <input id="inviteInput" readonly>
+                    <button onclick="copiarCodigo()">Copiar</button>
+                </div>
+            </div>
+
+            <div class="trip-card-expanded">
+                <h2>🤖 Assistente IA</h2>
+
+                <p>
+                    Use o chat da IA no lobby para pedir:
+                </p>
+
+                <ul>
+                    <li>Roteiros personalizados</li>
+                    <li>Pontos turísticos</li>
+                    <li>Restaurantes</li>
+                    <li>Dicas de economia</li>
+                    <li>Clima e organização</li>
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const params = new URLSearchParams(window.location.search)
+const idGrupo = params.get("id")
+
+async function carregarGrupo() {
+
+    const resp = await fetch(`http://127.0.0.1:8000/grupos/${idGrupo}`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${sessionStorage.getItem("token")}`,
+            "Content-Type": "application/json"
+        }
+    })
+
+    if (!resp.ok) {
+        alert("Erro ao carregar viagem")
+        return
+    }
+
+    const grupo = await resp.json()
+
+    document.getElementById("nomeViagem").innerText = grupo.nome_grupo
+    document.getElementById("destinoViagem").innerText = grupo.destino_principal
+
+    document.getElementById("datasViagem").innerText =
+        `${grupo.data_inicio} até ${grupo.data_fim}`
+
+    document.getElementById("infoDestino").innerText =
+        grupo.destino_principal
+
+    document.getElementById("infoPeriodo").innerText =
+        `${grupo.data_inicio} até ${grupo.data_fim}`
+
+    document.getElementById("codigoConvite").innerText =
+        grupo.codigo_convite
+
+    document.getElementById("inviteInput").value =
+        grupo.codigo_convite
+}
+
+function copiarCodigo() {
+
+    const codigo = document.getElementById("inviteInput").value
+
+    navigator.clipboard.writeText(codigo)
+
+    alert("Código copiado!")
+}
+
+carregarGrupo()
+
+</script>
+
+</body>
+</html>

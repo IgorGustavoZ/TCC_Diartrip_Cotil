@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diartrip</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=arrow_back" />
+<link rel="stylesheet" href="../static/style.css">
+<link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
+</head>
+<body>
+    <div class="app">
+
+    <div class="sidebar">
+
+    <a href="../lobby.html">
+        <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
+    </a>
+
+    <a href="../lobby.html">
+        <div class="menu-item">✈ Minhas viagens</div>
+    </a>
+    <div class="menu-item">💬 Chat IA</div>
+    <a href="#">
+        <div class="menu-item">⚙ Configurações</div>
+    </a>
+
+    <a href="form-viagem.html">
+        <button class="new-trip">+ Nova viagem</button>
+    </a>
+
+    </div>
+        
+    <div class="main">
+        <h1>⚙ Configurações</h1>
+
+        <div class="container">
+            <div>
+                <div class="action">
+                    <button id="btnAlterarConta">Mudar informações da conta</button>
+                </div>
+            </div>
+
+            <section style="padding:100px 20px; max-width:1200px; margin:auto; position: relative; bottom: 70px;display:flex; flex-direction:column; gap:15px; display: none;" id="alterarConta">
+                    <div class="back">
+                        <span class="material-symbols-outlined">
+                        arrow_back
+                        </span>
+                    </div>
+
+                    <h2>Alterar informações da conta</h2>
+
+                    <div class="field">
+                        <label for="nome">Novo nome</label>
+                        <input id="nome" type="text" placeholder="Seu nome">
+                    </div>
+
+                    <div class="field">
+                        <label for="email">Novo email</label>
+                        <input id="email" type="email" placeholder="seu@email.com">
+                    </div>
+
+                    <div class="field" style="position: relative;">
+                        <label for="senha">Confirme sua senha</label>                      
+                        <input id="senha" type="password" placeholder="Sua senha" required>
+                        <span class="togglePassword" style="font-size:14px; color:#94a3b8;cursor: pointer; top: 45px; right: 10px; text-align: right; position: absolute;display: inline-block;">mostrar</span>
+                    </div>
+                    <div class="error" style="display: none;"></div>
+                    <div class="sucess" style="display: none;"></div>
+                
+                    <div class="actions" style="margin: 20px; display: flex; justify-content: space-between;">
+                        <button class="save" type="submit">Salvar alterações</button>
+                        <button class="delete">Excluir conta</button>
+                    </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const togglePassword = document.querySelector(".togglePassword")
+        const nomeInput = document.querySelector("#nome")
+        const emailInput = document.querySelector("#email")
+        const passwordInput = document.querySelector("#senha")
+        const btnBack = document.querySelector(".back")
+        const btnSave = document.querySelector(".save")
+        const btnDelete = document.querySelector(".delete")
+
+        const msgSucess = document.querySelector(".sucess")
+        const msgError = document.querySelector(".error")
+
+        const btnAlterarConta = document.querySelector("#btnAlterarConta")
+        const divAlterarConta = document.querySelector("#alterarConta")
+
+        btnAlterarConta.addEventListener("click", ()=>{
+            btnBack.addEventListener("click", ()=>{
+                btnAlterarConta.parentElement.style.display="block"
+                divAlterarConta.style.display="none"
+            })
+            btnAlterarConta.parentElement.style.display="none"
+            divAlterarConta.style.display="flex"
+        })
+
+        const colocarDados = async ()=>{
+           const respGetUsuario = await fetch(`http://127.0.0.1:8000/usuarios/${sessionStorage.getItem("id")}`, {
+                method: 'GET', 
+                headers: {
+                    'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
+                    'Content-Type': 'application/json'
+                }
+           })
+            if(respGetUsuario.ok){
+                const dados = await respGetUsuario.text()
+                const respJson = JSON.parse(dados)
+                nomeInput.value = respJson.nome
+                emailInput.value = respJson.email
+            } 
+        } 
+
+        colocarDados()
+
+        btnSave.addEventListener("click", async ()=>{
+            if(passwordInput.value.length >= 6){
+                const respPutUsuario = await fetch(`http://127.0.0.1:8000/usuarios/${sessionStorage.getItem("id")}`, {
+                    method: 'PUT', 
+                    headers: {
+                        'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nome: nomeInput.value,
+                        email: emailInput.value
+                    })
+                })
+                if(respPutUsuario.ok){
+                    esconderAvisos()
+                    msgSucess.style.display = "block"
+                    msgSucess.innerHTML = "Usuário atualizado com sucesso!"
+                    limparCampos()
+                    colocarDados()
+                } else {
+                    esconderAvisos()
+                    msgError.style.display = "block"
+                    msgError.innerHTML = "Aconteceu algum erro ao atualizar o usuário. Tente novamente."
+                } 
+            } else {
+                esconderAvisos()
+                msgError.style.display = "block"
+                msgError.innerHTML = "A senha deve ter no mínimo 6 caracteres."
+            } 
+        })
+
+        btnDelete.addEventListener("click", async ()=>{
+            const respDeleteUsuario = await fetch(`http://127.0.0.1:8000/usuarios/${sessionStorage.getItem("id")}`, {
+                method: 'DELETE', 
+                headers: {
+                    'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            if(respDeleteUsuario.ok){
+                esconderAvisos()
+                msgSucess.style.display = "block"
+                msgSucess.innerHTML = "Usuário deletado com sucesso!"
+                setTimeout(()=>{ window.location.href = "../index.html" }, 2000)
+            } else {
+                esconderAvisos()
+                msgError.style.display = "block"
+                msgError.innerHTML = "Aconteceu algum erro ao deletar o usuário. Tente novamente."
+            } 
+        })
+
+        const esconderAvisos = ()=>{
+            msgError.style.display = "none"
+            msgSucess.style.display = "none"
+        }
+
+        const limparCampos = ()=>{
+            nomeInput.value = ""
+            emailInput.value = ""
+            passwordInput.value = ""
+        }
+
+        togglePassword.addEventListener("click", () => {
+            if(passwordInput.type === "password"){
+                passwordInput.type = "text"
+                togglePassword.textContent = "ocultar"
+            } else {
+                passwordInput.type = "password"
+                togglePassword.textContent = "mostrar"
+            } 
+        })
+    </script>
+</body>
+</html>

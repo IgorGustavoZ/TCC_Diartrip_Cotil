@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diartrip</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="static/style.css">
+<link rel="shortcut icon" href="imagens/favicon-diartrip.png" type="image/x-icon">
+</head>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<body>
+    <div class="app">
+
+    <div class="sidebar">
+
+    <a href="#">
+        <div class="logo"><img src="imagens/logo-diartrip.png" alt=""></div>
+    </a>
+
+    <div class="menu-item">✈ Minhas viagens</div>
+    <div class="menu-item">💬 Chat IA</div>
+    <a href="lobby-pags/config.html">
+        <div class="menu-item">⚙ Configurações</div>
+    </a>
+
+    <a href="lobby-pags/form-viagem.html">
+        <button class="new-trip">+ Nova viagem</button>
+    </a>
+
+    </div>
+
+    <div class="main">
+
+    <div class="header">
+    <h2>Minhas viagens</h2>
+    <div class="user"></div>
+    </div>
+
+    <div class="content">
+
+    <div class="trips">
+    <h3>Suas viagens</h3>
+
+    <div class="trip-grid">
+    </div>
+
+    </div>
+
+    <div class="chat">
+
+    <div class="chat-header">Assistente de Viagem IA</div>
+
+    <div id="chatMessages" class="chat-messages">
+    <div class="message"><strong>IA:</strong> Olá! Selecione uma viagem e pode me perguntar o que quiser sobre ela.</div>
+    </div>
+
+    <div class="chat-input">
+    <input id="chatInput" placeholder="Pergunte algo sobre sua viagem...">
+    <button onclick="sendMessage()">Enviar</button>
+    </div>
+
+    </div>
+
+    </div>
+
+    </div>
+
+    </div>
+
+<script>
+    let grupoSelecionado = null
+
+    const txtBv = async () => {
+        const resp = await fetch(`http://127.0.0.1:8000/usuarios/${sessionStorage.getItem("id")}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
+                'Content-Type': 'application/json'
+            }
+        })
+
+        if (resp.ok) {
+            const dados = await resp.json()
+            document.querySelector(".user").innerHTML = `Olá, ${dados.nome}!`
+        }
+    }
+
+    const carregarViagens = async () => {
+        const resp = await fetch(`http://127.0.0.1:8000/grupos`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
+                'Content-Type': 'application/json'
+            }
+        })
+
+        if (!resp.ok) return
+
+        const viagens = await resp.json()
+        const grid = document.querySelector(".trip-grid")
+        grid.innerHTML = ""
+
+        if (viagens.length === 0) {
+            grid.innerHTML = "<p>Nenhuma viagem encontrada.</p>"
+            return
+        }
+
+        viagens.forEach(viagem => {
+
+    const card = document.createElement("div")
+
+    card.className = "trip-card"
+
+    card.dataset.id = viagem.id_grupo
+
+    card.innerHTML = `
+        <strong>${viagem.nome_grupo}</strong>
+
+        <div class="trip-date">
+            ${viagem.destino_principal || ""}
+        </div>
+
+        <div class="trip-date">
+            ${viagem.data_inicio || ""} — ${viagem.data_fim || ""}
+        </div>
+    `
+
+    card.addEventListener("click", () => {
+
+        document
+            .querySelectorAll(".trip-card")
+            .forEach(c => c.classList.remove("ativo"))
+
+        card.classList.add("ativo")
+
+        grupoSelecionado = viagem.id_grupo
+
+        const messages = document.getElementById("chatMessages")
+
+        messages.innerHTML = `
+            <div class="message">
+                <strong>IA:</strong>
+                Viagem <em>${viagem.nome_grupo}</em> selecionada!
+                Como posso ajudar?
+            </div>
+        `
+    })
+
+    card.addEventListener("dblclick", () => {
+
+        window.location.href =
+            `lobby-pags/viagem.html?id=${viagem.id_grupo}`
+
+    })
+
+    grid.appendChild(card)
+})
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById("chatInput")
+        const messages = document.getElementById("chatMessages")
+
+        const text = input.value.trim()
+        if (!text) return
+
+        if (!grupoSelecionado) {
+            const aviso = document.createElement("div")
+            aviso.className = "message"
+            aviso.innerHTML = "<strong>IA:</strong> Selecione uma viagem antes de enviar uma mensagem."
+            messages.appendChild(aviso)
+            messages.scrollTop = messages.scrollHeight
+            return
+        }
+
+        const userMsg = document.createElement("div")
+        userMsg.className = "message"
+        userMsg.innerHTML = `<strong>Você:</strong> ${text}`
+        messages.appendChild(userMsg)
+        input.value = ""
+        messages.scrollTop = messages.scrollHeight
+
+        const loading = document.createElement("div")
+        loading.className = "message"
+        loading.id = "loading"
+        loading.innerHTML = "<strong>IA:</strong> digitando..."
+        messages.appendChild(loading)
+        messages.scrollTop = messages.scrollHeight
+
+        try {
+            const resp = await fetch("http://127.0.0.1:8000/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${sessionStorage.getItem("token")}`
+                },
+                body: JSON.stringify({
+                    pergunta: text,
+                    id_grupo: grupoSelecionado
+                })
+            })
+
+            document.getElementById("loading")?.remove()
+
+            if (!resp.ok) {
+                const erro = await resp.json()
+                const errMsg = document.createElement("div")
+                errMsg.className = "message"
+                errMsg.innerHTML = `<strong>IA:</strong> Erro ao obter resposta. (${erro.detail || resp.status})`
+                messages.appendChild(errMsg)
+            } else {
+                const dados = await resp.json()
+                const aiMsg = document.createElement("div")
+                aiMsg.className = "message"
+                aiMsg.innerHTML = `
+    <strong>IA:</strong>
+    <div class="ia-formatada">
+        ${marked.parse(dados.resposta)}
+    </div>
+`
+                messages.appendChild(aiMsg)
+            }
+        } catch (e) {
+            document.getElementById("loading")?.remove()
+            const errMsg = document.createElement("div")
+            errMsg.className = "message"
+            errMsg.innerHTML = "<strong>IA:</strong> Não foi possível conectar ao servidor."
+            messages.appendChild(errMsg)
+        }
+
+        messages.scrollTop = messages.scrollHeight
+    }
+
+    document.getElementById("chatInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendMessage()
+    })
+
+    txtBv()
+    carregarViagens()
+</script>
+
+</body>
+</html>
