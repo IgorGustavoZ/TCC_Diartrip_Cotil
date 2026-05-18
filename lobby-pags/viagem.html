@@ -1,6 +1,3 @@
-# viagem.html
-
-```html
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -9,26 +6,27 @@
 <title>Diartrip - Viagem</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../static/style.css">
+<link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 </head>
 <body>
 
 <div class="app">
 
     <div class="sidebar">
-
         <a href="../lobby.html">
             <div class="logo">
                 <img src="../imagens/logo-diartrip.png" alt="">
             </div>
         </a>
-
-        <div class="menu-item">✈ Minhas viagens</div>
-        <div class="menu-item">💬 Chat IA</div>
-
-        <a href="config.html">
-            <div class="menu-item">⚙ Configurações</div>
+        <a href="../lobby.html">
+            <div class="menu-item">✈ Minhas viagens</div>
         </a>
-
+        <a href="feed.html">
+            <div class="menu-item">📰 Feed</div>
+        </a>
+        <a href="perfil.html">
+            <div class="menu-item">👤 Perfil</div>
+        </a>
     </div>
 
     <div class="main">
@@ -39,7 +37,6 @@
                 <p id="destinoViagem"></p>
                 <span id="datasViagem"></span>
             </div>
-
             <div class="trip-actions">
                 <button class="btn-convite" onclick="copiarCodigo()">
                     📋 Copiar código convite
@@ -47,115 +44,407 @@
             </div>
         </div>
 
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab(this, 'geral')">📊 Visão Geral</button>
+            <button class="tab-btn" onclick="switchTab(this, 'pessoal')">👤 Meu Financeiro</button>
+            <button class="tab-btn" id="adminTabBtn" style="display:none;" onclick="switchTab(this, 'admin')">👑 Admin</button>
+            <button class="tab-btn" onclick="switchTab(this, 'gastos')">💸 Gastos</button>
+            <button class="tab-btn" onclick="switchTab(this, 'info')">📌 Informações</button>
+        </div>
+
         <div class="trip-content">
 
-            <div class="trip-card-expanded">
-                <h2>📌 Informações da viagem</h2>
+            <!-- TAB GERAL -->
+            <div id="tab-geral" class="tab-content active">
+                <div class="trip-card-expanded">
+                    <h2>📊 Dashboard do Grupo</h2>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3>💰 Orçamento</h3>
+                            <div class="stat-row">
+                                <span class="stat-label">Total Gasto</span>
+                                <span class="stat-value" id="totalGasto">R$ 0,00</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Restante</span>
+                                <span class="stat-value" id="orcamentoRestante">R$ 0,00</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="progressBar"></div>
+                            </div>
+                            <p style="font-size:12px; color:#64748b; text-align:center; margin:0;">
+                                <span id="percentualGasto">0</span>% consumido
+                            </p>
+                        </div>
 
-                <div class="info-item">
-                    <strong>Destino:</strong>
-                    <span id="infoDestino"></span>
-                </div>
-
-                <div class="info-item">
-                    <strong>Período:</strong>
-                    <span id="infoPeriodo"></span>
-                </div>
-
-                <div class="info-item">
-                    <strong>Código convite:</strong>
-                    <span id="codigoConvite"></span>
+                        <div class="dashboard-card">
+                            <h3>🏷️ Categorias</h3>
+                            <div class="category-list" id="listaCategorias">
+                                <p style="color:#64748b; font-size:14px; text-align:center;">Nenhum gasto registrado</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="trip-card-expanded">
-                <h2>👥 Convidar pessoas</h2>
+            <!-- TAB PESSOAL -->
+            <div id="tab-pessoal" class="tab-content">
+                <div class="trip-card-expanded">
+                    <h2>👤 Minha Visão</h2>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3>🏦 Meu Financeiro</h3>
+                            <div class="stat-row">
+                                <span class="stat-label">Quanto eu paguei</span>
+                                <span class="stat-value" id="meuTotalPago">R$ 0,00</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Minhas dívidas</span>
+                                <span class="stat-value saldo-negativo" id="minhaDivida">R$ 0,00</span>
+                            </div>
+                        </div>
 
-                <p>
-                    Compartilhe este código com seus amigos para que eles possam entrar na viagem.
-                </p>
-
-                <div class="invite-box">
-                    <input id="inviteInput" readonly>
-                    <button onclick="copiarCodigo()">Copiar</button>
+                        <div class="dashboard-card">
+                            <h3>📜 Últimos Gastos</h3>
+                            <div class="category-list" id="meusGastosRecentes">
+                                <p style="color:#64748b; font-size:14px; text-align:center;">Sem gastos recentes</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="trip-card-expanded">
-                <h2>🤖 Assistente IA</h2>
+            <!-- TAB ADMIN -->
+            <div id="tab-admin" class="tab-content">
+                <div class="trip-card-expanded">
+                    <h2>👑 Painel Administrativo</h2>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3>🔥 Ranking de Gastos</h3>
+                            <div class="category-list" id="rankingGastos"></div>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>📈 Estatísticas</h3>
+                            <div class="stat-row">
+                                <span class="stat-label">Membros Ativos</span>
+                                <span class="stat-value" id="totalMembros">0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Fotos no Grupo</span>
+                                <span class="stat-value" id="totalFotos">0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Itens no Roteiro</span>
+                                <span class="stat-value" id="totalRoteiros">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <p>
-                    Use o chat da IA no lobby para pedir:
-                </p>
+            <!-- TAB GASTOS -->
+            <div id="tab-gastos" class="tab-content">
+                <div class="trip-card-expanded">
+                    <h2>💸 Registrar Gasto</h2>
+                    <div class="gastos-layout">
 
-                <ul>
-                    <li>Roteiros personalizados</li>
-                    <li>Pontos turísticos</li>
-                    <li>Restaurantes</li>
-                    <li>Dicas de economia</li>
-                    <li>Clima e organização</li>
-                </ul>
+                        <div class="form-gasto">
+                            <div>
+                                <label>Valor (R$)</label>
+                                <input id="gastoValor" type="number" min="0.01" step="0.01" placeholder="Ex: 150.00">
+                            </div>
+                            <div>
+                                <label>Categoria</label>
+                                <select id="gastoCategoria">
+                                    <option value="transporte">🚗 Transporte</option>
+                                    <option value="alimentacao">🍽️ Alimentação</option>
+                                    <option value="hospedagem">🏨 Hospedagem</option>
+                                    <option value="lazer">🎭 Lazer</option>
+                                    <option value="compras">🛍️ Compras</option>
+                                    <option value="saude">💊 Saúde</option>
+                                    <option value="outro">📦 Outro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Descrição (opcional)</label>
+                                <input id="gastoDescricao" type="text" placeholder="Ex: Táxi para o hotel">
+                            </div>
+                            <div>
+                                <label>Data (opcional)</label>
+                                <input id="gastoData" type="date">
+                            </div>
+                            <span class="msg-erro-gasto" id="gastoErro"></span>
+                            <button class="btn-salvar-gasto" id="btnSalvarGasto" onclick="registrarGasto()">
+                                + Registrar gasto
+                            </button>
+                        </div>
+
+                        <div>
+                            <h3 style="margin:0 0 16px; font-size:16px; color:#94a3b8;">Histórico do grupo</h3>
+                            <div id="listaGastos">
+                                <p style="color:#64748b; font-size:14px;">Nenhum gasto registrado ainda.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB INFO -->
+            <div id="tab-info" class="tab-content">
+                <div class="trip-card-expanded">
+                    <h2>📌 Informações da viagem</h2>
+                    <div class="info-item">
+                        <strong>Destino</strong>
+                        <span id="infoDestino"></span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Período</strong>
+                        <span id="infoPeriodo"></span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Código convite</strong>
+                        <span id="codigoConvite"></span>
+                    </div>
+                </div>
+
+                <div class="trip-card-expanded">
+                    <h2>👥 Convidar pessoas</h2>
+                    <p style="color:#94a3b8; font-size:14px; margin:0 0 4px;">Compartilhe este código com seus amigos.</p>
+                    <div class="invite-box">
+                        <input id="inviteInput" readonly>
+                        <button onclick="copiarCodigo()">Copiar</button>
+                    </div>
+                </div>
+
+                <div class="trip-card-expanded">
+                    <h2>🤖 Assistente IA</h2>
+                    <p style="color:#94a3b8; font-size:14px; margin:0 0 12px;">Use o chat da IA no lobby para pedir:</p>
+                    <ul style="color:#cbd5f5; font-size:14px; padding-left:20px; margin:0; line-height:2;">
+                        <li>Roteiros personalizados</li>
+                        <li>Pontos turísticos</li>
+                        <li>Restaurantes</li>
+                        <li>Dicas de economia</li>
+                        <li>Clima e organização</li>
+                    </ul>
+                </div>
             </div>
 
         </div>
-
     </div>
-
 </div>
 
 <script>
-
 const params = new URLSearchParams(window.location.search)
 const idGrupo = params.get("id")
 
-async function carregarGrupo() {
+function switchTab(btn, tabName) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+    document.getElementById(`tab-${tabName}`).classList.add('active')
+    btn.classList.add('active')
+}
 
+async function carregarGrupo() {
     const resp = await fetch(`http://127.0.0.1:8000/grupos/${idGrupo}`, {
-        method: "GET",
         headers: {
             "Authorization": `Bearer ${sessionStorage.getItem("token")}`,
             "Content-Type": "application/json"
         }
     })
 
-    if (!resp.ok) {
-        alert("Erro ao carregar viagem")
-        return
-    }
+    if (!resp.ok) { alert("Erro ao carregar viagem"); return }
 
     const grupo = await resp.json()
 
     document.getElementById("nomeViagem").innerText = grupo.nome_grupo
-    document.getElementById("destinoViagem").innerText = grupo.destino_principal
+    document.getElementById("destinoViagem").innerText = `📍 ${grupo.destino_principal}`
+    document.getElementById("datasViagem").innerText = `${grupo.data_inicio} → ${grupo.data_fim}`
+    document.getElementById("infoDestino").innerText = grupo.destino_principal
+    document.getElementById("infoPeriodo").innerText = `${grupo.data_inicio} até ${grupo.data_fim}`
+    document.getElementById("codigoConvite").innerText = grupo.codigo_convite
+    document.getElementById("inviteInput").value = grupo.codigo_convite
 
-    document.getElementById("datasViagem").innerText =
-        `${grupo.data_inicio} até ${grupo.data_fim}`
+    carregarDashboardGeral()
+    carregarDashboardPessoal()
+    carregarDashboardAdmin()
+    carregarGastos()
+}
 
-    document.getElementById("infoDestino").innerText =
-        grupo.destino_principal
+async function carregarDashboardGeral() {
+    const resp = await fetch(`http://127.0.0.1:8000/grupos/${idGrupo}/dashboard/geral`, {
+        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
+    })
+    if (!resp.ok) return
+    const data = await resp.json()
 
-    document.getElementById("infoPeriodo").innerText =
-        `${grupo.data_inicio} até ${grupo.data_fim}`
+    document.getElementById("totalGasto").innerText = `R$ ${data.total_consumido.toLocaleString('pt-BR', {minimumFractionDigits:2})}`
+    document.getElementById("orcamentoRestante").innerText = `R$ ${data.orcamento_restante.toLocaleString('pt-BR', {minimumFractionDigits:2})}`
+    document.getElementById("percentualGasto").innerText = data.percentual_consumido
+    document.getElementById("progressBar").style.width = `${Math.min(data.percentual_consumido, 100)}%`
 
-    document.getElementById("codigoConvite").innerText =
-        grupo.codigo_convite
+    const lista = document.getElementById("listaCategorias")
+    if (data.distribuicao_categorias.length > 0) {
+        lista.innerHTML = data.distribuicao_categorias.map(cat => `
+            <div class="category-item">
+                <span>${cat.categoria}</span>
+                <strong>R$ ${cat.total.toLocaleString('pt-BR', {minimumFractionDigits:2})}</strong>
+            </div>
+        `).join('')
+    }
+}
 
-    document.getElementById("inviteInput").value =
-        grupo.codigo_convite
+async function carregarDashboardPessoal() {
+    const resp = await fetch(`http://127.0.0.1:8000/grupos/${idGrupo}/dashboard/pessoal`, {
+        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
+    })
+    if (!resp.ok) return
+    const data = await resp.json()
+
+    document.getElementById("meuTotalPago").innerText = `R$ ${data.total_pago_por_mim.toLocaleString('pt-BR', {minimumFractionDigits:2})}`
+    document.getElementById("minhaDivida").innerText = `R$ ${data.minha_divida_atual.toLocaleString('pt-BR', {minimumFractionDigits:2})}`
+
+    const lista = document.getElementById("meusGastosRecentes")
+    if (data.ultimos_gastos_pessoais.length > 0) {
+        lista.innerHTML = data.ultimos_gastos_pessoais.map(g => `
+            <div class="category-item">
+                <div>
+                    <div style="font-size:14px;">${g.descricao || g.categoria}</div>
+                    <div style="font-size:11px; color:#64748b;">${g.data_gasto || ''}</div>
+                </div>
+                <strong>R$ ${g.valor.toLocaleString('pt-BR', {minimumFractionDigits:2})}</strong>
+            </div>
+        `).join('')
+    }
+}
+
+async function carregarDashboardAdmin() {
+    const resp = await fetch(`http://127.0.0.1:8000/grupos/${idGrupo}/dashboard/admin`, {
+        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
+    })
+    if (!resp.ok) return
+
+    document.getElementById("adminTabBtn").style.display = "block"
+    const data = await resp.json()
+
+    document.getElementById("totalMembros").innerText = data.estatisticas.membros_ativos
+    document.getElementById("totalFotos").innerText = data.estatisticas.total_fotos_subidas
+    document.getElementById("totalRoteiros").innerText = data.estatisticas.itens_no_roteiro
+
+    document.getElementById("rankingGastos").innerHTML = data.ranking_contribuicao_financeira.map((m, i) => `
+        <div class="category-item">
+            <span>${i + 1}. ${m.nome}</span>
+            <strong>R$ ${m.total.toLocaleString('pt-BR', {minimumFractionDigits:2})}</strong>
+        </div>
+    `).join('')
+}
+
+async function carregarGastos() {
+    const resp = await fetch(`http://127.0.0.1:8000/grupos/${idGrupo}/gastos`, {
+        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
+    })
+    if (!resp.ok) return
+
+    const lista = await resp.json()
+    const container = document.getElementById("listaGastos")
+
+    if (lista.length === 0) {
+        container.innerHTML = '<p style="color:#64748b; font-size:14px;">Nenhum gasto registrado ainda.</p>'
+        return
+    }
+
+    const meuId = parseInt(sessionStorage.getItem("id"))
+
+    container.innerHTML = lista.map(g => `
+        <div class="gasto-item">
+            <div class="gasto-info">
+                <div class="desc">${g.descricao || g.categoria}</div>
+                <div class="meta">${g.categoria} · ${g.nome} · ${g.data_gasto || ''}</div>
+            </div>
+            <span class="gasto-valor">R$ ${parseFloat(g.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span>
+            ${g.id_usuario == meuId ? `<button class="btn-del-gasto" onclick="deletarGasto(${g.id_gasto})">Excluir</button>` : ''}
+        </div>
+    `).join('')
+}
+
+async function registrarGasto() {
+    const valor = parseFloat(document.getElementById("gastoValor").value)
+    const categoria = document.getElementById("gastoCategoria").value
+    const descricao = document.getElementById("gastoDescricao").value.trim()
+    const data = document.getElementById("gastoData").value
+    const erroEl = document.getElementById("gastoErro")
+    const btn = document.getElementById("btnSalvarGasto")
+
+    erroEl.style.display = "none"
+
+    if (isNaN(valor) || valor <= 0) {
+        erroEl.textContent = "Informe um valor válido maior que zero."
+        erroEl.style.display = "block"
+        return
+    }
+
+    btn.disabled = true
+    btn.textContent = "Salvando..."
+
+    try {
+        const body = { valor, categoria }
+        if (descricao) body.descricao = descricao
+        if (data) body.data_gasto = data
+
+        const resp = await fetch(`http://127.0.0.1:8000/grupos/${idGrupo}/gastos`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${sessionStorage.getItem("token")}`
+            },
+            body: JSON.stringify(body)
+        })
+
+        if (!resp.ok) {
+            const err = await resp.json()
+            erroEl.textContent = err.detail || "Erro ao registrar gasto."
+            erroEl.style.display = "block"
+            return
+        }
+
+        document.getElementById("gastoValor").value = ""
+        document.getElementById("gastoDescricao").value = ""
+        document.getElementById("gastoData").value = ""
+        carregarGastos()
+        carregarDashboardGeral()
+        carregarDashboardPessoal()
+
+    } catch (e) {
+        erroEl.textContent = "Erro ao conectar com o servidor."
+        erroEl.style.display = "block"
+    } finally {
+        btn.disabled = false
+        btn.textContent = "+ Registrar gasto"
+    }
+}
+
+async function deletarGasto(idGasto) {
+    if (!confirm("Excluir este gasto?")) return
+
+    const resp = await fetch(`http://127.0.0.1:8000/gastos/${idGasto}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
+    })
+
+    if (resp.ok) {
+        carregarGastos()
+        carregarDashboardGeral()
+        carregarDashboardPessoal()
+    }
 }
 
 function copiarCodigo() {
-
     const codigo = document.getElementById("inviteInput").value
-
     navigator.clipboard.writeText(codigo)
-
     alert("Código copiado!")
 }
 
 carregarGrupo()
-
 </script>
-
 </body>
 </html>

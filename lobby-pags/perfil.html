@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diartrip - Perfil</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../static/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
+</head>
+<body>
+<div class="app">
+
+    <div class="sidebar">
+        <a href="../lobby.html">
+            <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
+        </a>
+        <a href="../lobby.html">
+            <div class="menu-item">✈ Minhas viagens</div>
+        </a>
+        <a href="feed.html">
+            <div class="menu-item">📰 Feed</div>
+        </a>
+        <a href="perfil.html">
+            <div class="menu-item">👤 Perfil</div>
+        </a>
+        <a href="form-viagem.html">
+            <button class="new-trip">+ Nova viagem</button>
+        </a>
+    </div>
+
+    <div class="main">
+        <div class="perfil-page" id="perfilPage">
+
+            <!-- Avatar -->
+            <div class="avatar-wrap" id="avatarWrap" onclick="clicarFoto()">
+                <div class="avatar-iniciais" id="avatarIniciais">?</div>
+                <div class="avatar-overlay">📷</div>
+                <input type="file" id="fotoInput" accept="image/jpeg,image/png,image/webp">
+            </div>
+
+            <!-- View -->
+            <h1 class="perfil-nome" id="perfilNome">Carregando...</h1>
+            <p class="perfil-bio" id="perfilBio"></p>
+            <p class="perfil-desde" id="perfilDesde"></p>
+
+            <button class="btn-editar" id="btnEditar" style="display:none" onclick="entrarEdicao()">
+                ✏️ Editar perfil
+            </button>
+
+            <!-- Edit form -->
+            <form class="edit-form" id="editForm" onsubmit="salvarPerfil(event)">
+                <div>
+                    <label>Nome</label>
+                    <input id="editNome" type="text" required>
+                </div>
+                <div>
+                    <label>Bio <span style="color:#334155;">(máx. 200 caracteres)</span></label>
+                    <textarea id="editBio" maxlength="200" placeholder="Conte um pouco sobre você..."></textarea>
+                </div>
+                <div class="msg-ok" id="msgOk"></div>
+                <div class="msg-err" id="msgErr"></div>
+                <div class="edit-actions">
+                    <button type="submit" class="btn-salvar" id="btnSalvar">Salvar</button>
+                    <button type="button" class="btn-cancelar" onclick="sairEdicao()">Cancelar</button>
+                </div>
+            </form>
+
+            <!-- Link config (só dono) -->
+            <a href="config.html" class="config-link" id="linkConfig" style="display:none">
+                ⚙ Configurações da conta
+            </a>
+
+        </div>
+
+        <!-- Posts do usuário -->
+        <div class="perfil-posts" id="perfilPosts">
+            <h3 class="perfil-posts-titulo">Postagens</h3>
+            <div id="perfilPostsLista"></div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Crop Modal -->
+<div class="crop-modal" id="cropModal">
+    <div class="crop-container">
+        <img id="cropImg" src="" alt="">
+    </div>
+    <div class="crop-actions">
+        <button class="btn-crop-ok" onclick="confirmarCrop()">✓ Usar esta foto</button>
+        <button class="btn-crop-cancel" onclick="cancelarCrop()">Cancelar</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<script>
+const token    = sessionStorage.getItem("token")
+const meuId    = parseInt(sessionStorage.getItem("id"))
+const params   = new URLSearchParams(window.location.search)
+const alvoId   = parseInt(params.get("id")) || meuId
+
+if (!token) window.location.href = "../login.html"
+
+const ehDono = alvoId === meuId
+
+async function carregarPerfil() {
+    const url = ehDono
+        ? "http://127.0.0.1:8000/usuarios/me"
+        : `http://127.0.0.1:8000/usuarios/${alvoId}`
+
+    const resp = await fetch(url, {
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+
+    if (!resp.ok) { document.getElementById("perfilNome").textContent = "Perfil não encontrado"; return }
+
+    const u = await resp.json()
+
+    // Avatar
+    if (u.foto_perfil) {
+        const img = document.createElement("img")
+        img.src = `http://127.0.0.1:8000${u.foto_perfil}`
+        img.className = "avatar-img"
+        img.id = "avatarImg"
+        document.getElementById("avatarIniciais").replaceWith(img)
+    } else {
+        const iniciais = u.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+        document.getElementById("avatarIniciais").textContent = iniciais
+    }
+
+    document.getElementById("perfilNome").textContent = u.nome
+    document.getElementById("perfilBio").textContent = u.bio || (ehDono ? "Adicione uma bio..." : "")
+    document.getElementById("perfilBio").style.color = u.bio ? "#94a3b8" : "#334155"
+
+    if (u.data_criacao) {
+        const d = new Date(u.data_criacao)
+        document.getElementById("perfilDesde").textContent =
+            `Membro desde ${d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}`
+    }
+
+    // Preencher form de edição
+    document.getElementById("editNome").value = u.nome
+    document.getElementById("editBio").value  = u.bio || ""
+
+    // Mostrar controles do dono
+    if (ehDono) {
+        document.getElementById("btnEditar").style.display  = "block"
+        document.getElementById("linkConfig").style.display = "block"
+    }
+}
+
+// ---- Modo edição ----
+function entrarEdicao() {
+    document.getElementById("perfilPage").classList.add("edit-mode")
+    document.getElementById("btnEditar").style.display = "none"
+}
+
+function sairEdicao() {
+    document.getElementById("perfilPage").classList.remove("edit-mode")
+    document.getElementById("btnEditar").style.display = "block"
+    document.getElementById("msgOk").style.display  = "none"
+    document.getElementById("msgErr").style.display = "none"
+}
+
+async function salvarPerfil(e) {
+    e.preventDefault()
+    const nome = document.getElementById("editNome").value.trim()
+    const bio  = document.getElementById("editBio").value.trim()
+    const btn  = document.getElementById("btnSalvar")
+
+    document.getElementById("msgOk").style.display  = "none"
+    document.getElementById("msgErr").style.display = "none"
+
+    if (!nome) return
+
+    btn.disabled = true
+
+    // Buscar email atual (necessário para o PUT)
+    const meResp = await fetch("http://127.0.0.1:8000/usuarios/me", {
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    const me = await meResp.json()
+
+    const resp = await fetch(`http://127.0.0.1:8000/usuarios/${meuId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ nome, email: me.email, bio })
+    })
+
+    btn.disabled = false
+
+    if (resp.ok) {
+        document.getElementById("msgOk").textContent = "Perfil atualizado!"
+        document.getElementById("msgOk").style.display = "block"
+        setTimeout(() => { sairEdicao(); carregarPerfil() }, 1200)
+    } else {
+        const err = await resp.json()
+        document.getElementById("msgErr").textContent = err.detail || "Erro ao salvar."
+        document.getElementById("msgErr").style.display = "block"
+    }
+}
+
+// ---- Foto + Cropper ----
+let cropperInstance = null
+
+function clicarFoto() {
+    if (!ehDono) return
+    if (!document.getElementById("perfilPage").classList.contains("edit-mode")) return
+    document.getElementById("fotoInput").click()
+}
+
+document.getElementById("fotoInput").addEventListener("change", (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => abrirCropper(ev.target.result)
+    reader.readAsDataURL(file)
+    e.target.value = ""
+})
+
+function abrirCropper(src) {
+    const img = document.getElementById("cropImg")
+    img.src = src
+    document.getElementById("cropModal").classList.add("ativo")
+    if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null }
+    cropperInstance = new Cropper(img, {
+        aspectRatio: 1,
+        viewMode: 1,
+        dragMode: "move",
+        autoCropArea: 0.9,
+        background: false,
+        movable: true,
+        zoomable: true,
+        rotatable: false,
+    })
+}
+
+function cancelarCrop() {
+    document.getElementById("cropModal").classList.remove("ativo")
+    if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null }
+}
+
+async function confirmarCrop() {
+    if (!cropperInstance) return
+    const canvas = cropperInstance.getCroppedCanvas({ width: 400, height: 400 })
+    canvas.toBlob(async (blob) => {
+        cancelarCrop()
+        const form = new FormData()
+        form.append("foto", blob, "perfil.jpg")
+        const resp = await fetch(`http://127.0.0.1:8000/usuarios/${meuId}/foto`, {
+            method: "PATCH",
+            headers: { "Authorization": `Bearer ${token}` },
+            body: form
+        })
+        if (resp.ok) {
+            const data = await resp.json()
+            const src = `http://127.0.0.1:8000${data.foto_perfil}?t=${Date.now()}`
+            let img = document.getElementById("avatarImg")
+            if (!img) {
+                img = document.createElement("img")
+                img.className = "avatar-img"
+                img.id = "avatarImg"
+                document.getElementById("avatarIniciais")?.replaceWith(img)
+            }
+            img.src = src
+        }
+    }, "image/jpeg", 0.92)
+}
+
+async function carregarPostsPerfil() {
+    const resp = await fetch(`http://127.0.0.1:8000/posts/usuario/${alvoId}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    if (!resp.ok) return
+
+    const posts = await resp.json()
+    const lista = document.getElementById("perfilPostsLista")
+
+    if (posts.length === 0) {
+        lista.innerHTML = '<p class="feed-vazio">Nenhuma postagem ainda.</p>'
+        return
+    }
+
+    lista.innerHTML = posts.map(p => {
+        const delBtn = ehDono
+            ? `<button class="btn-del-post" onclick="deletarPostPerfil(${p.id_post}, this)">Excluir</button>`
+            : ""
+        const imgHtml = p.imagem
+            ? `<img class="post-img" src="http://127.0.0.1:8000${p.imagem}" alt="">`
+            : ""
+        const d = new Date(p.data_criacao)
+        const data = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
+        return `
+        <div class="post-card" id="ppost-${p.id_post}">
+            <div class="post-header">
+                <span class="post-data">${data}</span>
+                ${delBtn}
+            </div>
+            <p class="post-texto">${escapeHtml(p.conteudo)}</p>
+            ${imgHtml}
+        </div>`
+    }).join("")
+}
+
+async function deletarPostPerfil(id, btn) {
+    if (!confirm("Excluir este post?")) return
+    btn.disabled = true
+    const resp = await fetch(`http://127.0.0.1:8000/posts/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    if (resp.ok) document.getElementById(`ppost-${id}`)?.remove()
+    else btn.disabled = false
+}
+
+function escapeHtml(txt) {
+    return txt.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+}
+
+carregarPerfil()
+carregarPostsPerfil()
+</script>
+</body>
+</html>

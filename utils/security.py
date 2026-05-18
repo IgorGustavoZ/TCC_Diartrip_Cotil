@@ -1,5 +1,5 @@
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import bcrypt
 from fastapi import HTTPException
 import os
@@ -21,7 +21,7 @@ def verificar_senha(senha: str, hash_senha: str) -> bool:
     return bcrypt.checkpw(senha.encode("utf-8"), hash_senha.encode("utf-8"))
 
 def criar_token(usuario_id: int) -> str:
-    payload = {"id": usuario_id, "exp": datetime.utcnow() + timedelta(hours=2)}
+    payload = {"id": usuario_id, "exp": datetime.now(timezone.utc) + timedelta(hours=2)}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 def decodificar_token(token: str) -> int:

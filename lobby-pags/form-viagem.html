@@ -21,10 +21,13 @@
     <a href="../lobby.html">
         <div class="menu-item">✈ Minhas viagens</div>
     </a>
-    <div class="menu-item">💬 Chat IA</div>
+    
+    <a href="feed.html">
+            <div class="menu-item">📰 Feed</div>
+        </a>
 
-    <a href="config.html">
-        <div class="menu-item">⚙ Configurações</div>
+    <a href="perfil.html">
+        <div class="menu-item">👤 Perfil</div>
     </a>
 
     <a href="#">
@@ -63,13 +66,8 @@
             
 
             <div class="field">
-                <label for="orcamento">Orçamento</label>
-
-                <select id="orcamento">
-                    <option value="economico">Econômico</option>
-                    <option value="medio">Médio</option>
-                    <option value="luxo">Luxo</option>
-                </select>
+                <label for="orcamento">Orçamento (R$)</label>
+                <input id="orcamento" type="number" min="0" step="0.01" placeholder="Ex: 3000.00">
             </div>
 
             <div class="field">
@@ -265,6 +263,12 @@
             return
         }
 
+        const orcamentoValor = parseFloat(orcamento.value)
+        if(isNaN(orcamentoValor) || orcamentoValor < 0){
+            divError.innerHTML = "Informe um orçamento válido (ex: 3000.00)."
+            return
+        }
+
         if(
             (dataInc[2] >= dataFim[2] && dataInc[1] == dataFim[1]) ||
             dataInc[0] > dataFim[0] ||
@@ -309,7 +313,7 @@
 
                     data_fim: inputDataFim.value,
 
-                    orcamento: orcamento.value,
+                    orcamento: orcamentoValor,
 
                     tipo_viagem: tipoViagem.value,
 

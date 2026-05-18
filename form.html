@@ -52,95 +52,92 @@
     const nameError = document.getElementById("nameError")
     const emailError = document.getElementById("emailError")
     const passwordError = document.getElementById("passwordError")
+    const submitBtn = document.getElementById("submit")
 
-    // const success = document.getElementById("success")
+    togglePassword.addEventListener("click", () => {
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text"
+            togglePassword.textContent = "ocultar"
+        } else {
+            passwordInput.type = "password"
+            togglePassword.textContent = "mostrar"
+        }
+    })
 
-    const submit = document.querySelector("#submit")
-
-    form.addEventListener("submit", function(e){
+    form.addEventListener("submit", async function(e) {
         e.preventDefault()
-
-        let valid = true
 
         nameError.textContent = ""
         emailError.textContent = ""
         passwordError.textContent = ""
 
-        if(nameInput.value.length < 3){
+        let valid = true
+
+        if (nameInput.value.trim().length < 3) {
             nameError.textContent = "Nome deve ter pelo menos 3 caracteres"
             valid = false
         }
 
-        if(!emailInput.value.includes("@")){
+        if (!emailInput.value.includes("@")) {
             emailError.textContent = "Email inválido"
             valid = false
         }
 
-        if(passwordInput.value.length < 6){
+        if (passwordInput.value.length < 6) {
             passwordError.textContent = "Senha deve ter no mínimo 6 caracteres"
             valid = false
         }
 
-        if(valid){
-            // success.style.display = "block"
-            form.reset()
-        }
-    })
+        if (!valid) return
 
-    // mostrar ou esconder senha
+        const nome = nameInput.value.trim()
+        const email = emailInput.value.trim()
+        const senha = passwordInput.value
 
-    togglePassword.addEventListener("click", () => {
-        if(passwordInput.type === "password"){
-            passwordInput.type = "text"
-            togglePassword.textContent = "ocultar"
-        }else{
-            passwordInput.type = "password"
-            togglePassword.textContent = "mostrar"
-    }
-    })
+        submitBtn.disabled = true
+        submitBtn.value = "Criando..."
 
-    // quando for clicado em enviar
-    submit.addEventListener("click", async ()=>{
-    const nome = nameInput.value
-    const email = emailInput.value
-    const senha = passwordInput.value
+        try {
+            const resp = await fetch("http://127.0.0.1:8000/usuarios", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nome, email, senha })
+            })
 
-    if(nome != "" && email != "" && senha != ""){
-        const resp = await fetch("http://127.0.0.1:8000/usuarios", {
-            method: "POST",
-            headers:{
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ nome, email, senha })
-        })
+            if (resp.status === 409) {
+                emailError.textContent = "Este email já está cadastrado."
+                return
+            }
 
-        if(resp.ok){
+            if (!resp.ok) {
+                const dados = await resp.json()
+                emailError.textContent = dados.detail || "Erro ao criar conta. Tente novamente."
+                return
+            }
+
             const respLogin = await fetch("http://127.0.0.1:8000/login", {
                 method: "POST",
-                headers:{
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, senha })
             })
 
-            if(!respLogin.ok){
-                console.log("Erro no login do usuário!")
+            if (!respLogin.ok) {
+                nameError.textContent = "Conta criada, mas não foi possível fazer login automático."
                 return
-            } 
+            }
 
-            const dados = await respLogin.text()
-            const respJson = JSON.parse(dados)
-
+            const respJson = await respLogin.json()
             sessionStorage.setItem("token", respJson.token)
             sessionStorage.setItem("id", respJson.usuario_id)
+            window.location.href = "lobby.html"
 
-            window.location.href = "lobby.html" 
-        } else {
-            const dados = await resp.json()
-            console.log("Erro no envio dos dados: " + dados.detail)
+        } catch (err) {
+            emailError.textContent = "Não foi possível conectar ao servidor."
+        } finally {
+            submitBtn.disabled = false
+            submitBtn.value = "Criar conta"
         }
-    }     
-})
+    })
 </script>
 </body>
 </html>

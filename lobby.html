@@ -8,8 +8,8 @@
 <link rel="stylesheet" href="static/style.css">
 <link rel="shortcut icon" href="imagens/favicon-diartrip.png" type="image/x-icon">
 </head>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <body>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <div class="app">
 
     <div class="sidebar">
@@ -19,9 +19,11 @@
     </a>
 
     <div class="menu-item">✈ Minhas viagens</div>
-    <div class="menu-item">💬 Chat IA</div>
-    <a href="lobby-pags/config.html">
-        <div class="menu-item">⚙ Configurações</div>
+    <a href="lobby-pags/feed.html">
+        <div class="menu-item">📰 Feed</div>
+    </a>
+    <a href="lobby-pags/perfil.html">
+        <div class="menu-item">👤 Perfil</div>
     </a>
 
     <a href="lobby-pags/form-viagem.html">
@@ -34,7 +36,10 @@
 
     <div class="header">
     <h2>Minhas viagens</h2>
-    <div class="user"></div>
+    <a href="lobby-pags/perfil.html" id="userChip" style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); padding:6px 14px 6px 6px; border-radius:50px; cursor:pointer; transition:background 0.2s; text-decoration:none; color:inherit;">
+        <div id="avatarMini" style="width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#06b6d4); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0;">?</div>
+        <span id="userNome" style="font-size:14px; color:#cbd5f5; white-space:nowrap;"></span>
+    </a>
     </div>
 
     <div class="content">
@@ -72,7 +77,7 @@
     let grupoSelecionado = null
 
     const txtBv = async () => {
-        const resp = await fetch(`http://127.0.0.1:8000/usuarios/${sessionStorage.getItem("id")}`, {
+        const resp = await fetch(`http://127.0.0.1:8000/usuarios/me`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
@@ -82,7 +87,14 @@
 
         if (resp.ok) {
             const dados = await resp.json()
-            document.querySelector(".user").innerHTML = `Olá, ${dados.nome}!`
+            const avatarEl = document.getElementById("avatarMini")
+            if (dados.foto_perfil) {
+                avatarEl.innerHTML = `<img src="http://127.0.0.1:8000${dados.foto_perfil}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:block;">`
+            } else {
+                const iniciais = dados.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+                avatarEl.textContent = iniciais
+            }
+            document.getElementById("userNome").textContent = `Olá, ${dados.nome.split(" ")[0]}!`
         }
     }
 
@@ -141,7 +153,7 @@
         messages.innerHTML = `
             <div class="message">
                 <strong>IA:</strong>
-                Viagem <em>${viagem.nome_grupo}</em> selecionada!
+                <em>${viagem.nome_grupo}</em> selecionada!
                 Como posso ajudar?
             </div>
         `

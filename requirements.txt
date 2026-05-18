@@ -1,4 +1,7 @@
 ﻿annotated-doc==0.0.4
+email-validator==2.2.0
+pytest==8.3.5
+python-multipart==0.0.20
 annotated-types==0.7.0
 anyio==4.12.1
 bcrypt==4.0.1
