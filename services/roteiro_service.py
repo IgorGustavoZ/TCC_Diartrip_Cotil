@@ -3,6 +3,21 @@ from database import get_db
 from utils.dependencies import checar_membro_grupo
 
 
+def listar_por_grupo(id_grupo: int, usuario_id: int) -> list:
+    with get_db() as conexao:
+        cursor = conexao.cursor(dictionary=True)
+        try:
+            checar_membro_grupo(cursor, id_grupo, usuario_id)
+            cursor.execute(
+                "SELECT id_roteiro, id_grupo, titulo, descricao, data_criacao "
+                "FROM roteiros WHERE id_grupo=%s ORDER BY data_criacao ASC",
+                (id_grupo,),
+            )
+            return cursor.fetchall()
+        finally:
+            cursor.close()
+
+
 def listar_por_usuario(usuario_id: int) -> list:
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
@@ -64,7 +79,9 @@ def atualizar(id_roteiro: int, dados, usuario_id: int) -> dict:
             resultado = cursor.fetchone()
             if not resultado:
                 raise HTTPException(status_code=404, detail="Roteiro não encontrado")
-            checar_membro_grupo(cursor, resultado["id_grupo"], usuario_id)
+            cargo = checar_membro_grupo(cursor, resultado["id_grupo"], usuario_id)
+            if cargo != "admin":
+                raise HTTPException(status_code=403, detail="Apenas administradores podem editar roteiros")
             cursor.execute(
                 "UPDATE roteiros SET titulo=%s, descricao=%s WHERE id_roteiro=%s",
                 (dados.titulo, dados.descricao, id_roteiro),

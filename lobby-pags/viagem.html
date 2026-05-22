@@ -21,6 +21,9 @@
         <a href="../lobby.html">
             <div class="menu-item">✈ Minhas viagens</div>
         </a>
+        <a href="grupos.html">
+            <div class="menu-item">🌍 Grupos</div>
+        </a>
         <a href="feed.html">
             <div class="menu-item">📰 Feed</div>
         </a>
@@ -45,11 +48,13 @@
         </div>
 
         <div class="tabs-nav">
-            <button class="tab-btn active" onclick="switchTab(this, 'geral')">📊 Visão Geral</button>
-            <button class="tab-btn" onclick="switchTab(this, 'pessoal')">👤 Meu Financeiro</button>
-            <button class="tab-btn" id="adminTabBtn" style="display:none;" onclick="switchTab(this, 'admin')">👑 Admin</button>
-            <button class="tab-btn" onclick="switchTab(this, 'gastos')">💸 Gastos</button>
-            <button class="tab-btn" onclick="switchTab(this, 'info')">📌 Informações</button>
+            <button class="tab-btn active" data-tab="geral"    onclick="switchTab(this, 'geral')">📊 Visão Geral</button>
+            <button class="tab-btn"        data-tab="pessoal"  onclick="switchTab(this, 'pessoal')">👤 Meu Financeiro</button>
+            <button class="tab-btn"        data-tab="admin"    id="adminTabBtn" style="display:none;" onclick="switchTab(this, 'admin')">👑 Admin</button>
+            <button class="tab-btn"        data-tab="gastos"   onclick="switchTab(this, 'gastos')">💸 Gastos</button>
+            <button class="tab-btn"        data-tab="roteiro"  onclick="switchTab(this, 'roteiro')">📋 Roteiro</button>
+            <button class="tab-btn"        data-tab="chat"     onclick="switchTab(this, 'chat')">💬 Chat</button>
+            <button class="tab-btn"        data-tab="info"     onclick="switchTab(this, 'info')">📌 Informações</button>
         </div>
 
         <div class="trip-content">
@@ -140,6 +145,11 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="trip-card-expanded">
+                    <h2>👥 Gerenciar Membros</h2>
+                    <div id="adminMembroLista" style="display:flex;flex-direction:column;gap:10px;"></div>
+                </div>
             </div>
 
             <!-- TAB GASTOS -->
@@ -186,6 +196,36 @@
                             </div>
                         </div>
 
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB ROTEIRO -->
+            <div id="tab-roteiro" class="tab-content">
+                <div class="trip-card-expanded">
+                    <h2>📋 Roteiro da Viagem</h2>
+
+                    <!-- Formulário admin: adicionar item -->
+                    <div id="roteiroFormAdd" style="display:none; margin-bottom:24px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:18px;">
+                        <p style="margin:0 0 12px; font-size:14px; color:#94a3b8;">Adicionar item ao roteiro</p>
+                        <input id="roteiroTitulo" type="text" placeholder="Título (ex: Visita ao Coliseu)" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px 12px; color:#f1f5f9; font-size:14px; margin-bottom:10px; outline:none;">
+                        <textarea id="roteiroDesc" placeholder="Descrição (horário, endereço, dicas...)" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px 12px; color:#f1f5f9; font-size:14px; resize:vertical; min-height:72px; outline:none;"></textarea>
+                        <button onclick="criarRoteiroItem()" style="margin-top:10px; background:linear-gradient(135deg,#3b82f6,#06b6d4); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;">+ Adicionar</button>
+                        <span id="roteiroAddMsg" style="margin-left:12px; font-size:13px; color:#f87171; display:none;"></span>
+                    </div>
+
+                    <div id="roteiroLista"><p style="color:#64748b; font-size:14px; text-align:center; padding:30px 0;">Nenhum item no roteiro ainda.</p></div>
+                </div>
+            </div>
+
+            <!-- TAB CHAT -->
+            <div id="tab-chat" class="tab-content">
+                <div class="trip-card-expanded" style="display:flex; flex-direction:column; height:520px; padding:20px;">
+                    <h2 style="margin:0 0 16px; flex-shrink:0;">💬 Chat do Grupo</h2>
+                    <div id="chatGrupoMsgs" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:4px;"></div>
+                    <div style="display:flex; gap:8px; margin-top:14px; flex-shrink:0;">
+                        <input id="chatGrupoInput" placeholder="Escreva uma mensagem..." style="flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px 14px; color:#f1f5f9; font-size:14px; outline:none;">
+                        <button onclick="enviarMsgGrupo()" style="background:linear-gradient(135deg,#3b82f6,#06b6d4); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;">Enviar</button>
                     </div>
                 </div>
             </div>
@@ -237,25 +277,22 @@
 <script>
 const params = new URLSearchParams(window.location.search)
 const idGrupo = params.get("id")
-
-function switchTab(btn, tabName) {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
-    document.getElementById(`tab-${tabName}`).classList.add('active')
-    btn.classList.add('active')
-}
+const meuId = parseInt(sessionStorage.getItem("id"))
+let isAdmin = false
+let chatPollInterval = null
+let ultimaMsgId = 0
+let grupoAtual = null
 
 async function carregarGrupo() {
-    const resp = await fetch(`http://127.0.0.1:8000/grupos/${idGrupo}`, {
-        headers: {
-            "Authorization": `Bearer ${sessionStorage.getItem("token")}`,
-            "Content-Type": "application/json"
-        }
+    const resp = await fetch(`/grupos/${idGrupo}`, {
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
     })
 
     if (!resp.ok) { alert("Erro ao carregar viagem"); return }
 
-    const grupo = await resp.json()
+    grupoAtual = await resp.json()
+    const grupo = grupoAtual
 
     document.getElementById("nomeViagem").innerText = grupo.nome_grupo
     document.getElementById("destinoViagem").innerText = `📍 ${grupo.destino_principal}`
@@ -272,8 +309,8 @@ async function carregarGrupo() {
 }
 
 async function carregarDashboardGeral() {
-    const resp = await fetch(`http://127.0.0.1:8000/grupos/${idGrupo}/dashboard/geral`, {
-        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
+    const resp = await fetch(`/grupos/${idGrupo}/dashboard/geral`, {
+        credentials: "include"
     })
     if (!resp.ok) return
     const data = await resp.json()
@@ -287,7 +324,7 @@ async function carregarDashboardGeral() {
     if (data.distribuicao_categorias.length > 0) {
         lista.innerHTML = data.distribuicao_categorias.map(cat => `
             <div class="category-item">
-                <span>${cat.categoria}</span>
+                <span>${escapeHtml(cat.categoria)}</span>
                 <strong>R$ ${cat.total.toLocaleString('pt-BR', {minimumFractionDigits:2})}</strong>
             </div>
         `).join('')
@@ -295,8 +332,8 @@ async function carregarDashboardGeral() {
 }
 
 async function carregarDashboardPessoal() {
-    const resp = await fetch(`http://127.0.0.1:8000/grupos/${idGrupo}/dashboard/pessoal`, {
-        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
+    const resp = await fetch(`/grupos/${idGrupo}/dashboard/pessoal`, {
+        credentials: "include"
     })
     if (!resp.ok) return
     const data = await resp.json()
@@ -309,8 +346,8 @@ async function carregarDashboardPessoal() {
         lista.innerHTML = data.ultimos_gastos_pessoais.map(g => `
             <div class="category-item">
                 <div>
-                    <div style="font-size:14px;">${g.descricao || g.categoria}</div>
-                    <div style="font-size:11px; color:#64748b;">${g.data_gasto || ''}</div>
+                    <div style="font-size:14px;">${escapeHtml(g.descricao || g.categoria)}</div>
+                    <div style="font-size:11px; color:#64748b;">${escapeHtml(g.data_gasto || '')}</div>
                 </div>
                 <strong>R$ ${g.valor.toLocaleString('pt-BR', {minimumFractionDigits:2})}</strong>
             </div>
@@ -319,12 +356,15 @@ async function carregarDashboardPessoal() {
 }
 
 async function carregarDashboardAdmin() {
-    const resp = await fetch(`http://127.0.0.1:8000/grupos/${idGrupo}/dashboard/admin`, {
-        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
+    const resp = await fetch(`/grupos/${idGrupo}/dashboard/admin`, {
+        credentials: "include"
     })
     if (!resp.ok) return
 
+    isAdmin = true
     document.getElementById("adminTabBtn").style.display = "block"
+    document.getElementById("roteiroFormAdd").style.display = "block"
+    carregarMembrosAdmin()
     const data = await resp.json()
 
     document.getElementById("totalMembros").innerText = data.estatisticas.membros_ativos
@@ -333,15 +373,15 @@ async function carregarDashboardAdmin() {
 
     document.getElementById("rankingGastos").innerHTML = data.ranking_contribuicao_financeira.map((m, i) => `
         <div class="category-item">
-            <span>${i + 1}. ${m.nome}</span>
+            <span>${i + 1}. ${escapeHtml(m.nome)}</span>
             <strong>R$ ${m.total.toLocaleString('pt-BR', {minimumFractionDigits:2})}</strong>
         </div>
     `).join('')
 }
 
 async function carregarGastos() {
-    const resp = await fetch(`http://127.0.0.1:8000/grupos/${idGrupo}/gastos`, {
-        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
+    const resp = await fetch(`/grupos/${idGrupo}/gastos`, {
+        credentials: "include"
     })
     if (!resp.ok) return
 
@@ -358,8 +398,8 @@ async function carregarGastos() {
     container.innerHTML = lista.map(g => `
         <div class="gasto-item">
             <div class="gasto-info">
-                <div class="desc">${g.descricao || g.categoria}</div>
-                <div class="meta">${g.categoria} · ${g.nome} · ${g.data_gasto || ''}</div>
+                <div class="desc">${escapeHtml(g.descricao || g.categoria)}</div>
+                <div class="meta">${escapeHtml(g.categoria)} · ${escapeHtml(g.nome)} · ${escapeHtml(g.data_gasto || '')}</div>
             </div>
             <span class="gasto-valor">R$ ${parseFloat(g.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span>
             ${g.id_usuario == meuId ? `<button class="btn-del-gasto" onclick="deletarGasto(${g.id_gasto})">Excluir</button>` : ''}
@@ -391,12 +431,10 @@ async function registrarGasto() {
         if (descricao) body.descricao = descricao
         if (data) body.data_gasto = data
 
-        const resp = await fetch(`http://127.0.0.1:8000/grupos/${idGrupo}/gastos`, {
+        const resp = await fetch(`/grupos/${idGrupo}/gastos`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${sessionStorage.getItem("token")}`
-            },
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify(body)
         })
 
@@ -426,9 +464,9 @@ async function registrarGasto() {
 async function deletarGasto(idGasto) {
     if (!confirm("Excluir este gasto?")) return
 
-    const resp = await fetch(`http://127.0.0.1:8000/gastos/${idGasto}`, {
+    const resp = await fetch(`/gastos/${idGasto}`, {
         method: "DELETE",
-        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
+        credentials: "include"
     })
 
     if (resp.ok) {
@@ -442,6 +480,243 @@ function copiarCodigo() {
     const codigo = document.getElementById("inviteInput").value
     navigator.clipboard.writeText(codigo)
     alert("Código copiado!")
+}
+
+// ---- Chat do grupo ----
+function switchTab(btn, tabName) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+    document.getElementById(`tab-${tabName}`).classList.add('active')
+    btn.classList.add('active')
+
+    if (tabName === 'chat') {
+        carregarChat(true)
+        if (!chatPollInterval) chatPollInterval = setInterval(() => carregarChat(false), 3000)
+    } else {
+        if (chatPollInterval) { clearInterval(chatPollInterval); chatPollInterval = null }
+    }
+    if (tabName === 'roteiro') carregarRoteiro()
+}
+
+function _renderMsgHtml(m) {
+    const sou = m.id_usuario === meuId
+    const iniciais = m.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+    const av = m.foto_perfil
+        ? `<img src="${m.foto_perfil}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+        : `<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;">${iniciais}</div>`
+    const hora = new Date(m.data_envio).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+    return `
+    <div style="display:flex;gap:10px;align-items:flex-start;${sou ? 'flex-direction:row-reverse;' : ''}">
+        ${av}
+        <div style="max-width:70%;">
+            <div style="font-size:11px;color:#64748b;margin-bottom:3px;${sou ? 'text-align:right;' : ''}">${escapeHtml(m.nome)} · ${hora}</div>
+            <div style="background:${sou ? 'linear-gradient(135deg,#3b82f6,#06b6d4)' : 'rgba(255,255,255,0.07)'};color:#f1f5f9;border-radius:${sou ? '12px 4px 12px 12px' : '4px 12px 12px 12px'};padding:10px 14px;font-size:14px;line-height:1.5;word-break:break-word;">${escapeHtml(m.conteudo)}</div>
+        </div>
+    </div>`
+}
+
+async function carregarChat(cargaInicial) {
+    const since = cargaInicial ? 0 : ultimaMsgId
+    const resp = await fetch(`/grupos/${idGrupo}/chat?since_id=${since}`, {
+        credentials: "include"
+    })
+    if (!resp.ok) return
+    const msgs = await resp.json()
+    if (!msgs.length) return
+
+    const container = document.getElementById("chatGrupoMsgs")
+    if (cargaInicial) {
+        container.innerHTML = msgs.map(_renderMsgHtml).join("")
+    } else {
+        msgs.forEach(m => container.insertAdjacentHTML("beforeend", _renderMsgHtml(m)))
+    }
+    ultimaMsgId = msgs[msgs.length - 1].id_mensagem
+    container.scrollTop = container.scrollHeight
+}
+
+async function enviarMsgGrupo() {
+    const input = document.getElementById("chatGrupoInput")
+    const texto = input.value.trim()
+    if (!texto) return
+    input.value = ""
+    await fetch(`/grupos/${idGrupo}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ conteudo: texto })
+    })
+    carregarChat(true)
+}
+
+document.getElementById("chatGrupoInput").addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviarMsgGrupo() }
+})
+
+// ---- Roteiro ----
+async function carregarRoteiro() {
+    const resp = await fetch(`/grupos/${idGrupo}/roteiros`, {
+        credentials: "include"
+    })
+    if (!resp.ok) return
+    const itens = await resp.json()
+    const lista = document.getElementById("roteiroLista")
+
+    if (!itens.length) {
+        lista.innerHTML = '<p style="color:#64748b;font-size:14px;text-align:center;padding:30px 0;">Nenhum item no roteiro ainda.</p>'
+        return
+    }
+
+    lista.innerHTML = itens.map((r, i) => `
+        <div id="ritem-${r.id_roteiro}" style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px 18px;margin-bottom:10px;background:rgba(255,255,255,0.03);">
+            <div style="display:flex;align-items:flex-start;gap:12px;">
+                <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${i + 1}</div>
+                <div style="flex:1;min-width:0;" id="rview-${r.id_roteiro}">
+                    <div style="font-size:15px;font-weight:600;color:#f1f5f9;margin-bottom:4px;">${escapeHtml(r.titulo)}</div>
+                    <div style="font-size:13px;color:#94a3b8;white-space:pre-wrap;">${escapeHtml(r.descricao)}</div>
+                </div>
+                ${isAdmin ? `
+                <div style="display:flex;gap:6px;flex-shrink:0;">
+                    <button onclick="iniciarEdicaoRoteiro(${r.id_roteiro},'${escapeAtr(r.titulo)}','${escapeAtr(r.descricao)}')" style="background:rgba(255,255,255,0.08);border:none;border-radius:6px;padding:6px 10px;color:#cbd5f5;font-size:12px;cursor:pointer;">✏️</button>
+                    <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:rgba(239,68,68,0.15);border:none;border-radius:6px;padding:6px 10px;color:#f87171;font-size:12px;cursor:pointer;">🗑</button>
+                </div>` : ""}
+            </div>
+            <!-- formulário de edição inline (oculto por padrão) -->
+            <div id="redit-${r.id_roteiro}" style="display:none;margin-top:12px;">
+                <input id="retitulo-${r.id_roteiro}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 12px;color:#f1f5f9;font-size:14px;margin-bottom:8px;outline:none;">
+                <textarea id="redesc-${r.id_roteiro}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 12px;color:#f1f5f9;font-size:14px;resize:vertical;min-height:60px;outline:none;"></textarea>
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                    <button onclick="salvarEdicaoRoteiro(${r.id_roteiro})" style="background:linear-gradient(135deg,#3b82f6,#06b6d4);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">Salvar</button>
+                    <button onclick="cancelarEdicaoRoteiro(${r.id_roteiro})" style="background:rgba(255,255,255,0.07);color:#94a3b8;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    `).join("")
+}
+
+function iniciarEdicaoRoteiro(id, titulo, desc) {
+    document.getElementById(`rview-${id}`).style.display = "none"
+    document.getElementById(`redit-${id}`).style.display = "block"
+    document.getElementById(`retitulo-${id}`).value = titulo
+    document.getElementById(`redesc-${id}`).value = desc
+}
+
+function cancelarEdicaoRoteiro(id) {
+    document.getElementById(`rview-${id}`).style.display = "block"
+    document.getElementById(`redit-${id}`).style.display = "none"
+}
+
+async function salvarEdicaoRoteiro(id) {
+    const titulo = document.getElementById(`retitulo-${id}`).value.trim()
+    const descricao = document.getElementById(`redesc-${id}`).value.trim()
+    if (!titulo) return
+    const resp = await fetch(`/roteiros/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ titulo, descricao })
+    })
+    if (resp.ok) carregarRoteiro()
+}
+
+async function criarRoteiroItem() {
+    const titulo = document.getElementById("roteiroTitulo").value.trim()
+    const descricao = document.getElementById("roteiroDesc").value.trim()
+    const msg = document.getElementById("roteiroAddMsg")
+    msg.style.display = "none"
+    if (!titulo) { msg.textContent = "Informe o título."; msg.style.display = "inline"; return }
+    const resp = await fetch("/roteiros", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id_grupo: parseInt(idGrupo), titulo, descricao })
+    })
+    if (resp.ok) {
+        document.getElementById("roteiroTitulo").value = ""
+        document.getElementById("roteiroDesc").value = ""
+        carregarRoteiro()
+    }
+}
+
+async function deletarRoteiroItem(id) {
+    if (!confirm("Remover este item do roteiro?")) return
+    const resp = await fetch(`/roteiros/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+    })
+    if (resp.ok) carregarRoteiro()
+}
+
+// ---- Gerenciar membros (admin) ----
+async function carregarMembrosAdmin() {
+    const respMembros = await fetch(`/grupos/${idGrupo}/membros`, {
+        credentials: "include"
+    })
+    if (!respMembros.ok) return
+    const membros = await respMembros.json()
+    const criadorId = grupoAtual?.criador_id ?? null
+    const lista = document.getElementById("adminMembroLista")
+
+    lista.innerHTML = membros.map(m => {
+        const isMe = m.id_usuario === meuId
+        const isCriador = m.id_usuario === criadorId
+        const isAdminMembro = m.cargo === "admin"
+        const iniciais = m.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+
+        const badgeStyle = isCriador
+            ? "background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.3);"
+            : isAdminMembro
+                ? "background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);"
+                : "background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.2);"
+        const badgeLabel = isCriador ? "👑 Dono" : isAdminMembro ? "⭐ Admin" : "Membro"
+
+        const btnAcao = (isMe || isCriador) ? "" : isAdminMembro
+            ? `<button onclick="rebaixarMembro(${m.id_usuario})" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">Rebaixar</button>`
+            : `<button onclick="promoverMembro(${m.id_usuario})" style="background:rgba(251,191,36,0.12);color:#fbbf24;border:1px solid rgba(251,191,36,0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">⭐ Promover a Admin</button>`
+
+        return `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${iniciais}</div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:#f1f5f9;">${escapeHtml(m.nome)}${isMe ? " <span style='color:#64748b;font-weight:400;font-size:12px;'>(você)</span>" : ""}</div>
+            </div>
+            <span style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;${badgeStyle}">${badgeLabel}</span>
+            ${btnAcao}
+        </div>`
+    }).join("")
+}
+
+async function promoverMembro(idUsuario) {
+    if (!confirm("Promover este usuário a administrador?")) return
+    const resp = await fetch(`/grupos/${idGrupo}/membros/${idUsuario}/promover`, {
+        method: "PUT",
+        credentials: "include"
+    })
+    if (resp.ok) carregarMembrosAdmin()
+    else { const e = await resp.json(); alert(e.detail || "Erro ao promover") }
+}
+
+async function rebaixarMembro(idUsuario) {
+    if (!confirm("Rebaixar este admin para membro comum?")) return
+    const resp = await fetch(`/grupos/${idGrupo}/membros/${idUsuario}/rebaixar`, {
+        method: "PUT",
+        credentials: "include"
+    })
+    if (resp.ok) carregarMembrosAdmin()
+    else { const e = await resp.json(); alert(e.detail || "Erro ao rebaixar") }
+}
+
+function escapeHtml(txt) {
+    return String(txt).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")
+}
+function escapeAtr(txt) {
+    return String(txt).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\n/g,"\\n")
+}
+
+// Abre direto na tab pedida pela URL (?tab=chat)
+const tabInicial = params.get("tab")
+if (tabInicial) {
+    const btn = document.querySelector(`.tab-btn[data-tab="${tabInicial}"]`)
+    if (btn) btn.click()
 }
 
 carregarGrupo()

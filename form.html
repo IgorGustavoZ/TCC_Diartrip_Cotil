@@ -32,6 +32,9 @@
         <label>Senha</label>
         <input id="password" type="password" placeholder="Crie uma senha" required>
         <span id="togglePassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:#94a3b8;">mostrar</span>
+        <span style="font-size:12px; color:#94a3b8; margin-top:4px; display:block;">
+            Mínimo 8 caracteres, com ao menos uma letra maiúscula e um número.
+        </span>
         <span class="error" id="passwordError"></span>
         </div>
         <input class="cta" id="submit" type="submit" value="Criar conta">
@@ -83,8 +86,15 @@
             valid = false
         }
 
-        if (passwordInput.value.length < 6) {
-            passwordError.textContent = "Senha deve ter no mínimo 6 caracteres"
+        const senha = passwordInput.value
+        if (senha.length < 8) {
+            passwordError.textContent = "Senha deve ter no mínimo 8 caracteres"
+            valid = false
+        } else if (!/[A-Z]/.test(senha)) {
+            passwordError.textContent = "A senha deve conter ao menos uma letra maiúscula"
+            valid = false
+        } else if (!/[0-9]/.test(senha)) {
+            passwordError.textContent = "A senha deve conter ao menos um número"
             valid = false
         }
 
@@ -92,15 +102,15 @@
 
         const nome = nameInput.value.trim()
         const email = emailInput.value.trim()
-        const senha = passwordInput.value
 
         submitBtn.disabled = true
         submitBtn.value = "Criando..."
 
         try {
-            const resp = await fetch("http://127.0.0.1:8000/usuarios", {
+            const resp = await fetch("/usuarios", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({ nome, email, senha })
             })
 
@@ -111,13 +121,31 @@
 
             if (!resp.ok) {
                 const dados = await resp.json()
-                emailError.textContent = dados.detail || "Erro ao criar conta. Tente novamente."
+
+                if (Array.isArray(dados.detail)) {
+                    // Pydantic v2 retorna um array de erros de validação (422)
+                    for (const erro of dados.detail) {
+                        const campo = Array.isArray(erro.loc) ? erro.loc[erro.loc.length - 1] : ""
+                        const msg = (erro.msg || "Erro de validação")
+                            .replace(/^Value error,\s*/i, "")
+                        if (campo === "senha") {
+                            passwordError.textContent = msg
+                        } else if (campo === "email") {
+                            emailError.textContent = msg
+                        } else {
+                            emailError.textContent = msg
+                        }
+                    }
+                } else {
+                    emailError.textContent = dados.detail || "Erro ao criar conta. Tente novamente."
+                }
                 return
             }
 
-            const respLogin = await fetch("http://127.0.0.1:8000/login", {
+            const respLogin = await fetch("/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({ email, senha })
             })
 
@@ -127,8 +155,8 @@
             }
 
             const respJson = await respLogin.json()
-            sessionStorage.setItem("token", respJson.token)
             sessionStorage.setItem("id", respJson.usuario_id)
+            sessionStorage.setItem("logado", "1")
             window.location.href = "lobby.html"
 
         } catch (err) {

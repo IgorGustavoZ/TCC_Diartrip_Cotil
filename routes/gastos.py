@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from typing import Optional, List
 from utils.auth import get_usuario_logado
 from services import gasto_service
@@ -9,9 +9,9 @@ router = APIRouter(tags=["Gastos"])
 
 class GastoInput(BaseModel):
     valor: float
-    categoria: str
-    descricao: Optional[str] = None
-    data_gasto: Optional[str] = None
+    categoria: str = Field(..., max_length=50)
+    descricao: Optional[str] = Field(None, max_length=255)
+    data_gasto: Optional[str] = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$")
     id_usuarios_divisao: Optional[List[int]] = []
 
     @field_validator("valor")
@@ -24,8 +24,16 @@ class GastoInput(BaseModel):
 
 class GastoUpdate(BaseModel):
     valor: float
-    categoria: str
-    descricao: str
+    categoria: str = Field(..., max_length=50)
+    descricao: str = Field(..., max_length=255)
+    id_usuarios_divisao: list[int] | None = None
+
+    @field_validator("valor")
+    @classmethod
+    def valor_deve_ser_positivo(cls, v: float) -> float:
+        if v <= 0:
+            raise ValueError("O valor deve ser maior que zero")
+        return v
 
 
 @router.get("/grupos/{id_grupo}/gastos")

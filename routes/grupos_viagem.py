@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from datetime import datetime
 from utils.auth import get_usuario_logado
 from utils.dependencies import verificar_admin_do_grupo
@@ -9,13 +9,13 @@ router = APIRouter()
 
 
 class GrupoInput(BaseModel):
-    nome_grupo: str
-    destino_principal: str
-    data_inicio: str
-    data_fim: str
+    nome_grupo: str = Field(..., max_length=100)
+    destino_principal: str = Field(..., max_length=150)
+    data_inicio: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")
+    data_fim: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")
     orcamento: float
-    tipo_viagem: str
-    preferencias: str
+    tipo_viagem: str = Field(..., max_length=50)
+    preferencias: str = Field(..., max_length=1000)
 
     @field_validator("orcamento")
     @classmethod
@@ -46,10 +46,12 @@ def listar_grupos(usuario_id: int = Depends(get_usuario_logado)):
 
 @router.get("/grupos/buscar")
 def buscar_grupo_por_nome(
-    nome: str | None = Query(None),
+    nome: str | None = Query(None, max_length=100),
+    limite: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     usuario_id: int = Depends(get_usuario_logado),
 ):
-    return grupo_service.buscar_por_nome(usuario_id, nome)
+    return grupo_service.buscar_por_nome(usuario_id, nome, limite, offset)
 
 
 @router.post("/grupos/entrar")

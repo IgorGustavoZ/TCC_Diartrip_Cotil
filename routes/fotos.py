@@ -12,6 +12,9 @@ def listar_fotos(id_grupo: int, usuario_id: int = Depends(get_usuario_logado)):
     return foto_service.listar(id_grupo, usuario_id)
 
 
+_MAX_FOTO_BYTES = 5 * 1024 * 1024
+
+
 @router.post("/grupos/{id_grupo}/fotos")
 def upload_foto(
     id_grupo: int,
@@ -19,8 +22,11 @@ def upload_foto(
     template_usado: Optional[str] = Form(None),
     usuario_id: int = Depends(get_usuario_logado),
 ):
+    from fastapi import HTTPException
     arquivo.file.seek(0, os.SEEK_END)
     tamanho = arquivo.file.tell()
+    if tamanho > _MAX_FOTO_BYTES:
+        raise HTTPException(status_code=413, detail="Arquivo muito grande. Máximo 5 MB.")
     arquivo.file.seek(0)
     conteudo = arquivo.file.read()
     arquivo.file.close()

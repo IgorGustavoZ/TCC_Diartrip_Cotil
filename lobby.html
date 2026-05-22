@@ -19,6 +19,9 @@
     </a>
 
     <div class="menu-item">✈ Minhas viagens</div>
+    <a href="lobby-pags/grupos.html">
+        <div class="menu-item">🌍 Grupos</div>
+    </a>
     <a href="lobby-pags/feed.html">
         <div class="menu-item">📰 Feed</div>
     </a>
@@ -74,22 +77,24 @@
     </div>
 
 <script>
+    function escapeHtml(txt) {
+        return String(txt).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")
+    }
+
     let grupoSelecionado = null
 
     const txtBv = async () => {
-        const resp = await fetch(`http://127.0.0.1:8000/usuarios/me`, {
+        const resp = await fetch(`/usuarios/me`, {
             method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
         })
 
         if (resp.ok) {
             const dados = await resp.json()
             const avatarEl = document.getElementById("avatarMini")
             if (dados.foto_perfil) {
-                avatarEl.innerHTML = `<img src="http://127.0.0.1:8000${dados.foto_perfil}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:block;">`
+                avatarEl.innerHTML = `<img src="${dados.foto_perfil}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:block;">`
             } else {
                 const iniciais = dados.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
                 avatarEl.textContent = iniciais
@@ -99,12 +104,10 @@
     }
 
     const carregarViagens = async () => {
-        const resp = await fetch(`http://127.0.0.1:8000/grupos`, {
+        const resp = await fetch(`/grupos`, {
             method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
         })
 
         if (!resp.ok) return
@@ -127,14 +130,14 @@
     card.dataset.id = viagem.id_grupo
 
     card.innerHTML = `
-        <strong>${viagem.nome_grupo}</strong>
+        <strong>${escapeHtml(viagem.nome_grupo)}</strong>
 
         <div class="trip-date">
-            ${viagem.destino_principal || ""}
+            ${escapeHtml(viagem.destino_principal || "")}
         </div>
 
         <div class="trip-date">
-            ${viagem.data_inicio || ""} — ${viagem.data_fim || ""}
+            ${escapeHtml(viagem.data_inicio || "")} — ${escapeHtml(viagem.data_fim || "")}
         </div>
     `
 
@@ -153,7 +156,7 @@
         messages.innerHTML = `
             <div class="message">
                 <strong>IA:</strong>
-                <em>${viagem.nome_grupo}</em> selecionada!
+                <em>${escapeHtml(viagem.nome_grupo)}</em> selecionada!
                 Como posso ajudar?
             </div>
         `
@@ -188,7 +191,7 @@
 
         const userMsg = document.createElement("div")
         userMsg.className = "message"
-        userMsg.innerHTML = `<strong>Você:</strong> ${text}`
+        userMsg.innerHTML = `<strong>Você:</strong> ${escapeHtml(text)}`
         messages.appendChild(userMsg)
         input.value = ""
         messages.scrollTop = messages.scrollHeight
@@ -201,12 +204,10 @@
         messages.scrollTop = messages.scrollHeight
 
         try {
-            const resp = await fetch("http://127.0.0.1:8000/chat", {
+            const resp = await fetch("/chat", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${sessionStorage.getItem("token")}`
-                },
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({
                     pergunta: text,
                     id_grupo: grupoSelecionado
@@ -219,7 +220,7 @@
                 const erro = await resp.json()
                 const errMsg = document.createElement("div")
                 errMsg.className = "message"
-                errMsg.innerHTML = `<strong>IA:</strong> Erro ao obter resposta. (${erro.detail || resp.status})`
+                errMsg.innerHTML = `<strong>IA:</strong> Erro ao obter resposta. (${escapeHtml(String(erro.detail || resp.status))})`
                 messages.appendChild(errMsg)
             } else {
                 const dados = await resp.json()

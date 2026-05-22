@@ -21,6 +21,9 @@
     <a href="../lobby.html">
         <div class="menu-item">✈ Minhas viagens</div>
     </a>
+    <a href="grupos.html">
+        <div class="menu-item">🌍 Grupos</div>
+    </a>
     <div class="menu-item">💬 Chat IA</div>
     <a href="#">
         <div class="menu-item">⚙ Configurações</div>
@@ -102,12 +105,10 @@
         })
 
         const colocarDados = async ()=>{
-           const respGetUsuario = await fetch(`http://127.0.0.1:8000/usuarios/${sessionStorage.getItem("id")}`, {
-                method: 'GET', 
-                headers: {
-                    'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
-                    'Content-Type': 'application/json'
-                }
+           const respGetUsuario = await fetch(`/usuarios/${sessionStorage.getItem("id")}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
            })
             if(respGetUsuario.ok){
                 const dados = await respGetUsuario.text()
@@ -121,12 +122,10 @@
 
         btnSave.addEventListener("click", async ()=>{
             if(passwordInput.value.length >= 6){
-                const respPutUsuario = await fetch(`http://127.0.0.1:8000/usuarios/${sessionStorage.getItem("id")}`, {
-                    method: 'PUT', 
-                    headers: {
-                        'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
-                        'Content-Type': 'application/json'
-                    },
+                const respPutUsuario = await fetch(`/usuarios/${sessionStorage.getItem("id")}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({
                         nome: nomeInput.value,
                         email: emailInput.value
@@ -151,23 +150,21 @@
         })
 
         btnDelete.addEventListener("click", async ()=>{
-            const respDeleteUsuario = await fetch(`http://127.0.0.1:8000/usuarios/${sessionStorage.getItem("id")}`, {
-                method: 'DELETE', 
-                headers: {
-                    'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
-                    'Content-Type': 'application/json'
-                }
+            const respDeleteUsuario = await fetch(`/usuarios/${sessionStorage.getItem("id")}`, {
+                method: 'DELETE',
+                credentials: 'include'
             })
             if(respDeleteUsuario.ok){
                 esconderAvisos()
                 msgSucess.style.display = "block"
                 msgSucess.innerHTML = "Usuário deletado com sucesso!"
+                await fetch('/logout', { method: 'POST', credentials: 'include' })
                 setTimeout(()=>{ window.location.href = "../index.html" }, 2000)
             } else {
                 esconderAvisos()
                 msgError.style.display = "block"
                 msgError.innerHTML = "Aconteceu algum erro ao deletar o usuário. Tente novamente."
-            } 
+            }
         })
 
         const esconderAvisos = ()=>{

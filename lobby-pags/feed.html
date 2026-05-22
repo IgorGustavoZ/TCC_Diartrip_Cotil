@@ -18,6 +18,9 @@
         <a href="../lobby.html">
             <div class="menu-item">✈ Minhas viagens</div>
         </a>
+        <a href="grupos.html">
+            <div class="menu-item">🌍 Grupos</div>
+        </a>
         <a href="feed.html">
             <div class="menu-item">📰 Feed</div>
         </a>
@@ -65,30 +68,29 @@
 </div>
 
 <script>
-const token = sessionStorage.getItem("token")
 const meuId = parseInt(sessionStorage.getItem("id"))
-if (!token) window.location.href = "../login.html"
+if (!sessionStorage.getItem("logado")) window.location.href = "../login.html"
 
 let arquivoSelecionado = null
 
 // ---- Avatar do criador ----
 async function carregarMeu() {
-    const resp = await fetch("http://127.0.0.1:8000/usuarios/me", {
-        headers: { "Authorization": `Bearer ${token}` }
+    const resp = await fetch("/usuarios/me", {
+        credentials: "include"
     })
     if (!resp.ok) return
     const u = await resp.json()
 
     const el = document.getElementById("avCreate")
     if (u.foto_perfil) {
-        el.innerHTML = `<img src="http://127.0.0.1:8000${u.foto_perfil}">`
+        el.innerHTML = `<img src="${u.foto_perfil}">`
     } else {
         el.textContent = u.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
     }
 
     const avatarEl = document.getElementById("avatarMini")
     if (u.foto_perfil) {
-        avatarEl.innerHTML = `<img src="http://127.0.0.1:8000${u.foto_perfil}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:block;">`
+        avatarEl.innerHTML = `<img src="${u.foto_perfil}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:block;">`
     } else {
         avatarEl.textContent = u.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
     }
@@ -124,9 +126,9 @@ async function publicar() {
     if (arquivoSelecionado) form.append("imagem", arquivoSelecionado)
 
     try {
-        const resp = await fetch("http://127.0.0.1:8000/posts", {
+        const resp = await fetch("/posts", {
             method: "POST",
-            headers: { "Authorization": `Bearer ${token}` },
+            credentials: "include",
             body: form
         })
         if (resp.ok) {
@@ -145,8 +147,8 @@ document.getElementById("postTexto").addEventListener("keydown", (e) => {
 
 // ---- Carregar feed ----
 async function carregarFeed() {
-    const resp = await fetch("http://127.0.0.1:8000/posts", {
-        headers: { "Authorization": `Bearer ${token}` }
+    const resp = await fetch("/posts", {
+        credentials: "include"
     })
     if (!resp.ok) return
 
@@ -161,7 +163,7 @@ async function carregarFeed() {
     lista.innerHTML = posts.map(p => {
         const iniciais = p.nome.trim().split(" ").map(x => x[0]).slice(0, 2).join("").toUpperCase()
         const av = p.foto_perfil
-            ? `<div class="av"><img src="http://127.0.0.1:8000${p.foto_perfil}"></div>`
+            ? `<div class="av"><img src="${p.foto_perfil}"></div>`
             : `<div class="av">${iniciais}</div>`
 
         const delBtn = p.id_usuario === meuId
@@ -169,7 +171,7 @@ async function carregarFeed() {
             : ""
 
         const imgHtml = p.imagem
-            ? `<img class="post-img" src="http://127.0.0.1:8000${p.imagem}" alt="">`
+            ? `<img class="post-img" src="${p.imagem}" alt="">`
             : ""
 
         return `
@@ -177,7 +179,7 @@ async function carregarFeed() {
             <div class="post-header">
                 ${av}
                 <div class="post-meta">
-                    <span class="post-autor" onclick="window.location.href='perfil.html?id=${p.id_usuario}'">${p.nome}</span>
+                    <span class="post-autor" onclick="window.location.href='perfil.html?id=${p.id_usuario}'">${escapeHtml(p.nome)}</span>
                     <span class="post-data">${formatarData(p.data_criacao)}</span>
                 </div>
                 ${delBtn}
@@ -190,9 +192,9 @@ async function carregarFeed() {
 
 async function deletarPost(id) {
     if (!confirm("Excluir este post?")) return
-    const resp = await fetch(`http://127.0.0.1:8000/posts/${id}`, {
+    const resp = await fetch(`/posts/${id}`, {
         method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
+        credentials: "include"
     })
     if (resp.ok) document.getElementById(`post-${id}`)?.remove()
 }

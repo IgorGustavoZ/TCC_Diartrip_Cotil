@@ -1,12 +1,21 @@
-from fastapi import Depends, HTTPException
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import Cookie, HTTPException
 from utils.security import decodificar_token
+from database import get_db
 
-security = HTTPBearer()
 
-def get_usuario_logado(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    usuario_id = decodificar_token(token)
-    if not usuario_id:
-        raise HTTPException(status_code=401, detail="Token inválido ou expirado")
+def get_usuario_logado(access_token: str | None = Cookie(default=None)) -> int:
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Não autenticado")
+    
+    usuario_id = decodificar_token(access_token)
+    
+    with get_db() as conexao:
+        cursor = conexao.cursor()
+        try:
+            cursor.execute("SELECT 1 FROM usuarios WHERE id_usuario = %s", (usuario_id,))
+            if not cursor.fetchone():
+                raise HTTPException(status_code=401, detail="Usuário não encontrado ou inativo")
+        finally:
+            cursor.close()
+            
     return usuario_id

@@ -1,9 +1,8 @@
-import os
-import uuid
 from fastapi import HTTPException
 from database import get_db
+from utils.cloudinary_upload import upload_imagem, deletar_imagem
+from utils.imagem_utils import validar_imagem
 
-UPLOAD_DIR = "uploads"
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 MAX_IMAGE_SIZE = 10 * 1024 * 1024
 
@@ -54,15 +53,11 @@ def criar(usuario_id: int, conteudo: str, imagem_bytes: bytes | None, imagem_ext
 
     imagem_url = None
     if imagem_bytes is not None and imagem_ext is not None:
-        if imagem_ext not in ALLOWED_EXTENSIONS:
-            raise HTTPException(status_code=422, detail="Formato inválido. Use JPG, PNG ou WebP.")
-        if len(imagem_bytes) > MAX_IMAGE_SIZE:
-            raise HTTPException(status_code=422, detail="Imagem muito grande. Máximo 10 MB.")
-        nome = f"post_{uuid.uuid4().hex}{imagem_ext}"
-        os.makedirs(UPLOAD_DIR, exist_ok=True)
-        with open(os.path.join(UPLOAD_DIR, nome), "wb") as f:
-            f.write(imagem_bytes)
-        imagem_url = f"/uploads/{nome}"
+        # Validação robusta usando magic bytes
+        ext = imagem_ext.lstrip(".")
+        validar_imagem(imagem_bytes, ext, MAX_IMAGE_SIZE)
+        
+        imagem_url = upload_imagem(imagem_bytes, "diartrip/posts")
 
     with get_db() as conexao:
         cursor = conexao.cursor()
@@ -73,6 +68,10 @@ def criar(usuario_id: int, conteudo: str, imagem_bytes: bytes | None, imagem_ext
             )
             conexao.commit()
             return {"mensagem": "Post criado", "id_post": cursor.lastrowid}
+        except Exception:
+            if imagem_url:
+                deletar_imagem(imagem_url)
+            raise
         finally:
             cursor.close()
 
@@ -92,12 +91,7 @@ def deletar(id_post: int, usuario_id: int) -> dict:
             conexao.commit()
 
             if post[1]:
-                caminho = os.path.join(UPLOAD_DIR, os.path.basename(post[1]))
-                try:
-                    if os.path.exists(caminho):
-                        os.remove(caminho)
-                except OSError:
-                    pass
+                deletar_imagem(post[1])
 
             return {"mensagem": "Post removido"}
         finally:

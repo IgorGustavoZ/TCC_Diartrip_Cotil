@@ -31,6 +31,13 @@ def listar(usuario_id: int) -> list:
             cursor.close()
 
 
+def _sanitizar(texto: str | None, max_chars: int = 200) -> str:
+    """Remove quebras de linha e limita o tamanho para evitar prompt injection."""
+    if not texto:
+        return "N/A"
+    return str(texto).replace("\n", " ").replace("\r", " ").strip()[:max_chars]
+
+
 def criar(pergunta: str, id_grupo: int, usuario_id: int) -> dict:
     verificar_rate_limit(usuario_id)
 
@@ -52,6 +59,8 @@ def criar(pergunta: str, id_grupo: int, usuario_id: int) -> dict:
                 (id_grupo,),
             )
             grupo = cursor.fetchone()
+            if not grupo:
+                raise HTTPException(status_code=404, detail="Grupo não encontrado")
 
             cursor.execute(
                 """
@@ -68,44 +77,46 @@ def criar(pergunta: str, id_grupo: int, usuario_id: int) -> dict:
                 historico.append({"role": "user", "content": item["pergunta"]})
                 historico.append({"role": "assistant", "content": item["resposta"]})
             historico.append({"role": "user", "content": pergunta})
+        finally:
+            cursor.close()
 
-            try:
-                resposta_ia = _client.chat.completions.create(
-                    model=IA_MODEL,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": (
-                                "Você é um assistente de viagens eficiente.\n\n"
-                                f"Contexto:\n"
-                                f"- Nome: {grupo.get('nome_grupo', 'N/A')}\n"
-                                f"- Destino: {grupo.get('destino_principal', 'N/A')}\n"
-                                f"- Tipo: {grupo.get('tipo_viagem', 'N/A')}\n"
-                                f"- Orçamento: R$ {grupo.get('orcamento', '0')}\n"
-                                f"- Período: {grupo.get('data_inicio')} a {grupo.get('data_fim')}\n\n"
-                                "Regras:\n"
-                                "- Responda em Português Brasileiro.\n"
-                                "- Seja direto. Use listas para roteiros.\n"
-                                "- Se o roteiro for longo, foque nos destaques para evitar cortes."
-                            ),
-                        },
-                        *historico,
-                    ],
-                    max_tokens=2048,
-                )
-                resposta = resposta_ia.choices[0].message.content
-            except Exception:
-                raise HTTPException(status_code=502, detail="Serviço de IA indisponível. Tente novamente.")
+    try:
+        resposta_ia = _client.chat.completions.create(
+            model=IA_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Você é um assistente de viagens eficiente.\n\n"
+                        "Contexto da viagem:\n"
+                        f"- Nome: {_sanitizar(grupo.get('nome_grupo'))}\n"
+                        f"- Destino: {_sanitizar(grupo.get('destino_principal'))}\n"
+                        f"- Tipo: {_sanitizar(grupo.get('tipo_viagem'))}\n"
+                        f"- Orçamento: R$ {grupo.get('orcamento', '0')}\n"
+                        f"- Período: {grupo.get('data_inicio')} a {grupo.get('data_fim')}\n\n"
+                        "Regras:\n"
+                        "- Responda em Português Brasileiro.\n"
+                        "- Seja direto. Use listas para roteiros.\n"
+                        "- Se o roteiro for longo, foque nos destaques para evitar cortes."
+                    ),
+                },
+                *historico,
+            ],
+            max_tokens=2048,
+        )
+        resposta = resposta_ia.choices[0].message.content
+    except Exception:
+        raise HTTPException(status_code=502, detail="Serviço de IA indisponível. Tente novamente.")
 
-            cursor2 = conexao.cursor()
+    with get_db() as conexao:
+        cursor2 = conexao.cursor()
+        try:
             cursor2.execute(
                 "INSERT INTO chat_ia (id_usuario, id_grupo, pergunta, resposta) VALUES (%s, %s, %s, %s)",
                 (usuario_id, id_grupo, pergunta, resposta),
             )
             conexao.commit()
-            cursor2.close()
-
         finally:
-            cursor.close()
+            cursor2.close()
 
     return {"pergunta": pergunta, "resposta": resposta}

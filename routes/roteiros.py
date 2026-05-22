@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from utils.auth import get_usuario_logado
 from services import roteiro_service
 
@@ -8,13 +8,18 @@ router = APIRouter(tags=["Roteiros"])
 
 class RoteiroInput(BaseModel):
     id_grupo: int
-    titulo: str
-    descricao: str
+    titulo: str = Field(..., max_length=200)
+    descricao: str = Field(..., max_length=10000)
 
 
 class RoteiroUpdate(BaseModel):
-    titulo: str
-    descricao: str
+    titulo: str = Field(..., max_length=200)
+    descricao: str = Field(..., max_length=10000)
+
+
+@router.get("/grupos/{id_grupo}/roteiros")
+def listar_roteiros_grupo(id_grupo: int, usuario_id: int = Depends(get_usuario_logado)):
+    return roteiro_service.listar_por_grupo(id_grupo, usuario_id)
 
 
 @router.get("/roteiros")

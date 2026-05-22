@@ -19,6 +19,9 @@
         <a href="../lobby.html">
             <div class="menu-item">✈ Minhas viagens</div>
         </a>
+        <a href="grupos.html">
+            <div class="menu-item">🌍 Grupos</div>
+        </a>
         <a href="feed.html">
             <div class="menu-item">📰 Feed</div>
         </a>
@@ -96,22 +99,21 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script>
-const token    = sessionStorage.getItem("token")
 const meuId    = parseInt(sessionStorage.getItem("id"))
 const params   = new URLSearchParams(window.location.search)
 const alvoId   = parseInt(params.get("id")) || meuId
 
-if (!token) window.location.href = "../login.html"
+if (!sessionStorage.getItem("logado")) window.location.href = "../login.html"
 
 const ehDono = alvoId === meuId
 
 async function carregarPerfil() {
     const url = ehDono
-        ? "http://127.0.0.1:8000/usuarios/me"
-        : `http://127.0.0.1:8000/usuarios/${alvoId}`
+        ? "/usuarios/me"
+        : `/usuarios/${alvoId}`
 
     const resp = await fetch(url, {
-        headers: { "Authorization": `Bearer ${token}` }
+        credentials: "include"
     })
 
     if (!resp.ok) { document.getElementById("perfilNome").textContent = "Perfil não encontrado"; return }
@@ -121,7 +123,7 @@ async function carregarPerfil() {
     // Avatar
     if (u.foto_perfil) {
         const img = document.createElement("img")
-        img.src = `http://127.0.0.1:8000${u.foto_perfil}`
+        img.src = `${u.foto_perfil}`
         img.className = "avatar-img"
         img.id = "avatarImg"
         document.getElementById("avatarIniciais").replaceWith(img)
@@ -178,14 +180,15 @@ async function salvarPerfil(e) {
     btn.disabled = true
 
     // Buscar email atual (necessário para o PUT)
-    const meResp = await fetch("http://127.0.0.1:8000/usuarios/me", {
-        headers: { "Authorization": `Bearer ${token}` }
+    const meResp = await fetch("/usuarios/me", {
+        credentials: "include"
     })
     const me = await meResp.json()
 
-    const resp = await fetch(`http://127.0.0.1:8000/usuarios/${meuId}`, {
+    const resp = await fetch(`/usuarios/${meuId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ nome, email: me.email, bio })
     })
 
@@ -249,14 +252,14 @@ async function confirmarCrop() {
         cancelarCrop()
         const form = new FormData()
         form.append("foto", blob, "perfil.jpg")
-        const resp = await fetch(`http://127.0.0.1:8000/usuarios/${meuId}/foto`, {
+        const resp = await fetch(`/usuarios/${meuId}/foto`, {
             method: "PATCH",
-            headers: { "Authorization": `Bearer ${token}` },
+            credentials: "include",
             body: form
         })
         if (resp.ok) {
             const data = await resp.json()
-            const src = `http://127.0.0.1:8000${data.foto_perfil}?t=${Date.now()}`
+            const src = `${data.foto_perfil}?t=${Date.now()}`
             let img = document.getElementById("avatarImg")
             if (!img) {
                 img = document.createElement("img")
@@ -270,8 +273,8 @@ async function confirmarCrop() {
 }
 
 async function carregarPostsPerfil() {
-    const resp = await fetch(`http://127.0.0.1:8000/posts/usuario/${alvoId}`, {
-        headers: { "Authorization": `Bearer ${token}` }
+    const resp = await fetch(`/posts/usuario/${alvoId}`, {
+        credentials: "include"
     })
     if (!resp.ok) return
 
@@ -288,7 +291,7 @@ async function carregarPostsPerfil() {
             ? `<button class="btn-del-post" onclick="deletarPostPerfil(${p.id_post}, this)">Excluir</button>`
             : ""
         const imgHtml = p.imagem
-            ? `<img class="post-img" src="http://127.0.0.1:8000${p.imagem}" alt="">`
+            ? `<img class="post-img" src="${p.imagem}" alt="">`
             : ""
         const d = new Date(p.data_criacao)
         const data = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
@@ -307,9 +310,9 @@ async function carregarPostsPerfil() {
 async function deletarPostPerfil(id, btn) {
     if (!confirm("Excluir este post?")) return
     btn.disabled = true
-    const resp = await fetch(`http://127.0.0.1:8000/posts/${id}`, {
+    const resp = await fetch(`/posts/${id}`, {
         method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
+        credentials: "include"
     })
     if (resp.ok) document.getElementById(`ppost-${id}`)?.remove()
     else btn.disabled = false

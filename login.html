@@ -67,9 +67,10 @@
             submitBtn.textContent = "Entrando..."
 
             try {
-                const resp = await fetch("http://127.0.0.1:8000/login", {
+                const resp = await fetch("/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
+                    credentials: "include",
                     body: JSON.stringify({
                         email: emailInput.value,
                         senha: passwordInput.value
@@ -78,8 +79,8 @@
 
                 if (resp.ok) {
                     const respJson = await resp.json()
-                    sessionStorage.setItem("token", respJson.token)
                     sessionStorage.setItem("id", respJson.usuario_id)
+                    sessionStorage.setItem("logado", "1")
                     window.location.href = "lobby.html"
                 } else {
                     submitError.style.display = "block"
