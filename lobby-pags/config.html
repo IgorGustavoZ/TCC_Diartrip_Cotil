@@ -56,26 +56,26 @@
                     <h2 data-i18n="config.alterTitle">Change account information</h2>
 
                     <div class="field">
-                        <label for="nome">Novo nome</label>
-                        <input id="nome" type="text" placeholder="Seu nome">
+                        <label for="nome" data-i18n="config.newName">Novo nome</label>
+                        <input id="nome" type="text" data-i18n-placeholder="config.namePlaceholder" placeholder="Seu nome">
                     </div>
 
                     <div class="field">
-                        <label for="email">Novo email</label>
-                        <input id="email" type="email" placeholder="seu@email.com">
+                        <label for="email" data-i18n="config.newEmail">Novo email</label>
+                        <input id="email" type="email" data-i18n-placeholder="config.emailPlaceholder" placeholder="seu@email.com">
                     </div>
 
                     <div class="field" style="position: relative;">
-                        <label for="senha">Confirme sua senha</label>                      
-                        <input id="senha" type="password" placeholder="Sua senha" required>
-                        <span class="togglePassword" style="font-size:14px; color:#94a3b8;cursor: pointer; top: 45px; right: 10px; text-align: right; position: absolute;display: inline-block;">mostrar</span>
+                        <label for="senha" data-i18n="config.confirmPass">Confirme sua senha</label>
+                        <input id="senha" type="password" data-i18n-placeholder="config.passPlaceholder" placeholder="Sua senha" required>
+                        <span class="togglePassword" data-i18n="config.show" style="font-size:14px; color:#94a3b8;cursor: pointer; top: 45px; right: 10px; text-align: right; position: absolute;display: inline-block;">mostrar</span>
                     </div>
                     <div class="error" style="display: none;"></div>
                     <div class="sucess" style="display: none;"></div>
                 
                     <div class="actions" style="margin: 20px; display: flex; justify-content: space-between;">
-                        <button class="save" type="submit">Salvar alterações</button>
-                        <button class="delete">Excluir conta</button>
+                        <button class="save" type="submit" data-i18n="config.saveChanges">Salvar alterações</button>
+                        <button class="delete" data-i18n="config.deleteAccount">Excluir conta</button>
                     </div>
             </section>
         </div>

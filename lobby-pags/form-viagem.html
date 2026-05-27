@@ -339,7 +339,7 @@
                 return
             }
 
-            divSucess.innerHTML = "Viagem criada com sucesso!"
+            divSucess.innerHTML = t('formViagem.success')
 
             fetch(`https://nominatim.openstreetmap.org/search?q=restaurants in ${inputCidade.value}&format=json&addressdetails=1`)
             .then(resp => resp.json())
@@ -356,7 +356,7 @@
             console.log(e)
 
             divError.innerHTML =
-                "Erro ao conectar com servidor"
+                t('formViagem.serverError')
         }
 
     })
