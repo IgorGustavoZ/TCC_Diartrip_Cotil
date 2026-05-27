@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../static/style.css">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
+<script src="../static/i18n.js"></script>
 </head>
 <body>
 <div class="app">
@@ -16,25 +17,25 @@
             <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
         </a>
         <a href="../lobby.html">
-            <div class="menu-item">✈ Minhas viagens</div>
+            <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
         </a>
         <a href="grupos.html">
-            <div class="menu-item">🌍 Grupos</div>
+            <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
         </a>
         <a href="feed.html">
-            <div class="menu-item">📰 Feed</div>
+            <div class="menu-item" data-i18n="nav.feed">📰 Feed</div>
         </a>
         <a href="perfil.html">
-            <div class="menu-item">👤 Perfil</div>
+            <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
         </a>
         <a href="form-viagem.html">
-            <button class="new-trip">+ Nova viagem</button>
+            <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
         </a>
     </div>
 
     <div class="main">
         <div class="header">
-            <h2>Feed</h2>
+            <h2 data-i18n="feed.header">Feed</h2>
             <a href="perfil.html" id="userChip" style="display:flex;align-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);padding:4px;border-radius:50%;cursor:pointer;transition:background 0.2s;text-decoration:none;color:inherit;">
                 <div id="avatarMini" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">?</div>
             </a>
@@ -45,17 +46,17 @@
             <div class="create-card">
                 <div class="av" id="avCreate">?</div>
                 <div class="create-right">
-                    <textarea id="postTexto" placeholder="Compartilhe algo sobre sua viagem..."></textarea>
+                    <textarea id="postTexto" data-i18n-placeholder="feed.placeholder" placeholder="Share something about your trip..."></textarea>
                     <div class="img-preview-wrap" id="imgPreviewWrap">
                         <img id="imgPreview" src="" alt="">
                         <button class="btn-rm-img" onclick="removerImagem()">✕</button>
                     </div>
                     <div class="create-actions">
                         <label class="btn-foto-post">
-                            📷 Foto
+                            <span data-i18n="feed.photo">📷 Foto</span>
                             <input type="file" id="postFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
                         </label>
-                        <button class="btn-publicar" id="btnPublicar" onclick="publicar()">Publicar</button>
+                        <button class="btn-publicar" id="btnPublicar" onclick="publicar()" data-i18n="feed.publish">Publicar</button>
                     </div>
                 </div>
             </div>
@@ -70,6 +71,11 @@
 <script>
 const meuId = parseInt(sessionStorage.getItem("id"))
 if (!sessionStorage.getItem("logado")) window.location.href = "../login.html"
+
+document.addEventListener('languageChanged', () => {
+    applyTranslations()
+    carregarFeed()
+})
 
 let arquivoSelecionado = null
 
@@ -156,7 +162,7 @@ async function carregarFeed() {
     const lista = document.getElementById("feedLista")
 
     if (posts.length === 0) {
-        lista.innerHTML = '<p class="feed-vazio">Nenhum post ainda. Seja o primeiro! 🌍</p>'
+        lista.innerHTML = `<p class="feed-vazio">${t('feed.empty')}</p>`
         return
     }
 
@@ -167,7 +173,7 @@ async function carregarFeed() {
             : `<div class="av">${iniciais}</div>`
 
         const delBtn = p.id_usuario === meuId
-            ? `<button class="btn-del-post" onclick="deletarPost(${p.id_post})">Excluir</button>`
+            ? `<button class="btn-del-post" onclick="deletarPost(${p.id_post})">${t('common.delete')}</button>`
             : ""
 
         const imgHtml = p.imagem
@@ -191,7 +197,7 @@ async function carregarFeed() {
 }
 
 async function deletarPost(id) {
-    if (!confirm("Excluir este post?")) return
+    if (!confirm(t('feed.confirmDelete'))) return
     const resp = await fetch(`/posts/${id}`, {
         method: "DELETE",
         credentials: "include"
@@ -204,11 +210,11 @@ function formatarData(iso) {
     const d = new Date(iso)
     const agora = new Date()
     const diff = Math.floor((agora - d) / 1000)
-    if (diff < 60) return "agora mesmo"
-    if (diff < 3600) return `há ${Math.floor(diff / 60)} min`
-    if (diff < 86400) return `há ${Math.floor(diff / 3600)} h`
-    if (diff < 604800) return `há ${Math.floor(diff / 86400)} dias`
-    return d.toLocaleDateString("pt-BR")
+    if (diff < 60) return t('feed.date.now')
+    if (diff < 3600) return `há ${Math.floor(diff / 60)}${t('feed.date.min')}`
+    if (diff < 86400) return `há ${Math.floor(diff / 3600)}${t('feed.date.hour')}`
+    if (diff < 604800) return `há ${Math.floor(diff / 86400)}${t('feed.date.days')}`
+    return d.toLocaleDateString(getLang())
 }
 
 function escapeHtml(txt) {
@@ -220,3 +226,4 @@ carregarFeed()
 </script>
 </body>
 </html>
+tml>

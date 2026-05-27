@@ -34,7 +34,7 @@ def login(dados: LoginInput, response: Response):
                 key="access_token",
                 value=token,
                 httponly=True,
-                samesite="lax",
+                samesite="strict",
                 max_age=7200,
                 secure=_SECURE_COOKIES,
             )

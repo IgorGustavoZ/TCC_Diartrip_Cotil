@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../static/style.css">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
+<script src="../static/i18n.js"></script>
 <style>
 .grupos-wrap { max-width: 720px; margin: 0 auto; padding: 0 16px 40px; }
 .entrar-card {
@@ -94,26 +95,26 @@
         <a href="../lobby.html">
             <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
         </a>
-        <a href="../lobby.html"><div class="menu-item">✈ Minhas viagens</div></a>
-        <a href="grupos.html"><div class="menu-item active">🌍 Grupos</div></a>
-        <a href="feed.html"><div class="menu-item">📰 Feed</div></a>
-        <a href="perfil.html"><div class="menu-item">👤 Perfil</div></a>
+        <a href="../lobby.html"><div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div></a>
+        <a href="grupos.html"><div class="menu-item active" data-i18n="nav.groups">🌍 Groups</div></a>
+        <a href="feed.html"><div class="menu-item" data-i18n="nav.feed">📰 Feed</div></a>
+        <a href="perfil.html"><div class="menu-item" data-i18n="nav.profile">👤 Profile</div></a>
         <a href="form-viagem.html">
-            <button class="new-trip">+ Nova viagem</button>
+            <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
         </a>
     </div>
 
     <div class="main">
-        <div class="header"><h2>Grupos</h2></div>
+        <div class="header"><h2 data-i18n="grupos.header">Groups</h2></div>
 
         <div class="grupos-wrap">
 
             <!-- Entrar por código -->
             <div class="entrar-card">
-                <h3>🔑 Entrar em um grupo</h3>
+                <h3 data-i18n="grupos.joinTitle">🔑 Join a group</h3>
                 <div class="entrar-row">
-                    <input id="codigoInput" maxlength="6" placeholder="Código de convite (ex: AB12CD)">
-                    <button class="btn-entrar" onclick="entrarGrupo()">Entrar</button>
+                    <input id="codigoInput" maxlength="6" data-i18n-placeholder="grupos.joinPlaceholder" placeholder="Invite code (e.g. AB12CD)">
+                    <button class="btn-entrar" onclick="entrarGrupo()" data-i18n="grupos.joinBtn">Join</button>
                 </div>
                 <div class="msg-entrar ok" id="msgOk"></div>
                 <div class="msg-entrar err" id="msgErr"></div>
@@ -121,8 +122,8 @@
 
             <!-- Lista de grupos -->
             <div class="grupos-lista">
-                <h3>Seus grupos</h3>
-                <div id="gruposLista"><p class="grupos-vazio">Carregando...</p></div>
+                <h3 data-i18n="grupos.yourGroups">Your groups</h3>
+                <div id="gruposLista"><p class="grupos-vazio" data-i18n="common.loading">Carregando...</p></div>
             </div>
 
         </div>
@@ -132,6 +133,11 @@
 <script>
 if (!sessionStorage.getItem("logado")) window.location.href = "../login.html"
 
+document.addEventListener('languageChanged', () => {
+    applyTranslations()
+    carregarGrupos()
+})
+
 async function carregarGrupos() {
     const resp = await fetch("/grupos", { credentials: "include" })
     if (!resp.ok) return
@@ -139,7 +145,7 @@ async function carregarGrupos() {
     const lista = document.getElementById("gruposLista")
 
     if (grupos.length === 0) {
-        lista.innerHTML = '<p class="grupos-vazio">Você não pertence a nenhum grupo ainda.<br>Crie uma viagem ou entre pelo código acima.</p>'
+        lista.innerHTML = `<p class="grupos-vazio" data-i18n="grupos.empty">${t('grupos.empty')}</p>`
         return
     }
 
@@ -151,8 +157,8 @@ async function carregarGrupos() {
                 <p class="grupo-destino">📍 ${escapeHtml(g.destino_principal || "")}${g.data_inicio ? " · " + g.data_inicio : ""}</p>
             </div>
             <div class="grupo-acoes">
-                <button class="btn-viagem" onclick="irViagem(${g.id_grupo})">Ver viagem</button>
-                <button class="btn-chat" onclick="irChat(${g.id_grupo})">💬 Chat</button>
+                <button class="btn-viagem" onclick="irViagem(${g.id_grupo})">${t('grupos.viewTrip')}</button>
+                <button class="btn-chat" onclick="irChat(${g.id_grupo})">${t('grupos.chat')}</button>
             </div>
         </div>
     `).join("")
@@ -169,7 +175,7 @@ async function entrarGrupo() {
     msgErr.style.display = "none"
 
     if (codigo.length < 4) {
-        msgErr.textContent = "Informe o código de convite."
+        msgErr.textContent = t('grupos.enterCodeError')
         msgErr.style.display = "block"
         return
     }
@@ -188,7 +194,7 @@ async function entrarGrupo() {
         document.getElementById("codigoInput").value = ""
         carregarGrupos()
     } else {
-        msgErr.textContent = data.detail || "Erro ao entrar no grupo."
+        msgErr.textContent = data.detail || t('grupos.joinError')
         msgErr.style.display = "block"
     }
 }

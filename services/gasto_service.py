@@ -1,7 +1,11 @@
+import logging
 from decimal import Decimal, ROUND_HALF_UP
+
 from fastapi import HTTPException
 from database import get_db
 from utils.dependencies import checar_membro_grupo
+
+logger = logging.getLogger("diartrip.gasto")
 
 
 def listar(id_grupo: int, usuario_id: int) -> list:
@@ -82,6 +86,11 @@ def criar(id_grupo: int, usuario_id: int, dados) -> dict:
                 _inserir_divisao(cursor, id_gasto, participantes, dados.valor)
 
             conexao.commit()
+            logger.info(
+                "Gasto registrado",
+                extra={"gasto_id": id_gasto, "grupo_id": id_grupo, "user_id": usuario_id,
+                       "valor": dados.valor, "participantes": len(participantes)},
+            )
             return {"mensagem": "Gasto registrado", "id": id_gasto}
         finally:
             cursor.close()
@@ -208,6 +217,10 @@ def atualizar(id_gasto: int, dados, usuario_id: int) -> dict:
                     _inserir_divisao(cursor, id_gasto, participantes_existentes, dados.valor)
 
             conexao.commit()
+            logger.info(
+                "Gasto atualizado",
+                extra={"gasto_id": id_gasto, "user_id": usuario_id, "valor": dados.valor},
+            )
             return {"mensagem": "Gasto atualizado"}
         finally:
             cursor.close()
@@ -231,6 +244,10 @@ def deletar(id_gasto: int, usuario_id: int) -> dict:
             cursor.execute("DELETE FROM divisao_gastos WHERE id_gasto=%s", (id_gasto,))
             cursor.execute("DELETE FROM gastos WHERE id_gasto=%s", (id_gasto,))
             conexao.commit()
+            logger.info(
+                "Gasto removido",
+                extra={"gasto_id": id_gasto, "user_id": usuario_id},
+            )
             return {"mensagem": "Gasto removido"}
         finally:
             cursor.close()

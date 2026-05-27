@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,36 +8,37 @@
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <title>Diartrip - Login</title>
     <link rel="shortcut icon" href="imagens/favicon-diartrip.png" type="image/x-icon">
+    <script src="static/i18n.js"></script>
 </head>
 <body>
     <header>
         <a href="index.html"><div class="logo"><img src="imagens/logo-diartrip.png" alt=""></div></a>
     </header>
     <section style="padding:100px 20px; max-width:600px; max-height: 550px; margin:auto; position: relative; bottom: 70px;">
-        <h2 class="section-title titulo" style="margin-bottom:20px;">Login</h2>
+        <h2 class="section-title titulo" style="margin-bottom:20px;" data-i18n="login.title">Login</h2>
         <form id="signupForm" style="display:flex; flex-direction:column; gap:22px; background:rgba(255,255,255,0.05); padding:40px; border-radius:16px; border:1px solid rgba(255,255,255,0.08); backdrop-filter:blur(6px); position:relative;">
 
             <div class="field">
-                <label>Email</label>
-                <input id="email" type="email" placeholder="Digite seu email" required>
+                <label data-i18n="login.email.label">Email</label>
+                <input id="email" type="email" data-i18n-placeholder="login.email.placeholder" placeholder="Enter your email" required>
             </div>
 
             <div class="field" style="position:relative">
-                <label>Senha</label>
-                <input id="password" type="password" placeholder="Digite sua senha" required>
-                <span class="togglePassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:#94a3b8;">mostrar</span>  
+                <label data-i18n="login.pass.label">Password</label>
+                <input id="password" type="password" data-i18n-placeholder="login.pass.placeholder" placeholder="Enter your password" required>
+                <span class="togglePassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:#94a3b8;" data-i18n="login.pass.show">show</span>
             </div>
 
-            <span class="error" id="submitError" style="display: none;">Não foi possível realizar o login, tente novamente.</span>
-            
-            <button class="cta" id="submit" type="submit">Entrar conta</button>
+            <span class="error" id="submitError" style="display: none;" data-i18n="login.error">Could not log in, please try again.</span>
 
-            <div class="login"><a href="form.html">Não tem uma conta? Clique aqui.</a></div>
+            <button class="cta" id="submit" type="submit" data-i18n="login.submit">Sign In</button>
+
+            <div class="login"><a href="form.html" data-i18n="login.noAccount">Don't have an account? Click here.</a></div>
 
         </form>
     </section>
-    <footer>
-    © 2026 Diartrip — Planejamento Inteligente de Viagens
+    <footer data-i18n="footer">
+    © 2026 Diartrip — Intelligent Travel Planning
     </footer>
 
     <script>
@@ -50,10 +51,10 @@
         togglePassword.addEventListener("click", () => {
             if (passwordInput.type === "password") {
                 passwordInput.type = "text"
-                togglePassword.textContent = "ocultar"
+                togglePassword.textContent = t("login.pass.hide")
             } else {
                 passwordInput.type = "password"
-                togglePassword.textContent = "mostrar"
+                togglePassword.textContent = t("login.pass.show")
             }
         })
 
@@ -64,7 +65,7 @@
             if (!emailInput.value || !passwordInput.value) return
 
             submitBtn.disabled = true
-            submitBtn.textContent = "Entrando..."
+            submitBtn.textContent = t("login.signingIn")
 
             try {
                 const resp = await fetch("/login", {
@@ -86,15 +87,15 @@
                     submitError.style.display = "block"
                 }
             } catch (err) {
-                submitError.textContent = "Não foi possível conectar ao servidor."
+                submitError.textContent = t("login.error")
                 submitError.style.display = "block"
             } finally {
                 submitBtn.disabled = false
-                submitBtn.textContent = "Entrar conta"
+                submitBtn.textContent = t("login.submit")
             }
         })
     </script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-   
+
 </body>
 </html>

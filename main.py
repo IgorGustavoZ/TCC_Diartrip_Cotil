@@ -1,21 +1,17 @@
 import os
-import logging
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from database import get_db
+from utils.logger import configurar_logging, get_logger
 
 from routes import usuarios, login, grupos_viagem, roteiros, grupos_membros, gastos, chat_ia, fotos, dashboard, posts, chat_grupo
 
 load_dotenv()
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
-)
-logger = logging.getLogger("diartrip")
+configurar_logging()
+logger = get_logger("main")
 
 app = FastAPI(
     title="Diartrip API",
@@ -37,6 +33,14 @@ _SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "SAMEORIGIN",
     "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Content-Security-Policy": (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
+        "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self' https://api.geoapify.com https://nominatim.openstreetmap.org;"
+    ),
 }
 
 
@@ -73,13 +77,9 @@ app.include_router(dashboard.router)
 app.include_router(posts.router)
 app.include_router(chat_grupo.router)
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/imagens", StaticFiles(directory="imagens"), name="imagens")
 app.mount("/lobby-pags", StaticFiles(directory="lobby-pags"), name="lobby-pags")
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 
 @app.get("/", tags=["Frontend"])
@@ -98,12 +98,31 @@ def serve_page(page: str):
 
 @app.get("/health", tags=["Health"])
 def health():
+    status: dict = {}
+
     try:
         with get_db() as conexao:
             cursor = conexao.cursor()
             cursor.execute("SELECT 1")
             cursor.fetchone()
             cursor.close()
-        return {"status": "ok", "banco": "ok"}
+        status["banco"] = "ok"
     except Exception:
-        raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        status["banco"] = "erro"
+
+    status["openrouter"] = "ok" if os.getenv("OPENROUTER_API_KEY") else "sem_chave"
+    status["cloudinary"] = (
+        "ok"
+        if all(
+            os.getenv(k)
+            for k in ("CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET")
+        )
+        else "sem_chave"
+    )
+
+    degradado = [k for k, v in status.items() if v != "ok"]
+    if "banco" in degradado:
+        raise HTTPException(status_code=503, detail={"status": "erro", **status})
+    if degradado:
+        return {"status": "degradado", **status}
+    return {"status": "ok", **status}

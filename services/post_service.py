@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from database import get_db
 from utils.cloudinary_upload import upload_imagem, deletar_imagem
-from utils.imagem_utils import validar_imagem
+from utils.imagem_utils import validar_imagem, strip_exif
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 MAX_IMAGE_SIZE = 10 * 1024 * 1024
@@ -56,7 +56,7 @@ def criar(usuario_id: int, conteudo: str, imagem_bytes: bytes | None, imagem_ext
         # Validação robusta usando magic bytes
         ext = imagem_ext.lstrip(".")
         validar_imagem(imagem_bytes, ext, MAX_IMAGE_SIZE)
-        
+        imagem_bytes = strip_exif(imagem_bytes, ext)
         imagem_url = upload_imagem(imagem_bytes, "diartrip/posts")
 
     with get_db() as conexao:

@@ -1,4 +1,4 @@
-import mysql.connector
+from mysql.connector import Error
 from fastapi import HTTPException
 from database import get_db
 from utils.security import gerar_hash
@@ -53,8 +53,9 @@ def criar(nome: str, email: str, senha: str) -> dict:
             )
             conexao.commit()
             return {"mensagem": "Usuário criado com sucesso", "id": cursor.lastrowid, "email": email}
-        except mysql.connector.Error as err:
-            if err.errno == 1062:
+        except (Error, Exception) as err:
+            # Verifica se é erro de duplicidade (MySQL error 1062)
+            if hasattr(err, 'errno') and err.errno == 1062:
                 raise HTTPException(status_code=409, detail="Email já cadastrado")
             raise
         finally:
@@ -71,8 +72,8 @@ def atualizar(usuario_id: int, nome: str, email: str, bio: str | None = None) ->
             )
             conexao.commit()
             return {"mensagem": "Usuário atualizado"}
-        except mysql.connector.Error as err:
-            if err.errno == 1062:
+        except (Error, Exception) as err:
+            if hasattr(err, 'errno') and err.errno == 1062:
                 raise HTTPException(
                     status_code=409, detail="Este e-mail já está em uso por outro usuário"
                 )

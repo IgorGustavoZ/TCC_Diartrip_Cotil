@@ -1,8 +1,13 @@
 import io
+import logging
 import os
 import threading
+
 import cloudinary
 import cloudinary.uploader
+from fastapi import HTTPException
+
+logger = logging.getLogger("diartrip.cloudinary")
 
 _configurado = False
 _config_lock = threading.Lock()
@@ -23,19 +28,24 @@ def _configurar() -> None:
 
 
 def upload_imagem(conteudo: bytes, pasta: str, public_id: str | None = None) -> str:
-    """Faz upload de bytes para o Cloudinary e retorna a URL HTTPS."""
     _configurar()
     kwargs: dict = {"folder": pasta, "resource_type": "image"}
     if public_id:
         kwargs["public_id"] = public_id
         kwargs["overwrite"] = True
         kwargs["invalidate"] = True
-    resultado = cloudinary.uploader.upload(io.BytesIO(conteudo), **kwargs)
-    return resultado["secure_url"]
+    try:
+        resultado = cloudinary.uploader.upload(io.BytesIO(conteudo), **kwargs)
+        return resultado["secure_url"]
+    except Exception as exc:
+        logger.error("Cloudinary upload falhou — pasta=%s: %s", pasta, exc)
+        raise HTTPException(
+            status_code=502,
+            detail="Serviço de armazenamento de imagens indisponível. Tente novamente.",
+        )
 
 
 def deletar_imagem(url: str) -> None:
-    """Extrai o public_id da URL do Cloudinary e deleta a imagem. Silencia erros."""
     if not url or "cloudinary.com" not in url:
         return
     _configurar()
@@ -49,5 +59,5 @@ def deletar_imagem(url: str) -> None:
             caminho = caminho.split("/", 1)[1]
         public_id = caminho.rsplit(".", 1)[0]
         cloudinary.uploader.destroy(public_id)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Falha ao deletar imagem no Cloudinary (url=%s): %s", url, exc)

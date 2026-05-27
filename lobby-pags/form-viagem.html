@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=arrow_back" />
 <link rel="stylesheet" href="../static/style.css">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
+<script src="../static/i18n.js"></script>
 </head>
 <body>
     <div class="app">
@@ -19,74 +20,79 @@
     </a>
 
     <a href="../lobby.html">
-        <div class="menu-item">✈ Minhas viagens</div>
+        <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
     </a>
     <a href="grupos.html">
-        <div class="menu-item">🌍 Grupos</div>
+        <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
     </a>
     <a href="feed.html">
-            <div class="menu-item">📰 Feed</div>
+            <div class="menu-item" data-i18n="nav.feed">📰 Feed</div>
         </a>
 
     <a href="perfil.html">
-        <div class="menu-item">👤 Perfil</div>
+        <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
     </a>
 
     <a href="#">
-        <button class="new-trip">+ Nova viagem</button>
+        <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
     </a>
 
     </div>
         
     <div class="main">
 
-        <h1>+ Nova viagem</h1>
+        <h1 data-i18n="formViagem.title">+ New Trip</h1>
 
         <div class="container" style="display: flex;flex-direction: column;gap: 20px;">
 
-            <h2>Planejar Viagem ✈️</h2>
+            <h2 data-i18n="formViagem.plan">Plan Trip ✈️</h2>
 
             <div class="field">
-                <label for="cidade">Cidade</label>
+                <label for="nomeViagem" data-i18n="formViagem.name">Trip name</label>
+                <input id="nomeViagem" data-i18n-placeholder="formViagem.name.placeholder" placeholder="e.g. Europe Summer 2025" required>
+            </div>
 
-                <input id="cidade" placeholder="Ex: Paris" required>
+            <div class="field">
+                <label for="cidade" data-i18n="formViagem.city">City</label>
 
-                <div class="sugestoes" id="sugest-cidade">
+                <input id="cidade" data-i18n-placeholder="formViagem.cityPlaceholder" placeholder="Ex: Paris" required>
+
+                <div class="sugestoes" id="sug-cidade">
                     
                 </div>
             </div>
 
             <div class="field" style="flex:1">
-                <label for="inicio">Data de início</label>
+                <label for="inicio" data-i18n="formViagem.start">Start date</label>
                 <input id="inicio" type="date" required>
             </div>
 
             <div class="field" style="flex:1">
-                <label for="fim">Data de fim</label>
+                <label for="fim" data-i18n="formViagem.end">End date</label>
                 <input id="fim" type="date" required>
             </div>
-            
+
 
             <div class="field">
-                <label for="orcamento">Orçamento (R$)</label>
+                <label for="orcamento" data-i18n="formViagem.budget">Budget (R$)</label>
                 <input id="orcamento" type="number" min="0" step="0.01" placeholder="Ex: 3000.00">
             </div>
 
             <div class="field">
-                <label for="tipo">Tipo de viagem</label>
+                <label for="tipo" data-i18n="formViagem.type">Trip type</label>
 
                 <select id="tipo">
-                    <option value="gastronomico">Gastronômico</option>
-                    <option value="aventura">Aventura</option>
-                    <option value="cultural">Cultural</option>
-                    <option value="relax">Relaxamento</option>
+                    <option value="gastronomico" data-i18n="formViagem.type.gastronomic">Gastronômico</option>
+                    <option value="aventura" data-i18n="formViagem.type.adventure">Aventura</option>
+                    <option value="cultural" data-i18n="formViagem.type.cultural">Cultural</option>
+                    <option value="relax" data-i18n="formViagem.type.relax">Relaxamento</option>
                 </select>
             </div>
 
             <div class="field">
-                <label for="preferencias">Preferências</label>
+                <label for="preferencias" data-i18n="formViagem.prefs.label">Preferências</label>
 
-                <input id="preferencias" placeholder="Ex: museus, restaurantes...">
+                <input id="preferencias" data-i18n-placeholder="formViagem.prefs.placeholder" placeholder="Ex: museus, restaurantes...">
             </div>
 
             <div class="error" style="margin-bottom: 20px;">
@@ -97,9 +103,9 @@
                 
             </div>
 
-            <button type="submit">Gerar Roteiro</button>
+            <button type="submit" data-i18n="formViagem.submit">Gerar Roteiro</button>
 
-            <div id="result" class="result" style="display: none;">
+            <div id="result" class="result" style="display: none;" data-i18n="formViagem.generating">
                 Roteiro sendo gerado...
             </div>
 
@@ -126,6 +132,7 @@
 
     // const inputPais = document.querySelector("#pais")
 
+    const inputNomeViagem = document.querySelector("#nomeViagem")
     const inputCidade = document.querySelector("#cidade")
     const inputDataInicio = document.querySelector("#inicio")
     const inputDataFim = document.querySelector("#fim")
@@ -257,17 +264,18 @@
         // data[0] - ano
 
         if(
+            inputNomeViagem.value.trim() == "" ||
             inputCidade.value.trim() == "" ||
             inputDataInicio.value == "" ||
             inputDataFim.value == ""
         ){
-            divError.innerHTML = "Preencha todos os campos."
+            divError.innerHTML = t('formViagem.fillAll')
             return
         }
 
         const orcamentoValor = parseFloat(orcamento.value)
         if(isNaN(orcamentoValor) || orcamentoValor < 0){
-            divError.innerHTML = "Informe um orçamento válido (ex: 3000.00)."
+            divError.innerHTML = t('formViagem.invalidBudget')
             return
         }
 
@@ -280,7 +288,7 @@
             (dataFim[2] < diaAtual && dataFim[1] == mesAtual)
         ){
 
-            divError.innerHTML = "Informações inválidas"
+            divError.innerHTML = t('formViagem.invalidInfo')
 
             console.log("Data inválida.")
 
@@ -305,7 +313,7 @@
 
                 body: JSON.stringify({
 
-                    nome_grupo: `Viagem para ${viagem.cidade || inputCidade.value}`,
+                    nome_grupo: inputNomeViagem.value.trim(),
 
                     destino_principal: inputCidade.value,
 
@@ -326,7 +334,7 @@
             if(!resp.ok){
 
                 divError.innerHTML =
-                    dados.detail || "Erro ao criar viagem"
+                    dados.detail || t('formViagem.error')
 
                 return
             }

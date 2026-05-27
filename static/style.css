@@ -313,6 +313,9 @@ footer{
     color:#cbd5f5;
     cursor:pointer;
     transition:0.2s;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
 }
 
 .menu-item:hover{
@@ -343,6 +346,16 @@ footer{
     justify-content:space-between;
     align-items:center;
     margin-bottom:25px;
+    gap:12px;
+}
+
+.header h2, .header h1{
+    flex:1;
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    margin:0;
 }
 
 .user{
@@ -1830,4 +1843,110 @@ option{
     margin: 0 0 16px;
     padding-top: 8px;
     border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+/* Public header: keep nav + lang-selector stable on the right */
+header nav {
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+}
+
+/* ---- Language selector ---- */
+.lang-selector {
+    position: relative;
+    z-index: 200;
+    flex-shrink: 0;
+}
+
+.lang-selector--fixed {
+    position: fixed;
+    top: 18px;
+    right: 24px;
+    z-index: 9999;
+}
+
+.lang-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 20px;
+    padding: 5px 12px 5px 8px;
+    color: #cbd5f5;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+    white-space: nowrap;
+    /* fixed size prevents any shift when language switches */
+    min-width: 76px;
+    box-sizing: border-box;
+}
+
+.lang-btn .fi,
+.lang-option .fi {
+    width: 18px;
+    height: 14px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    display: inline-block;
+    background-size: cover;
+}
+
+.lang-btn:hover {
+    background: rgba(255,255,255,0.13);
+}
+
+.lang-arrow {
+    font-size: 10px;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+.lang-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: #1a2540;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+    min-width: 110px;
+}
+
+.lang-menu--open {
+    display: block;
+}
+
+.lang-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 16px;
+    background: none;
+    border: none;
+    color: #cbd5f5;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.lang-option:hover {
+    background: rgba(255,255,255,0.07);
+}
+
+.lang-option--active {
+    color: #60a5fa;
+    font-weight: 700;
 }

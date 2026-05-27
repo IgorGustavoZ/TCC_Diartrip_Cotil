@@ -1,8 +1,12 @@
+import logging
+
 from fastapi import HTTPException
 from database import get_db
 from utils.dependencies import checar_membro_grupo
 from utils.cloudinary_upload import upload_imagem, deletar_imagem
-from utils.imagem_utils import validar_imagem
+from utils.imagem_utils import validar_imagem, strip_exif
+
+logger = logging.getLogger("diartrip.foto")
 
 
 def listar(id_grupo: int, usuario_id: int) -> list:
@@ -35,6 +39,7 @@ def salvar(
 ) -> dict:
     ext = arquivo_nome.split(".")[-1].lower() if arquivo_nome else ""
     validar_imagem(arquivo_bytes, ext)
+    arquivo_bytes = strip_exif(arquivo_bytes, ext)
 
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
@@ -51,7 +56,13 @@ def salvar(
                 )
                 conexao.commit()
             except Exception:
-                deletar_imagem(url)
+                try:
+                    deletar_imagem(url)
+                except Exception as cleanup_exc:
+                    logger.error(
+                        "Imagem órfã no Cloudinary após falha de DB — url=%s: %s",
+                        url, cleanup_exc,
+                    )
                 raise
 
             return {"mensagem": "Upload realizado", "url": url, "id_grupo": id_grupo}

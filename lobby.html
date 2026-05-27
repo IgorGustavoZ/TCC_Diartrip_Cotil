@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +7,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="static/style.css">
 <link rel="shortcut icon" href="imagens/favicon-diartrip.png" type="image/x-icon">
+<script src="static/i18n.js"></script>
 </head>
 <body>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <div class="app">
 
@@ -18,19 +20,19 @@
         <div class="logo"><img src="imagens/logo-diartrip.png" alt=""></div>
     </a>
 
-    <div class="menu-item">✈ Minhas viagens</div>
+    <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
     <a href="lobby-pags/grupos.html">
-        <div class="menu-item">🌍 Grupos</div>
+        <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
     </a>
     <a href="lobby-pags/feed.html">
-        <div class="menu-item">📰 Feed</div>
+        <div class="menu-item" data-i18n="nav.feed">📰 Feed</div>
     </a>
     <a href="lobby-pags/perfil.html">
-        <div class="menu-item">👤 Perfil</div>
+        <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
     </a>
 
     <a href="lobby-pags/form-viagem.html">
-        <button class="new-trip">+ Nova viagem</button>
+        <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
     </a>
 
     </div>
@@ -38,7 +40,7 @@
     <div class="main">
 
     <div class="header">
-    <h2>Minhas viagens</h2>
+    <h2 data-i18n="lobby.trips.heading">My Trips</h2>
     <a href="lobby-pags/perfil.html" id="userChip" style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); padding:6px 14px 6px 6px; border-radius:50px; cursor:pointer; transition:background 0.2s; text-decoration:none; color:inherit;">
         <div id="avatarMini" style="width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#06b6d4); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0;">?</div>
         <span id="userNome" style="font-size:14px; color:#cbd5f5; white-space:nowrap;"></span>
@@ -48,7 +50,7 @@
     <div class="content">
 
     <div class="trips">
-    <h3>Suas viagens</h3>
+    <h3 data-i18n="lobby.trips.section">Your trips</h3>
 
     <div class="trip-grid">
     </div>
@@ -57,15 +59,15 @@
 
     <div class="chat">
 
-    <div class="chat-header">Assistente de Viagem IA</div>
+    <div class="chat-header" data-i18n="lobby.chat.header">Travel AI Assistant</div>
 
     <div id="chatMessages" class="chat-messages">
-    <div class="message"><strong>IA:</strong> Olá! Selecione uma viagem e pode me perguntar o que quiser sobre ela.</div>
+    <div class="message"><strong>AI:</strong> <span data-i18n="lobby.chat.initial">Hello! Select a trip and ask me anything about it.</span></div>
     </div>
 
     <div class="chat-input">
-    <input id="chatInput" placeholder="Pergunte algo sobre sua viagem...">
-    <button onclick="sendMessage()">Enviar</button>
+    <input id="chatInput" data-i18n-placeholder="lobby.chat.placeholder" placeholder="Ask something about your trip...">
+    <button onclick="sendMessage()" data-i18n="lobby.chat.send">Send</button>
     </div>
 
     </div>
@@ -99,7 +101,7 @@
                 const iniciais = dados.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
                 avatarEl.textContent = iniciais
             }
-            document.getElementById("userNome").textContent = `Olá, ${dados.nome.split(" ")[0]}!`
+            document.getElementById("userNome").textContent = `${t('lobby.greeting')}${dados.nome.split(" ")[0]}!`
         }
     }
 
@@ -117,7 +119,7 @@
         grid.innerHTML = ""
 
         if (viagens.length === 0) {
-            grid.innerHTML = "<p>Nenhuma viagem encontrada.</p>"
+            grid.innerHTML = `<p>${t('lobby.trips.empty') || 'No trips found.'}</p>`
             return
         }
 
@@ -155,9 +157,8 @@
 
         messages.innerHTML = `
             <div class="message">
-                <strong>IA:</strong>
-                <em>${escapeHtml(viagem.nome_grupo)}</em> selecionada!
-                Como posso ajudar?
+                <strong>AI:</strong>
+                <em>${escapeHtml(viagem.nome_grupo)}</em> ${t('lobby.chat.selected') || 'selected! How can I help?'}
             </div>
         `
     })
@@ -183,7 +184,7 @@
         if (!grupoSelecionado) {
             const aviso = document.createElement("div")
             aviso.className = "message"
-            aviso.innerHTML = "<strong>IA:</strong> Selecione uma viagem antes de enviar uma mensagem."
+            aviso.innerHTML = `<strong>AI:</strong> ${t('lobby.chat.selectFirst') || 'Select a trip before sending a message.'}`
             messages.appendChild(aviso)
             messages.scrollTop = messages.scrollHeight
             return
@@ -191,7 +192,7 @@
 
         const userMsg = document.createElement("div")
         userMsg.className = "message"
-        userMsg.innerHTML = `<strong>Você:</strong> ${escapeHtml(text)}`
+        userMsg.innerHTML = `<strong>${t('lobby.chat.you') || 'You'}:</strong> ${escapeHtml(text)}`
         messages.appendChild(userMsg)
         input.value = ""
         messages.scrollTop = messages.scrollHeight
@@ -199,7 +200,7 @@
         const loading = document.createElement("div")
         loading.className = "message"
         loading.id = "loading"
-        loading.innerHTML = "<strong>IA:</strong> digitando..."
+        loading.innerHTML = `<strong>AI:</strong> ${t('lobby.chat.typing') || 'typing...'}`
         messages.appendChild(loading)
         messages.scrollTop = messages.scrollHeight
 
@@ -220,16 +221,16 @@
                 const erro = await resp.json()
                 const errMsg = document.createElement("div")
                 errMsg.className = "message"
-                errMsg.innerHTML = `<strong>IA:</strong> Erro ao obter resposta. (${escapeHtml(String(erro.detail || resp.status))})`
+                errMsg.innerHTML = `<strong>AI:</strong> ${t('lobby.chat.error') || 'Error getting response.'} (${escapeHtml(String(erro.detail || resp.status))})`
                 messages.appendChild(errMsg)
             } else {
                 const dados = await resp.json()
                 const aiMsg = document.createElement("div")
                 aiMsg.className = "message"
                 aiMsg.innerHTML = `
-    <strong>IA:</strong>
+    <strong>AI:</strong>
     <div class="ia-formatada">
-        ${marked.parse(dados.resposta)}
+        ${DOMPurify.sanitize(marked.parse(dados.resposta))}
     </div>
 `
                 messages.appendChild(aiMsg)
@@ -238,7 +239,7 @@
             document.getElementById("loading")?.remove()
             const errMsg = document.createElement("div")
             errMsg.className = "message"
-            errMsg.innerHTML = "<strong>IA:</strong> Não foi possível conectar ao servidor."
+            errMsg.innerHTML = `<strong>AI:</strong> ${t('lobby.chat.noServer') || 'Could not connect to server.'}`
             messages.appendChild(errMsg)
         }
 
