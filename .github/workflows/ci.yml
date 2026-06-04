@@ -58,7 +58,6 @@ jobs:
         run: |
           pytest \
             --cov=. \
-            --cov-omit="tests/*,conftest.py" \
             --cov-report=xml:coverage.xml \
             --cov-report=term-missing \
             --cov-fail-under=70 \
