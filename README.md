@@ -3,10 +3,12 @@
 API REST feita em Python usando FastAPI para gerenciamento de viagens em grupo.
 
 ## Tecnologias
-- Python 3.12+
+- Python 3.11+
 - FastAPI
-- MySQL (connection pool)
+- MySQL (connection pool com retry automático)
+- Redis (rate limiting e blacklist de tokens)
 - Uvicorn
+- Docker / Docker Compose
 - bcrypt (senhas)
 - JWT (autenticação via Cookies HttpOnly)
 - Pydantic v2 (validação de dados e limites)
@@ -58,18 +60,43 @@ API REST feita em Python usando FastAPI para gerenciamento de viagens em grupo.
 
 ## Como executar
 
-### 1. Ambiente
+### Com Docker (recomendado)
+
+**Pré-requisitos:** Docker Desktop instalado e rodando.
+
 ```bash
+# 1. Configure o ambiente
+cp backend/.env.example backend/.env
+# Edite backend/.env e preencha SECRET_KEY e as demais variáveis
+
+# 2. Primeira execução (cria volumes e aplica o schema)
+docker compose up --build
+
+# 3. Execuções seguintes
+docker compose up
+```
+
+A API estará disponível em `http://localhost:8000`.  
+Para parar: `docker compose down`. Para resetar o banco: `docker compose down -v`.
+
+> **Nota:** Se a porta 3306 já estiver em uso localmente, altere `MYSQL_HOST_PORT=3307` no `backend/.env` (o container sempre usa 3306 internamente).
+
+---
+
+### Sem Docker (ambiente local)
+
+```bash
+# 1. Ambiente
 python -m venv venv
 # Ativar venv
 pip install -r requirements.txt
-```
 
-### 2. Configurar .env
-Preencha as variáveis de banco, JWT e APIs conforme o `.env.example`.
+# 2. Configurar .env
+# Preencha as variáveis de banco, JWT e APIs conforme o backend/.env.example
+# Certifique-se de que MySQL e Redis estejam rodando localmente
 
-### 3. Executar
-```bash
+# 3. Executar
+cd backend
 uvicorn main:app --reload
 ```
 
@@ -87,11 +114,14 @@ A suíte de testes valida o fluxo completo: criação de usuários, grupos, gast
 ## Estrutura
 
 ```text
-/routes          → Controladores HTTP e esquemas Pydantic
-/services        → Lógica de negócio e acesso ao MySQL
-/utils           → Autenticação, dependências, segurança e rate limit
-/tests           → Testes automatizados
-/uploads         → Armazenamento local temporário
-main.py          → Inicialização e rotas
-database.py      → Pool de conexões MySQL
+backend/
+  routes/        → Controladores HTTP e esquemas Pydantic
+  services/      → Lógica de negócio e acesso ao MySQL
+  utils/         → Autenticação, dependências, segurança e rate limit
+  tests/         → Testes automatizados
+  main.py        → Inicialização e rotas
+  database.py    → Pool de conexões MySQL (lazy init com retry automático)
+docker/
+  mysql/init/    → Schema SQL aplicado na criação do banco
+docker-compose.yml
 ```
