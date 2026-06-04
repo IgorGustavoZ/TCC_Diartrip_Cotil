@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Logger centralizado para toda a aplicação.
