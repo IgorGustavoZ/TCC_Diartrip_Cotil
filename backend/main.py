@@ -77,9 +77,12 @@ app.include_router(dashboard.router)
 app.include_router(posts.router)
 app.include_router(chat_grupo.router)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount("/imagens", StaticFiles(directory="imagens"), name="imagens")
-app.mount("/lobby-pags", StaticFiles(directory="lobby-pags"), name="lobby-pags")
+if os.path.isdir("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+if os.path.isdir("imagens"):
+    app.mount("/imagens", StaticFiles(directory="imagens"), name="imagens")
+if os.path.isdir("lobby-pags"):
+    app.mount("/lobby-pags", StaticFiles(directory="lobby-pags"), name="lobby-pags")
 
 
 @app.get("/", tags=["Frontend"])
