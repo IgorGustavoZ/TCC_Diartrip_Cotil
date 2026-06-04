@@ -87,6 +87,8 @@ if os.path.isdir("lobby-pags"):
 
 @app.get("/", tags=["Frontend"])
 def index():
+    if not os.path.isfile("index.html"):
+        return JSONResponse(status_code=404, content={"detail": "Página não encontrada"})
     return FileResponse("index.html")
 
 
@@ -96,7 +98,10 @@ _PAGINAS_PERMITIDAS = {"index", "lobby", "login", "form"}
 def serve_page(page: str):
     if page not in _PAGINAS_PERMITIDAS:
         return JSONResponse(status_code=404, content={"detail": "Página não encontrada"})
-    return FileResponse(f"{page}.html")
+    path = f"{page}.html"
+    if not os.path.isfile(path):
+        return JSONResponse(status_code=404, content={"detail": "Página não encontrada"})
+    return FileResponse(path)
 
 
 @app.get("/health", tags=["Health"])
