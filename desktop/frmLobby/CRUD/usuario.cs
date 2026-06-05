@@ -223,8 +223,66 @@ namespace WindowLobby.crud
 
         // ── Utilitários ──────────────────────────────────────────────────────────
 
-        [Obsolete("Endpoint GET /usuarios não existe no backend. Use GetMe() para o usuário logado.")]
-        public static Task<string?> GetUsuarios() => Task.FromResult<string?>(null);
+        //[Obsolete("Endpoint GET /usuarios não existe no backend. Use GetMe() para o usuário logado.")]
+        public async static Task<string?> GetUsuarios()
+        {
+            string url =
+                "http://127.0.0.1:8000/usuarios";
+
+
+            //HttpResponseMessage resposta =
+            //    await Client.GetAsync(url);
+
+            var resp = await ExecutarComRefresh(() =>
+            {
+                var req = new HttpRequestMessage(HttpMethod.Get, $"/usuarios/")
+                {
+                    Content = new StringContent("", Encoding.UTF8, "application/json")
+                };
+                return req;
+            });
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            string respostaJson =
+                await resp.Content
+                .ReadAsStringAsync();
+
+            return respostaJson;
+        }
+
+        public async static Task<string?> GetUsuariosById(int id)
+        {
+            string url =
+                "http://127.0.0.1:8000/usuarios";
+
+
+            //HttpResponseMessage resposta =
+            //    await Client.GetAsync(url);
+
+            var resp = await ExecutarComRefresh(() =>
+            {
+                var req = new HttpRequestMessage(HttpMethod.Get, $"/usuarios/{id}")
+                {
+                    Content = new StringContent("", Encoding.UTF8, "application/json")
+                };
+                return req;
+            });
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            string respostaJson =
+                await resp.Content
+                .ReadAsStringAsync();
+
+            return respostaJson;
+        }
 
         internal static void AdicionarCsrfHeader(HttpRequestMessage req)
         {

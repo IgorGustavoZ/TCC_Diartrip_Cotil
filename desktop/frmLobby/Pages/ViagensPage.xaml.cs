@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using WindowLobby.crud;
 using WindowLobby.CRUD.models;
 
 namespace WindowLobby.Pages
@@ -34,6 +35,23 @@ namespace WindowLobby.Pages
                 );
 
                 if (viagens is not null)
+                    foreach (ViagemModel v in viagens)
+                    {
+                        var resp = await Usuario.GetUsuariosById(v.criado_por);
+                        if (resp is not null)
+                        {
+                            {
+                                UsuarioModel usuario = JsonSerializer.Deserialize<UsuarioModel>(
+                                    resp,
+                                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                                );
+
+                                v.criador = usuario.nome;
+                            }
+
+                        }
+                        
+                    }
                     gridViagens.ItemsSource = viagens;
             }
             catch (Exception ex)

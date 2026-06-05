@@ -14,7 +14,7 @@ namespace WindowLobby.CRUD
         public static async Task<string?> GetViagens()
         {
             var resp = await Usuario.ExecutarComRefresh(
-                () => new HttpRequestMessage(HttpMethod.Get, "/grupos"),
+                () => new HttpRequestMessage(HttpMethod.Get, "/gruposAll"),
                 isGet: true
             );
 

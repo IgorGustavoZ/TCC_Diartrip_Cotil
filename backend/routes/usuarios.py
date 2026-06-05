@@ -35,6 +35,9 @@ class UsuarioUpdate(BaseModel):
     email: EmailStr = Field(..., max_length=150)
     bio: str | None = Field(None, max_length=500)
 
+@router.get("/usuarios/")
+def obter_todos_os_perfil():
+    return usuario_service.buscar_tudo()
 
 @router.get("/usuarios/me")
 def obter_perfil_atual(usuario_id: int = Depends(get_usuario_logado)):

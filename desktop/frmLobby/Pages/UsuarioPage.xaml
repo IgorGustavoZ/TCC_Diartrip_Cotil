@@ -13,7 +13,7 @@
 
             <DataGrid
                 x:Name="gridUsuarios"
-                Height="120"
+                Height="500"
 
                 IsReadOnly="True"
                 CanUserAddRows="False"

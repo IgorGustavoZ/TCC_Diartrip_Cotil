@@ -38,6 +38,9 @@ class GrupoInput(BaseModel):
 class EntrarGrupoInput(BaseModel):
     codigo_convite: str
 
+@router.get("/gruposAll")
+def listar_todos_os_grupos_de_viagem():
+    return grupo_service.listar_tudo()
 
 @router.get("/grupos")
 def listar_grupos(usuario_id: int = Depends(get_usuario_logado)):

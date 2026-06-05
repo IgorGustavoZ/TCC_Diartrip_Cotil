@@ -1,0 +1,52 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[codz]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Python cache
+*.pyc
+
+# VSCode
+.vscode/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Unit test / coverage reports
+.coverage
+.coverage.*
+.pytest_cache/
+htmlcov/
+
+# mypy
+.mypy_cache/
+
+# Uploads de usuários (fotos enviadas pela API)
+uploads/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Variáveis de ambiente alternativas
+.env.*
+!.env.example
+
+.claude/

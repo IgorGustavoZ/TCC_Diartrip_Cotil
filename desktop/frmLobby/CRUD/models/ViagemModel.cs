@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.RightsManagement;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,6 +21,7 @@ namespace WindowLobby.CRUD.models
 
         public string codigo_convite { get; set; }
 
+        public int criado_por { get; set; }      
         public string criador { get; set; }
 
     }

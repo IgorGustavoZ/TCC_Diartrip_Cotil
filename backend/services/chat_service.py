@@ -16,6 +16,18 @@ _client = OpenAI(
 )
 IA_MODEL = os.getenv("IA_MODEL", "mistralai/mistral-7b-instruct:free")
 
+def listar_tudo(usuario_id: int) -> list:
+    with get_db() as conexao:
+        cursor = conexao.cursor(dictionary=True)
+        try:
+            cursor.execute(
+                """
+                SELECT * FROM chat_ia
+                """, 
+            )
+            return cursor.fetchall()
+        finally:
+            cursor.close()
 
 def listar(usuario_id: int) -> list:
     with get_db() as conexao:

@@ -152,13 +152,15 @@
 
                     <StackPanel Margin="20">
 
-                        <TextBlock Text="Mensagens IA"
+                        <TextBlock Text="Usuários"
                                    Foreground="#CBD5E1"/>
 
                         <TextBlock Text="0"
                                    FontSize="40"
                                    FontWeight="Bold"
-                                   Foreground="White"/>
+                                   Foreground="White"
+                                   Name="txtUsuarios"
+                                   />
 
                     </StackPanel>
 
@@ -170,14 +172,15 @@
 
                     <StackPanel Margin="20">
 
-                        <TextBlock Text="Bem-vindo"
-                                   Foreground="#CBD5E1"/>
+                        <TextBlock Text="Chat IA"
+                       Foreground="#CBD5E1"/>
 
-                        <TextBlock x:Name="txtBemVindo"
-                                   Text=""
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="White"/>
+                                <TextBlock Text="0"
+                       FontSize="40"
+                       FontWeight="Bold"
+                       Foreground="White"  
+                       Name="txtChatIA"
+                       />
 
                     </StackPanel>
 

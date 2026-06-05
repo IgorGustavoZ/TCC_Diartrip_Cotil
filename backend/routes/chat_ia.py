@@ -10,6 +10,9 @@ class ChatInput(BaseModel):
     pergunta: str = Field(..., min_length=1, max_length=1000)
     id_grupo: int
 
+@router.get("/chatAll")
+def listar_todos_os_chats(usuario_id: int = Depends(get_usuario_logado)):
+    return chat_service.listar_tudo(usuario_id)
 
 @router.get("/chat")
 def listar_chat(usuario_id: int = Depends(get_usuario_logado)):

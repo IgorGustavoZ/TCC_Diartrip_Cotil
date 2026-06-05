@@ -5,6 +5,20 @@ from utils.security import gerar_hash
 from utils.cloudinary_upload import upload_imagem
 from utils.imagem_utils import validar_imagem
 
+def buscar_tudo() -> dict:
+    """Retorna todos os perfils no banco de dados (parte exclusiva do desktop)"""
+    with get_db() as conexao:
+        cursor = conexao.cursor(dictionary=True)
+        try:
+            cursor.execute(
+                "SELECT * FROM usuarios;",               
+            )
+            usuarios = cursor.fetchall()
+            if not usuarios:
+                raise HTTPException(status_code=404, detail="Usuário não encontrado")
+            return usuarios
+        finally:
+            cursor.close()
 
 def buscar_por_id(usuario_id: int) -> dict:
     """Retorna perfil completo (incluindo email). Usar apenas em /usuarios/me."""

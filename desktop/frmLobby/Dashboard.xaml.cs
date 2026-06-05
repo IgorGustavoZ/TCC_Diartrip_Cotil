@@ -46,17 +46,42 @@ namespace WindowLobby
                     }
                 }
 
-                var json = await Viagem.GetViagens();
-                if (json is not null)
+                var jsonVia = await Viagem.GetViagens();
+                if (jsonVia is not null)
                 {
                     var viagens = JsonSerializer.Deserialize<List<ViagemModel>>(
-                        json,
+                        jsonVia,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                     );
                     txtViagens.Text = viagens?.Count.ToString() ?? "0";
                 }
 
-                txtBemVindo.Text = Sessao.Nome;
+                var jsonUsu = await Usuario.GetUsuarios();
+                if (jsonUsu is not null)
+                {
+                    var usuarios = JsonSerializer.Deserialize<List<UsuarioModel>>(
+                        jsonUsu,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
+                    txtUsuarios.Text = usuarios?.Count.ToString() ?? "0";
+                }
+
+                
+                var jsonChat = await Chat_ia.BuscarMensagens();
+                if (jsonChat is not null)
+                {
+                    var chats = JsonSerializer.Deserialize<List<ChatModel>>(
+                        jsonChat,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
+                    double totalChats = 0;
+                    foreach (var c in chats)
+                    {
+                        totalChats+=c.resposta.Length;
+                    }
+                   
+                    txtChatIA.Text = totalChats.ToString();
+                }
             }
             catch (Exception ex)
             {
@@ -103,7 +128,9 @@ namespace WindowLobby
                         .Column(col =>
                         {
                             col.Item().Text($"Usuário: {Sessao.Nome}");
+                            col.Item().Text($"Total de usuários: {txtUsuarios.Text}");
                             col.Item().Text($"Total de viagens: {txtViagens.Text}");
+                            col.Item().Text($"Tamanho total das respostas da IA: {txtChatIA.Text}");
                             col.Item().Text($"Gerado em: {DateTime.Now:dd/MM/yyyy HH:mm}");
                         });
 

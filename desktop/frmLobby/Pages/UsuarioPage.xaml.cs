@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using WindowLobby.crud;
 using WindowLobby.CRUD.models;
 
 namespace WindowLobby.Pages
@@ -28,16 +29,18 @@ namespace WindowLobby.Pages
                     return;
                 }
 
-                var usuario = new UsuarioModel
+                var jsonUsu = await Usuario.GetUsuarios();
+                if (jsonUsu is not null)
                 {
-                    id_usuario  = perfil["id_usuario"]?.GetValue<int>() ?? 0,
-                    nome        = perfil["nome"]?.GetValue<string>() ?? "",
-                    email       = perfil["email"]?.GetValue<string>() ?? "",
-                    data_criacao = perfil["data_criacao"]?.GetValue<string>() ?? "",
-                    foto_perfil  = perfil["foto_perfil"]?.GetValue<string>() ?? "",
-                };
+                    var usuarios = JsonSerializer.Deserialize<List<UsuarioModel>>(
+                        jsonUsu,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );   
 
-                gridUsuarios.ItemsSource = new List<UsuarioModel> { usuario };
+                    gridUsuarios.ItemsSource = usuarios;
+
+                }
+
             }
             catch (Exception ex)
             {
