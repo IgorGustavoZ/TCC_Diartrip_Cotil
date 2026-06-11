@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diartrip - Trip</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../static/style.css">
+<link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
+<script src="../static/i18n.js"></script>
+</head>
+<body>
+
+<div class="app">
+
+    <div class="sidebar">
+        <a href="../lobby.html">
+            <div class="logo">
+                <img src="../imagens/logo-diartrip.png" alt="">
+            </div>
+        </a>
+        <a href="../lobby.html">
+            <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
+        </a>
+        <a href="grupos.html">
+            <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
+        </a>
+        <a href="feed.html">
+            <div class="menu-item" data-i18n="nav.feed">📰 Feed</div>
+        </a>
+        <a href="perfil.html">
+            <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
+        </a>
+    </div>
+
+    <div class="main">
+
+        <div class="trip-banner">
+            <div>
+                <h1 id="nomeViagem" data-i18n="common.loading">Carregando...</h1>
+                <p id="destinoViagem"></p>
+                <span id="datasViagem"></span>
+            </div>
+            <div class="trip-actions">
+                <button class="btn-convite" onclick="copiarCodigo()" data-i18n="viagem.copyCode">
+                    📋 Copy invite code
+                </button>
+            </div>
+        </div>
+
+        <div class="tabs-nav">
+            <button class="tab-btn active" data-tab="geral"    onclick="switchTab(this, 'geral')"   data-i18n="viagem.tab.overview">📊 Overview</button>
+            <button class="tab-btn"        data-tab="pessoal"  onclick="switchTab(this, 'pessoal')" data-i18n="viagem.tab.personal">👤 My Finances</button>
+            <button class="tab-btn"        data-tab="admin"    id="adminTabBtn" style="display:none;" onclick="switchTab(this, 'admin')" data-i18n="viagem.tab.admin">👑 Admin</button>
+            <button class="tab-btn"        data-tab="gastos"   onclick="switchTab(this, 'gastos')"  data-i18n="viagem.tab.expenses">💸 Expenses</button>
+            <button class="tab-btn"        data-tab="roteiro"  onclick="switchTab(this, 'roteiro')" data-i18n="viagem.tab.itinerary">📋 Itinerary</button>
+            <button class="tab-btn"        data-tab="chat"     onclick="switchTab(this, 'chat')"    data-i18n="viagem.tab.chat">💬 Chat</button>
+            <button class="tab-btn"        data-tab="info"     onclick="switchTab(this, 'info')"    data-i18n="viagem.tab.info">📌 Info</button>
+        </div>
+
+        <div class="trip-content">
+
+            <!-- TAB GERAL -->
+            <div id="tab-geral" class="tab-content active">
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.tab.overview.dashboard">📊 Dashboard do Grupo</h2>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3 data-i18n="viagem.tab.overview.budget">💰 Orçamento</h3>
+                            <div class="stat-row">
+                                <span class="stat-label" data-i18n="viagem.tab.overview.totalSpent">Total Gasto</span>
+                                <span class="stat-value" id="totalGasto">R$ 0,00</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label" data-i18n="viagem.tab.overview.remaining">Restante</span>
+                                <span class="stat-value" id="orcamentoRestante">R$ 0,00</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="progressBar"></div>
+                            </div>
+                            <p style="font-size:12px; color:#64748b; text-align:center; margin:0;">
+                                <span id="percentualGasto">0</span>% <span data-i18n="viagem.tab.overview.consumed">consumido</span>
+                            </p>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <h3 data-i18n="viagem.tab.overview.categories">🏷️ Categorias</h3>
+                            <div class="category-list" id="listaCategorias">
+                                <p style="color:#64748b; font-size:14px; text-align:center;" data-i18n="viagem.tab.overview.noExpenses">Nenhum gasto registrado</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB PESSOAL -->
+            <div id="tab-pessoal" class="tab-content">
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.tab.personal.myView">👤 Minha Visão</h2>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3 data-i18n="viagem.tab.personal.myFinances">🏦 Meu Financeiro</h3>
+                            <div class="stat-row">
+                                <span class="stat-label" data-i18n="viagem.tab.personal.paid">Quanto eu paguei</span>
+                                <span class="stat-value" id="meuTotalPago">R$ 0,00</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label" data-i18n="viagem.tab.personal.debt">Minhas dívidas</span>
+                                <span class="stat-value saldo-negativo" id="minhaDivida">R$ 0,00</span>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <h3 data-i18n="viagem.tab.personal.recent">📜 Últimos Gastos</h3>
+                            <div class="category-list" id="meusGastosRecentes">
+                                <p style="color:#64748b; font-size:14px; text-align:center;" data-i18n="viagem.tab.personal.noRecent">Sem gastos recentes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB ADMIN -->
+            <div id="tab-admin" class="tab-content">
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.tab.admin.panel">👑 Painel Administrativo</h2>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3 data-i18n="viagem.tab.admin.ranking">🔥 Ranking de Gastos</h3>
+                            <div class="category-list" id="rankingGastos"></div>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3 data-i18n="viagem.tab.admin.stats">📈 Estatísticas</h3>
+                            <div class="stat-row">
+                                <span class="stat-label" data-i18n="viagem.tab.admin.activeMembers">Membros Ativos</span>
+                                <span class="stat-value" id="totalMembros">0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label" data-i18n="viagem.tab.admin.photos">Fotos no Grupo</span>
+                                <span class="stat-value" id="totalFotos">0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label" data-i18n="viagem.tab.admin.itineraryItems">Itens no Roteiro</span>
+                                <span class="stat-value" id="totalRoteiros">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.manageMembers">👥 Gerenciar Membros</h2>
+                    <div id="adminMembroLista" style="display:flex;flex-direction:column;gap:10px;"></div>
+                </div>
+            </div>
+
+            <!-- TAB GASTOS -->
+            <div id="tab-gastos" class="tab-content">
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.registerExpense">💸 Registrar Gasto</h2>
+                    <div class="gastos-layout">
+
+                        <div class="form-gasto">
+                            <div>
+                                <label data-i18n="viagem.value">Valor (R$)</label>
+                                <input id="gastoValor" type="number" min="0.01" step="0.01" data-i18n-placeholder="viagem.value.placeholder" placeholder="Ex: 150.00">
+                            </div>
+                            <div>
+                                <label data-i18n="viagem.category">Categoria</label>
+                                <select id="gastoCategoria">
+                                    <option value="transporte" data-i18n="viagem.cat.transport">🚗 Transporte</option>
+                                    <option value="alimentacao" data-i18n="viagem.cat.food">🍽️ Alimentação</option>
+                                    <option value="hospedagem" data-i18n="viagem.cat.lodging">🏨 Hospedagem</option>
+                                    <option value="lazer" data-i18n="viagem.cat.leisure">🎭 Lazer</option>
+                                    <option value="compras" data-i18n="viagem.cat.shopping">🛍️ Compras</option>
+                                    <option value="saude" data-i18n="viagem.cat.health">💊 Saúde</option>
+                                    <option value="outro" data-i18n="viagem.cat.other">📦 Outro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label data-i18n="viagem.description">Descrição (opcional)</label>
+                                <input id="gastoDescricao" type="text" data-i18n-placeholder="viagem.description.placeholder" placeholder="Ex: Táxi para o hotel">
+                            </div>
+                            <div>
+                                <label data-i18n="viagem.date">Data (opcional)</label>
+                                <input id="gastoData" type="date">
+                            </div>
+                            <span class="msg-erro-gasto" id="gastoErro"></span>
+                            <button class="btn-salvar-gasto" id="btnSalvarGasto" onclick="registrarGasto()" data-i18n="viagem.registerBtn">
+                                + Registrar gasto
+                            </button>
+                        </div>
+
+                        <div>
+                            <h3 style="margin:0 0 16px; font-size:16px; color:#94a3b8;" data-i18n="viagem.history">Histórico do grupo</h3>
+                            <div id="listaGastos">
+                                <p style="color:#64748b; font-size:14px;" data-i18n="viagem.emptyExpenses">Nenhum gasto registrado ainda.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB ROTEIRO -->
+            <div id="tab-roteiro" class="tab-content">
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.itineraryTitle">📋 Roteiro da Viagem</h2>
+
+                    <!-- Formulário admin: adicionar item -->
+                    <div id="roteiroFormAdd" style="display:none; margin-bottom:24px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:18px;">
+                        <p style="margin:0 0 12px; font-size:14px; color:#94a3b8;" data-i18n="viagem.addItem">Adicionar item ao roteiro</p>
+                        <input id="roteiroTitulo" type="text" data-i18n-placeholder="viagem.itemTitle" placeholder="Título (ex: Visita ao Coliseu)" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px 12px; color:#f1f5f9; font-size:14px; margin-bottom:10px; outline:none;">
+                        <textarea id="roteiroDesc" data-i18n-placeholder="viagem.itemDesc" placeholder="Descrição (horário, endereço, dicas...)" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px 12px; color:#f1f5f9; font-size:14px; resize:vertical; min-height:72px; outline:none;"></textarea>
+                        <button onclick="criarRoteiroItem()" style="margin-top:10px; background:linear-gradient(135deg,#3b82f6,#06b6d4); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.addBtn">+ Adicionar</button>
+                        <span id="roteiroAddMsg" style="margin-left:12px; font-size:13px; color:#f87171; display:none;"></span>
+                    </div>
+
+                    <div id="roteiroLista"><p style="color:#64748b; font-size:14px; text-align:center; padding:30px 0;" data-i18n="viagem.emptyItinerary">Nenhum item no roteiro ainda.</p></div>
+                </div>
+            </div>
+
+            <!-- TAB CHAT -->
+            <div id="tab-chat" class="tab-content">
+                <div class="trip-card-expanded" style="display:flex; flex-direction:column; height:520px; padding:20px;">
+                    <h2 style="margin:0 0 16px; flex-shrink:0;" data-i18n="viagem.groupChat">💬 Chat do Grupo</h2>
+                    <div id="chatGrupoMsgs" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:4px;"></div>
+                    <div style="display:flex; gap:8px; margin-top:14px; flex-shrink:0;">
+                        <input id="chatGrupoInput" data-i18n-placeholder="viagem.chatPlaceholder" placeholder="Escreva uma mensagem..." style="flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px 14px; color:#f1f5f9; font-size:14px; outline:none;">
+                        <button onclick="enviarMsgGrupo()" style="background:linear-gradient(135deg,#3b82f6,#06b6d4); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="lobby.chat.send">Enviar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB INFO -->
+            <div id="tab-info" class="tab-content">
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.infoTitle">📌 Informações da viagem</h2>
+                    <div class="info-item">
+                        <strong data-i18n="viagem.destination">Destino</strong>
+                        <span id="infoDestino"></span>
+                    </div>
+                    <div class="info-item">
+                        <strong data-i18n="viagem.period">Período</strong>
+                        <span id="infoPeriodo"></span>
+                    </div>
+                    <div class="info-item">
+                        <strong data-i18n="viagem.inviteCode">Código convite</strong>
+                        <span id="codigoConvite"></span>
+                    </div>
+                </div>
+
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.inviteTitle">👥 Convidar pessoas</h2>
+                    <p style="color:#94a3b8; font-size:14px; margin:0 0 4px;" data-i18n="viagem.inviteDesc">Compartilhe este código com seus amigos.</p>
+                    <div class="invite-box">
+                        <input id="inviteInput" readonly>
+                        <button onclick="copiarCodigo()" data-i18n="common.copy">Copiar</button>
+                    </div>
+                </div>
+
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.aiAssistant">🤖 Assistente IA</h2>
+                    <p style="color:#94a3b8; font-size:14px; margin:0 0 12px;" data-i18n="viagem.aiUses">Use o chat da IA no lobby para pedir:</p>
+                    <ul style="color:#cbd5f5; font-size:14px; padding-left:20px; margin:0; line-height:2;">
+                        <li data-i18n="viagem.aiFeature1">Roteiros personalizados</li>
+                        <li data-i18n="viagem.aiFeature2">Pontos turísticos</li>
+                        <li data-i18n="viagem.aiFeature3">Restaurantes</li>
+                        <li data-i18n="viagem.aiFeature4">Dicas de economia</li>
+                        <li data-i18n="viagem.aiFeature5">Clima e organization</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search)
+const idGrupo = params.get("id")
+const meuId = parseInt(sessionStorage.getItem("id"))
+let isAdmin = false
+let chatWS = null
+let ultimaMsgId = 0
+let grupoAtual = null
+
+if (!sessionStorage.getItem("logado")) window.location.href = "../login.html"
+
+document.addEventListener('languageChanged', () => {
+    carregarGrupo()
+    if (document.querySelector('.tab-btn[data-tab="roteiro"]').classList.contains('active')) carregarRoteiro()
+})
+
+async function carregarGrupo() {
+    const resp = await fetch(`/grupos/${idGrupo}`, {
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+    })
+
+    if (!resp.ok) { alert(t('common.error') + ": " + t('viagem.errorLoad')); return }
+
+    grupoAtual = await resp.json()
+    const grupo = grupoAtual
+
+    document.getElementById("nomeViagem").innerText = grupo.nome_grupo
+    document.getElementById("destinoViagem").innerText = `📍 ${grupo.destino_principal}`
+    document.getElementById("datasViagem").innerText = `${grupo.data_inicio} → ${grupo.data_fim}`
+    document.getElementById("infoDestino").innerText = grupo.destino_principal
+    document.getElementById("infoPeriodo").innerText = `${grupo.data_inicio} ${t('common.at')} ${grupo.data_fim}`
+    document.getElementById("codigoConvite").innerText = grupo.codigo_convite
+    document.getElementById("inviteInput").value = grupo.codigo_convite
+
+    carregarDashboard()
+    carregarGastos()
+}
+
+async function carregarDashboard() {
+    const resp = await fetch(`/grupos/${idGrupo}/dashboard`, { credentials: "include" })
+    if (!resp.ok) return
+    const data = await resp.json()
+
+    const g = data.geral
+    document.getElementById("totalGasto").innerText = `R$ ${g.total_consumido.toLocaleString(getLang(), {minimumFractionDigits:2})}`
+    document.getElementById("orcamentoRestante").innerText = `R$ ${g.orcamento_restante.toLocaleString(getLang(), {minimumFractionDigits:2})}`
+    document.getElementById("percentualGasto").innerText = g.percentual_consumido
+    document.getElementById("progressBar").style.width = `${Math.min(g.percentual_consumido, 100)}%`
+    if (g.distribuicao_categorias.length > 0) {
+        document.getElementById("listaCategorias").innerHTML = g.distribuicao_categorias.map(cat => `
+            <div class="category-item">
+                <span>${t('viagem.cat.' + cat.categoria) || escapeHtml(cat.categoria)}</span>
+                <strong>R$ ${cat.total.toLocaleString(getLang(), {minimumFractionDigits:2})}</strong>
+            </div>
+        `).join('')
+    }
+
+    const p = data.pessoal
+    document.getElementById("meuTotalPago").innerText = `R$ ${p.total_pago_por_mim.toLocaleString(getLang(), {minimumFractionDigits:2})}`
+    document.getElementById("minhaDivida").innerText = `R$ ${p.minha_divida_atual.toLocaleString(getLang(), {minimumFractionDigits:2})}`
+    if (p.ultimos_gastos_pessoais.length > 0) {
+        document.getElementById("meusGastosRecentes").innerHTML = p.ultimos_gastos_pessoais.map(g => `
+            <div class="category-item">
+                <div>
+                    <div style="font-size:14px;">${escapeHtml(g.descricao || t('viagem.cat.' + g.categoria) || g.categoria)}</div>
+                    <div style="font-size:11px; color:#64748b;">${escapeHtml(g.data_gasto || '')}</div>
+                </div>
+                <strong>R$ ${g.valor.toLocaleString(getLang(), {minimumFractionDigits:2})}</strong>
+            </div>
+        `).join('')
+    }
+
+    if (data.admin) {
+        isAdmin = true
+        document.getElementById("adminTabBtn").style.display = "block"
+        document.getElementById("roteiroFormAdd").style.display = "block"
+        carregarMembrosAdmin()
+        const a = data.admin
+        document.getElementById("totalMembros").innerText = a.estatisticas.membros_ativos
+        document.getElementById("totalFotos").innerText = a.estatisticas.total_fotos_subidas
+        document.getElementById("totalRoteiros").innerText = a.estatisticas.itens_no_roteiro
+        document.getElementById("rankingGastos").innerHTML = a.ranking_contribuicao_financeira.map((m, i) => `
+            <div class="category-item">
+                <span>${i + 1}. ${escapeHtml(m.nome)}</span>
+                <strong>R$ ${m.total.toLocaleString(getLang(), {minimumFractionDigits:2})}</strong>
+            </div>
+        `).join('')
+    }
+}
+
+async function carregarGastos() {
+    const resp = await fetch(`/grupos/${idGrupo}/gastos`, {
+        credentials: "include"
+    })
+    if (!resp.ok) return
+
+    const lista = await resp.json()
+    const container = document.getElementById("listaGastos")
+
+    if (lista.length === 0) {
+        container.innerHTML = `<p style="color:#64748b; font-size:14px;">${t('viagem.emptyExpenses')}</p>`
+        return
+    }
+
+    const meuId = parseInt(sessionStorage.getItem("id"))
+
+    container.innerHTML = lista.map(g => `
+        <div class="gasto-item">
+            <div class="gasto-info">
+                <div class="desc">${escapeHtml(g.descricao || t('viagem.cat.' + g.categoria) || g.categoria)}</div>
+                <div class="meta">${t('viagem.cat.' + g.categoria) || escapeHtml(g.categoria)} · ${escapeHtml(g.nome)} · ${escapeHtml(g.data_gasto || '')}</div>
+            </div>
+            <span class="gasto-valor">R$ ${parseFloat(g.valor).toLocaleString(getLang(), {minimumFractionDigits:2})}</span>
+            ${g.id_usuario == meuId ? `<button class="btn-del-gasto" onclick="deletarGasto(${g.id_gasto})">${t('common.delete')}</button>` : ''}
+        </div>
+    `).join('')
+}
+
+async function registrarGasto() {
+    const valor = parseFloat(document.getElementById("gastoValor").value)
+    const categoria = document.getElementById("gastoCategoria").value
+    const descricao = document.getElementById("gastoDescricao").value.trim()
+    const data = document.getElementById("gastoData").value
+    const erroEl = document.getElementById("gastoErro")
+    const btn = document.getElementById("btnSalvarGasto")
+
+    erroEl.style.display = "none"
+
+    if (isNaN(valor) || valor <= 0) {
+        erroEl.textContent = t('viagem.expenseError')
+        erroEl.style.display = "block"
+        return
+    }
+
+    btn.disabled = true
+    btn.textContent = t('viagem.saving')
+
+    try {
+        const body = { valor, categoria }
+        if (descricao) body.descricao = descricao
+        if (data) body.data_gasto = data
+
+        const resp = await fetch(`/grupos/${idGrupo}/gastos`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(body)
+        })
+
+        if (!resp.ok) {
+            const err = await resp.json()
+            erroEl.textContent = err.detail || t('viagem.expenseError')
+            erroEl.style.display = "block"
+            return
+        }
+
+        document.getElementById("gastoValor").value = ""
+        document.getElementById("gastoDescricao").value = ""
+        document.getElementById("gastoData").value = ""
+        carregarGastos()
+        carregarDashboard()
+
+    } catch (e) {
+        erroEl.textContent = t('lobby.chat.noServer')
+        erroEl.style.display = "block"
+    } finally {
+        btn.disabled = false
+        btn.textContent = t('viagem.registerBtn')
+    }
+}
+
+async function deletarGasto(idGasto) {
+    if (!confirm(t('viagem.confirmDeleteExpense'))) return
+
+    const resp = await fetch(`/gastos/${idGasto}`, {
+        method: "DELETE",
+        credentials: "include"
+    })
+
+    if (resp.ok) {
+        carregarGastos()
+        carregarDashboard()
+    }
+}
+
+function copiarCodigo() {
+    const codigo = document.getElementById("inviteInput").value
+    navigator.clipboard.writeText(codigo)
+    alert(t('common.copied'))
+}
+
+// ---- Chat do grupo ----
+function conectarChatWS() {
+    if (chatWS && chatWS.readyState < WebSocket.CLOSING) return
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:'
+    chatWS = new WebSocket(`${proto}//${location.host}/grupos/${idGrupo}/chat/ws`)
+    chatWS.onopen = () => {
+        if (ultimaMsgId > 0) carregarChat(false)
+    }
+    chatWS.onmessage = (ev) => {
+        let m
+        try { m = JSON.parse(ev.data) } catch { return }
+        if (m.erro) return
+        const container = document.getElementById("chatGrupoMsgs")
+        container.insertAdjacentHTML("beforeend", _renderMsgHtml(m))
+        ultimaMsgId = m.id_mensagem
+        container.scrollTop = container.scrollHeight
+    }
+    chatWS.onclose = () => setTimeout(conectarChatWS, 3000)
+    chatWS.onerror = () => chatWS.close()
+}
+
+function switchTab(btn, tabName) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+    document.getElementById(`tab-${tabName}`).classList.add('active')
+    btn.classList.add('active')
+
+    if (tabName === 'chat') {
+        carregarChat(true)
+        conectarChatWS()
+    }
+    if (tabName === 'roteiro') carregarRoteiro()
+}
+
+function _renderMsgHtml(m) {
+    const sou = m.id_usuario === meuId
+    const iniciais = m.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+    const av = m.foto_perfil
+        ? `<img src="${m.foto_perfil}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+        : `<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;">${iniciais}</div>`
+    const hora = new Date(m.data_envio).toLocaleTimeString(getLang(), { hour: "2-digit", minute: "2-digit" })
+    return `
+    <div style="display:flex;gap:10px;align-items:flex-start;${sou ? 'flex-direction:row-reverse;' : ''}">
+        ${av}
+        <div style="max-width:70%;">
+            <div style="font-size:11px;color:#64748b;margin-bottom:3px;${sou ? 'text-align:right;' : ''}">${escapeHtml(m.nome)} · ${hora}</div>
+            <div style="background:${sou ? 'linear-gradient(135deg,#3b82f6,#06b6d4)' : 'rgba(255,255,255,0.07)'};color:#f1f5f9;border-radius:${sou ? '12px 4px 12px 12px' : '4px 12px 12px 12px'};padding:10px 14px;font-size:14px;line-height:1.5;word-break:break-word;">${escapeHtml(m.conteudo)}</div>
+        </div>
+    </div>`
+}
+
+async function carregarChat(cargaInicial) {
+    const since = cargaInicial ? 0 : ultimaMsgId
+    const resp = await fetch(`/grupos/${idGrupo}/chat?since_id=${since}`, {
+        credentials: "include"
+    })
+    if (!resp.ok) return
+    const msgs = await resp.json()
+    if (!msgs.length) return
+
+    const container = document.getElementById("chatGrupoMsgs")
+    if (cargaInicial) {
+        container.innerHTML = msgs.map(_renderMsgHtml).join("")
+    } else {
+        msgs.forEach(m => container.insertAdjacentHTML("beforeend", _renderMsgHtml(m)))
+    }
+    ultimaMsgId = msgs[msgs.length - 1].id_mensagem
+    container.scrollTop = container.scrollHeight
+}
+
+async function enviarMsgGrupo() {
+    const input = document.getElementById("chatGrupoInput")
+    const texto = input.value.trim()
+    if (!texto) return
+    input.value = ""
+    if (chatWS && chatWS.readyState === WebSocket.OPEN) {
+        chatWS.send(JSON.stringify({ conteudo: texto }))
+    } else {
+        const resp = await fetch(`/grupos/${idGrupo}/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ conteudo: texto })
+        })
+        if (resp.ok) carregarChat(true)
+    }
+}
+
+document.getElementById("chatGrupoInput").addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviarMsgGrupo() }
+})
+
+// ---- Roteiro ----
+async function carregarRoteiro() {
+    const resp = await fetch(`/grupos/${idGrupo}/roteiros`, {
+        credentials: "include"
+    })
+    if (!resp.ok) return
+    const itens = await resp.json()
+    const lista = document.getElementById("roteiroLista")
+
+    if (!itens.length) {
+        lista.innerHTML = `<p style="color:#64748b;font-size:14px;text-align:center;padding:30px 0;">${t('viagem.emptyItinerary')}</p>`
+        return
+    }
+
+    lista.innerHTML = itens.map((r, i) => `
+        <div id="ritem-${r.id_roteiro}" style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px 18px;margin-bottom:10px;background:rgba(255,255,255,0.03);">
+            <div style="display:flex;align-items:flex-start;gap:12px;">
+                <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${i + 1}</div>
+                <div style="flex:1;min-width:0;" id="rview-${r.id_roteiro}">
+                    <div style="font-size:15px;font-weight:600;color:#f1f5f9;margin-bottom:4px;">${escapeHtml(r.titulo)}</div>
+                    <div style="font-size:13px;color:#94a3b8;white-space:pre-wrap;">${escapeHtml(r.descricao)}</div>
+                </div>
+                ${isAdmin ? `
+                <div style="display:flex;gap:6px;flex-shrink:0;">
+                    <button onclick="iniciarEdicaoRoteiro(${r.id_roteiro},'${escapeAtr(r.titulo)}','${escapeAtr(r.descricao)}')" style="background:rgba(255,255,255,0.08);border:none;border-radius:6px;padding:6px 10px;color:#cbd5f5;font-size:12px;cursor:pointer;">${t('viagem.itinerary.edit')}</button>
+                    <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:rgba(239,68,68,0.15);border:none;border-radius:6px;padding:6px 10px;color:#f87171;font-size:12px;cursor:pointer;">🗑</button>
+                </div>` : ""}
+            </div>
+            <!-- formulário de edição inline (oculto por padrão) -->
+            <div id="redit-${r.id_roteiro}" style="display:none;margin-top:12px;">
+                <input id="retitulo-${r.id_roteiro}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 12px;color:#f1f5f9;font-size:14px;margin-bottom:8px;outline:none;">
+                <textarea id="redesc-${r.id_roteiro}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 12px;color:#f1f5f9;font-size:14px;resize:vertical;min-height:60px;outline:none;"></textarea>
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                    <button onclick="salvarEdicaoRoteiro(${r.id_roteiro})" style="background:linear-gradient(135deg,#3b82f6,#06b6d4);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">${t('viagem.itinerary.save')}</button>
+                    <button onclick="cancelarEdicaoRoteiro(${r.id_roteiro})" style="background:rgba(255,255,255,0.07);color:#94a3b8;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;">${t('viagem.itinerary.cancel')}</button>
+                </div>
+            </div>
+        </div>
+    `).join("")
+}
+
+function iniciarEdicaoRoteiro(id, titulo, desc) {
+    document.getElementById(`rview-${id}`).style.display = "none"
+    document.getElementById(`redit-${id}`).style.display = "block"
+    document.getElementById(`retitulo-${id}`).value = titulo
+    document.getElementById(`redesc-${id}`).value = desc
+}
+
+function cancelarEdicaoRoteiro(id) {
+    document.getElementById(`rview-${id}`).style.display = "block"
+    document.getElementById(`redit-${id}`).style.display = "none"
+}
+
+async function salvarEdicaoRoteiro(id) {
+    const titulo = document.getElementById(`retitulo-${id}`).value.trim()
+    const descricao = document.getElementById(`redesc-${id}`).value.trim()
+    if (!titulo) return
+    const resp = await fetch(`/roteiros/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ titulo, descricao })
+    })
+    if (resp.ok) carregarRoteiro()
+}
+
+async function criarRoteiroItem() {
+    const titulo = document.getElementById("roteiroTitulo").value.trim()
+    const descricao = document.getElementById("roteiroDesc").value.trim()
+    const msg = document.getElementById("roteiroAddMsg")
+    msg.style.display = "none"
+    if (!titulo) { msg.textContent = t('viagem.itinerary.titleError'); msg.style.display = "inline"; return }
+    const resp = await fetch("/roteiros", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id_grupo: parseInt(idGrupo), titulo, descricao })
+    })
+    if (resp.ok) {
+        document.getElementById("roteiroTitulo").value = ""
+        document.getElementById("roteiroDesc").value = ""
+        carregarRoteiro()
+    }
+}
+
+async function deletarRoteiroItem(id) {
+    if (!confirm(t('viagem.confirmDeleteRoteiro'))) return
+    const resp = await fetch(`/roteiros/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+    })
+    if (resp.ok) carregarRoteiro()
+}
+
+// ---- Gerenciar membros (admin) ----
+async function carregarMembrosAdmin() {
+    const respMembros = await fetch(`/grupos/${idGrupo}/membros`, {
+        credentials: "include"
+    })
+    if (!respMembros.ok) return
+    const membros = await respMembros.json()
+    const criadorId = grupoAtual?.criador_id ?? null
+    const lista = document.getElementById("adminMembroLista")
+
+    lista.innerHTML = membros.map(m => {
+        const isMe = m.id_usuario === meuId
+        const isCriador = m.id_usuario === criadorId
+        const isAdminMembro = m.cargo === "admin"
+        const iniciais = m.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+
+        const badgeStyle = isCriador
+            ? "background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.3);"
+            : isAdminMembro
+                ? "background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);"
+                : "background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.2);"
+        const badgeLabel = isCriador ? t('viagem.badge.owner') : isAdminMembro ? t('viagem.badge.admin') : t('viagem.badge.member')
+
+        const btnAcao = (isMe || isCriador) ? "" : isAdminMembro
+            ? `<button onclick="rebaixarMembro(${m.id_usuario})" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.action.demote')}</button>`
+            : `<button onclick="promoverMembro(${m.id_usuario})" style="background:rgba(251,191,36,0.12);color:#fbbf24;border:1px solid rgba(251,191,36,0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.action.promote')}</button>`
+
+        return `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${iniciais}</div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:#f1f5f9;">${escapeHtml(m.nome)}${isMe ? " <span style='color:#64748b;font-weight:400;font-size:12px;'>(você)</span>" : ""}</div>
+            </div>
+            <span style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;${badgeStyle}">${badgeLabel}</span>
+            ${btnAcao}
+        </div>`
+    }).join("")
+}
+
+async function promoverMembro(idUsuario) {
+    if (!confirm(t('viagem.confirmPromote'))) return
+    const resp = await fetch(`/grupos/${idGrupo}/membros/${idUsuario}/promover`, {
+        method: "PUT",
+        credentials: "include"
+    })
+    if (resp.ok) carregarMembrosAdmin()
+    else { const e = await resp.json(); alert(e.detail || t('viagem.errorPromote')) }
+}
+
+async function rebaixarMembro(idUsuario) {
+    if (!confirm(t('viagem.confirmDemote'))) return
+    const resp = await fetch(`/grupos/${idGrupo}/membros/${idUsuario}/rebaixar`, {
+        method: "PUT",
+        credentials: "include"
+    })
+    if (resp.ok) carregarMembrosAdmin()
+    else { const e = await resp.json(); alert(e.detail || t('viagem.errorDemote')) }
+}
+
+function escapeHtml(txt) {
+    return String(txt).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")
+}
+function escapeAtr(txt) {
+    return String(txt).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\n/g,"\\n")
+}
+
+const tabInicial = params.get("tab")
+if (tabInicial) {
+    const btn = document.querySelector(`.tab-btn[data-tab="${tabInicial}"]`)
+    if (btn) btn.click()
+}
+
+carregarGrupo()
+</script>
+</body>
+</html>

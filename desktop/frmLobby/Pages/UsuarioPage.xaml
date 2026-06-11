@@ -1,0 +1,63 @@
+<Page x:Class="WindowLobby.Pages.UsuarioPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <StackPanel>
+
+            <TextBlock Text="Meu Perfil:"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Foreground="White"
+                       Margin="0,0,0,20"/>
+
+            <DataGrid
+                x:Name="gridUsuarios"
+                Height="500"
+
+                IsReadOnly="True"
+                CanUserAddRows="False"
+                CanUserDeleteRows="False"
+                CanUserResizeRows="False"
+
+                AutoGenerateColumns="False"
+                Background="#1E293B"
+                Foreground="#fff"
+                BorderThickness="0"
+                HeadersVisibility="Column"
+                RowBackground="#1E293B"
+                AlternatingRowBackground="#273549"
+                GridLinesVisibility="None" Width="936">
+
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="{x:Type DataGridColumnHeader}">
+                        <Setter Property="Foreground" Value="#1E293B"/>
+                        <Setter Property="FontSize" Value="14"/>
+                        <Setter Property="Padding" Value="10,5,10,5"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+
+                <DataGrid.Columns>
+
+                    <DataGridTextColumn Header="Id"
+                                        Binding="{Binding id_usuario}"
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Nome"
+                                        Binding="{Binding nome}"
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Email"
+                                        Binding="{Binding email}"
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Data de criação"
+                                        Binding="{Binding data_criacao}"
+                                        Width="*"/>
+
+                </DataGrid.Columns>
+
+            </DataGrid>
+        </StackPanel>
+    </Grid>
+</Page>

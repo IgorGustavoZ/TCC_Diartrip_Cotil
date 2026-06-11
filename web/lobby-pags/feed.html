@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diartrip - Feed</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../static/style.css">
+<link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
+<script src="../static/i18n.js"></script>
+</head>
+<body>
+<div class="app">
+
+    <div class="sidebar">
+        <a href="../lobby.html">
+            <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
+        </a>
+        <a href="../lobby.html">
+            <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
+        </a>
+        <a href="grupos.html">
+            <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
+        </a>
+        <a href="feed.html">
+            <div class="menu-item" data-i18n="nav.feed">📰 Feed</div>
+        </a>
+        <a href="perfil.html">
+            <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
+        </a>
+        <a href="form-viagem.html">
+            <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
+        </a>
+    </div>
+
+    <div class="main">
+        <div class="header">
+            <h2 data-i18n="feed.header">Feed</h2>
+            <a href="perfil.html" id="userChip" style="display:flex;align-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);padding:4px;border-radius:50%;cursor:pointer;transition:background 0.2s;text-decoration:none;color:inherit;">
+                <div id="avatarMini" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">?</div>
+            </a>
+        </div>
+        <div class="feed-wrap">
+
+            <!-- Criar post -->
+            <div class="create-card">
+                <div class="av" id="avCreate">?</div>
+                <div class="create-right">
+                    <textarea id="postTexto" data-i18n-placeholder="feed.placeholder" placeholder="Share something about your trip..."></textarea>
+                    <div class="img-preview-wrap" id="imgPreviewWrap">
+                        <img id="imgPreview" src="" alt="">
+                        <button class="btn-rm-img" onclick="removerImagem()">✕</button>
+                    </div>
+                    <div class="create-actions">
+                        <label class="btn-foto-post">
+                            <span data-i18n="feed.photo">📷 Foto</span>
+                            <input type="file" id="postFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+                        </label>
+                        <button class="btn-publicar" id="btnPublicar" onclick="publicar()" data-i18n="feed.publish">Publicar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feed -->
+            <div id="feedLista"></div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+const meuId = parseInt(sessionStorage.getItem("id"))
+if (!sessionStorage.getItem("logado")) window.location.href = "../login.html"
+
+document.addEventListener('languageChanged', () => {
+    applyTranslations()
+    carregarFeed()
+})
+
+let arquivoSelecionado = null
+
+// ---- Avatar do criador ----
+async function carregarMeu() {
+    const resp = await fetch("/usuarios/me", {
+        credentials: "include"
+    })
+    if (!resp.ok) return
+    const u = await resp.json()
+
+    const el = document.getElementById("avCreate")
+    if (u.foto_perfil) {
+        el.innerHTML = `<img src="${u.foto_perfil}">`
+    } else {
+        el.textContent = u.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+    }
+
+    const avatarEl = document.getElementById("avatarMini")
+    if (u.foto_perfil) {
+        avatarEl.innerHTML = `<img src="${u.foto_perfil}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:block;">`
+    } else {
+        avatarEl.textContent = u.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+    }
+}
+
+// ---- Selecionar imagem ----
+document.getElementById("postFotoInput").addEventListener("change", (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    arquivoSelecionado = file
+    const url = URL.createObjectURL(file)
+    document.getElementById("imgPreview").src = url
+    document.getElementById("imgPreviewWrap").style.display = "block"
+})
+
+function removerImagem() {
+    arquivoSelecionado = null
+    document.getElementById("postFotoInput").value = ""
+    document.getElementById("imgPreview").src = ""
+    document.getElementById("imgPreviewWrap").style.display = "none"
+}
+
+// ---- Publicar ----
+async function publicar() {
+    const texto = document.getElementById("postTexto").value.trim()
+    if (!texto) return
+
+    const btn = document.getElementById("btnPublicar")
+    btn.disabled = true
+
+    const form = new FormData()
+    form.append("conteudo", texto)
+    if (arquivoSelecionado) form.append("imagem", arquivoSelecionado)
+
+    try {
+        const resp = await fetch("/posts", {
+            method: "POST",
+            credentials: "include",
+            body: form
+        })
+        if (resp.ok) {
+            document.getElementById("postTexto").value = ""
+            removerImagem()
+            carregarFeed()
+        }
+    } finally {
+        btn.disabled = false
+    }
+}
+
+document.getElementById("postTexto").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.ctrlKey) publicar()
+})
+
+// ---- Carregar feed ----
+async function carregarFeed() {
+    const resp = await fetch("/posts", {
+        credentials: "include"
+    })
+    if (!resp.ok) return
+
+    const posts = await resp.json()
+    const lista = document.getElementById("feedLista")
+
+    if (posts.length === 0) {
+        lista.innerHTML = `<p class="feed-vazio">${t('feed.empty')}</p>`
+        return
+    }
+
+    lista.innerHTML = posts.map(p => {
+        const iniciais = p.nome.trim().split(" ").map(x => x[0]).slice(0, 2).join("").toUpperCase()
+        const av = p.foto_perfil
+            ? `<div class="av"><img src="${p.foto_perfil}"></div>`
+            : `<div class="av">${iniciais}</div>`
+
+        const delBtn = p.id_usuario === meuId
+            ? `<button class="btn-del-post" onclick="deletarPost(${p.id_post})">${t('common.delete')}</button>`
+            : ""
+
+        const imgHtml = p.imagem
+            ? `<img class="post-img" src="${p.imagem}" alt="">`
+            : ""
+
+        return `
+        <div class="post-card" id="post-${p.id_post}">
+            <div class="post-header">
+                ${av}
+                <div class="post-meta">
+                    <span class="post-autor" onclick="window.location.href='perfil.html?id=${p.id_usuario}'">${escapeHtml(p.nome)}</span>
+                    <span class="post-data">${formatarData(p.data_criacao)}</span>
+                </div>
+                ${delBtn}
+            </div>
+            <p class="post-texto">${escapeHtml(p.conteudo)}</p>
+            ${imgHtml}
+        </div>`
+    }).join("")
+}
+
+async function deletarPost(id) {
+    if (!confirm(t('feed.confirmDelete'))) return
+    const resp = await fetch(`/posts/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+    })
+    if (resp.ok) document.getElementById(`post-${id}`)?.remove()
+}
+
+// ---- Helpers ----
+function formatarData(iso) {
+    const d = new Date(iso)
+    const agora = new Date()
+    const diff = Math.floor((agora - d) / 1000)
+    if (diff < 60) return t('feed.date.now')
+    if (diff < 3600) return `há ${Math.floor(diff / 60)}${t('feed.date.min')}`
+    if (diff < 86400) return `há ${Math.floor(diff / 3600)}${t('feed.date.hour')}`
+    if (diff < 604800) return `há ${Math.floor(diff / 86400)}${t('feed.date.days')}`
+    return d.toLocaleDateString(getLang())
+}
+
+function escapeHtml(txt) {
+    return txt.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+}
+
+carregarMeu()
+carregarFeed()
+</script>
+</body>
+</html>
+tml>

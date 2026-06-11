@@ -1,0 +1,60 @@
+# ── Credenciais e segredos ────────────────────────────────────────────────────
+.env
+*.env
+!.env.example
+
+# ── Claude Code (configurações locais do assistente) ─────────────────────────
+.claude/settings.local.json
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# ── Flutter ───────────────────────────────────────────────────────────────────
+diartrip_flutter/.dart_tool/
+diartrip_flutter/build/
+diartrip_flutter/.flutter-plugins
+diartrip_flutter/.flutter-plugins-dependencies
+diartrip_flutter/.pub-cache/
+diartrip_flutter/.pub/
+diartrip_flutter/android/.gradle/
+diartrip_flutter/android/local.properties
+diartrip_flutter/android/captures/
+diartrip_flutter/android/key.properties
+diartrip_flutter/ios/.symlinks/
+diartrip_flutter/ios/Pods/
+diartrip_flutter/ios/Flutter/flutter_export_environment.sh
+
+# ── C# / .NET ─────────────────────────────────────────────────────────────────
+desktop/**/bin/
+desktop/**/obj/
+desktop/**/.vs/
+desktop/**/*.user
+desktop/**/*.suo
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+docker-compose.override.yml
+
+# ── IDEs ─────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Cookies persistidos (Flutter dev) ────────────────────────────────────────
+*.cookies/

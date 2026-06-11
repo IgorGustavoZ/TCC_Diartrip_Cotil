@@ -1,0 +1,70 @@
+<Page x:Class="WindowLobby.Pages.ViagensPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <StackPanel>
+
+            <TextBlock Text="Viagens:"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Foreground="White"
+                       Margin="0,0,0,20"/>
+            <DataGrid
+                x:Name="gridViagens"
+                Height="500"
+
+                IsReadOnly="True"
+                CanUserAddRows="False"
+                CanUserDeleteRows="False"
+                CanUserResizeRows="False"
+
+                AutoGenerateColumns="False"
+                Background="#1E293B"
+                Foreground="#fff"
+                BorderThickness="0"
+                HeadersVisibility="Column"
+                RowBackground="#1E293B"
+                AlternatingRowBackground="#273549"
+                GridLinesVisibility="None" Width="936">
+
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="{x:Type DataGridColumnHeader}">
+                        <Setter Property="Foreground" Value="#1E293B"/>
+                        <Setter Property="FontSize" Value="14"/>
+                        <Setter Property="Padding" Value="10,5,10,5"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+
+                <DataGrid.Columns>
+
+                    <DataGridTextColumn Header="Id"
+                                        Binding="{Binding id_grupo}"
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Nome"
+                                        Binding="{Binding nome_grupo}"
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Destino Principal"
+                                        Binding="{Binding destino_principal}"
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Data de Início"
+                                        Binding="{Binding data_inicio}"
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Data de Fim"
+                                        Binding="{Binding data_fim}"
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Criado por"
+                                        Binding="{Binding criador}"
+                                        Width="*"/>
+
+                </DataGrid.Columns>
+
+            </DataGrid>
+        </StackPanel>
+    </Grid>
+</Page>
