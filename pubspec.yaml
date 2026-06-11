@@ -1,0 +1,54 @@
+name: diartrip_flutter
+description: Diartrip — planejamento inteligente de viagens em grupo.
+
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # HTTP + Cookies + CSRF
+  dio: ^5.7.0
+  cookie_jar: ^4.0.8
+  dio_cookie_manager: ^3.1.1
+
+  # WebSocket (chat em tempo real)
+  web_socket_channel: ^3.0.1
+
+  # Armazenamento local
+  path_provider: ^2.1.4
+
+  # Gerenciamento de estado
+  provider: ^6.1.2
+
+  # Imagens
+  image_picker: ^1.1.2
+  cached_network_image: ^3.4.1
+
+  # Utilitários
+  intl: ^0.20.2
+  timeago: ^3.7.0
+  flutter_markdown: ^0.7.4
+
+  # Observabilidade / Crash reporting (produção)
+  # Execute: flutter pub get após adicionar esta dependência
+  sentry_flutter: ^8.9.0
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  mockito: ^5.4.4
+  build_runner: ^2.4.12
+  http_mock_adapter: ^0.6.1
+
+flutter:
+  uses-material-design: true

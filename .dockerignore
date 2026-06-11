@@ -1,0 +1,34 @@
+# Build outputs — gerados durante o build Docker, não enviar no contexto
+build/
+.dart_tool/
+
+# Plataformas não-web — irrelevantes para flutter build web
+android/
+ios/
+linux/
+macos/
+windows/
+
+# Cache e pacotes locais
+.pub-cache/
+.pub/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Testes
+test/
+integration_test/
+
+# IDEs e editores
+.idea/
+.vscode/
+*.iml
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Logs e temporários
+*.log
