@@ -2,7 +2,21 @@ import pytest
 from fastapi.testclient import TestClient
 from main import app
 
-client = TestClient(app)
+_METODOS_MUTANTES = {"POST", "PUT", "PATCH", "DELETE"}
+
+
+class CsrfTestClient(TestClient):
+    def request(self, method, url, **kwargs):
+        if method.upper() in _METODOS_MUTANTES:
+            csrf = self.cookies.get("csrf_token")
+            if csrf:
+                headers = dict(kwargs.get("headers") or {})
+                headers.setdefault("X-CSRF-Token", csrf)
+                kwargs["headers"] = headers
+        return super().request(method, url, **kwargs)
+
+
+client = CsrfTestClient(app)
 
 # Dados de teste
 _USER1 = {"nome": "QA Admin", "email": "admin_qa_1@diartrip.com", "senha": "Teste1234"}
