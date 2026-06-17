@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Diartrip - Sign Up</title>
+    <link rel="shortcut icon" href="imagens/favicon-diartrip.png" type="image/x-icon">
+    <script src="static/i18n.js"></script>
+</head>
+<body>
+    <header>
+        <a href="index.html"><div class="logo"><img src="imagens/logo-diartrip.png" alt=""></div></a>
+    </header>
+    <section style="padding:100px 20px; max-width:600px; margin:auto; position: relative; bottom: 100px;">
+        <h2 class="section-title titulo" style="margin-bottom:20px;" data-i18n="register.title">Sign Up</h2>
+        <form id="signupForm" style="display:flex; flex-direction:column; gap:22px; background:rgba(255,255,255,0.05); padding:40px; border-radius:16px; border:1px solid rgba(255,255,255,0.08); backdrop-filter:blur(6px); position:relative;">
+
+        <div class="field">
+        <label data-i18n="register.name.label">Name</label>
+        <input id="name" type="text" data-i18n-placeholder="register.name.placeholder" placeholder="Enter your name" required>
+        <span class="error" id="nameError"></span>
+        </div>
+
+        <div class="field">
+        <label data-i18n="register.email.label">Email</label>
+        <input id="email" type="email" data-i18n-placeholder="register.email.placeholder" placeholder="Enter your email" required>
+        <span class="error" id="emailError"></span>
+        </div>
+
+        <div class="field" style="position:relative">
+        <label data-i18n="register.pass.label">Password</label>
+        <input id="password" type="password" data-i18n-placeholder="register.pass.placeholder" placeholder="Create a password" required>
+        <span id="togglePassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:#94a3b8;" data-i18n="login.pass.show">show</span>
+        <span style="font-size:12px; color:#94a3b8; margin-top:4px; display:block;" data-i18n="register.pass.hint">
+            Minimum 8 characters, with at least one uppercase letter and one number.
+        </span>
+        <span class="error" id="passwordError"></span>
+        </div>
+        <input class="cta" id="submit" type="submit" data-i18n-value="register.submit" value="Create Account">
+        <div class="login"><a href="login.html" data-i18n="register.hasAccount">Already have an account? Click here.</a></div>
+
+    </form>
+
+    <footer data-i18n="footer">
+    © 2026 Diartrip — Intelligent Travel Planning
+    </footer>
+<script>
+    const form = document.getElementById("signupForm")
+    const nameInput = document.getElementById("name")
+    const emailInput = document.getElementById("email")
+    const passwordInput = document.getElementById("password")
+    const togglePassword = document.getElementById("togglePassword")
+
+    const nameError = document.getElementById("nameError")
+    const emailError = document.getElementById("emailError")
+    const passwordError = document.getElementById("passwordError")
+    const submitBtn = document.getElementById("submit")
+
+    togglePassword.addEventListener("click", () => {
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text"
+            togglePassword.textContent = t("login.pass.hide")
+        } else {
+            passwordInput.type = "password"
+            togglePassword.textContent = t("login.pass.show")
+        }
+    })
+
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault()
+
+        nameError.textContent = ""
+        emailError.textContent = ""
+        passwordError.textContent = ""
+
+        let valid = true
+
+        if (nameInput.value.trim().length < 3) {
+            nameError.textContent = t("register.err.name")
+            valid = false
+        }
+
+        if (!emailInput.value.includes("@")) {
+            emailError.textContent = t("register.err.email")
+            valid = false
+        }
+
+        const senha = passwordInput.value
+        if (senha.length < 8) {
+            passwordError.textContent = t("register.err.passLen")
+            valid = false
+        } else if (!/[A-Z]/.test(senha)) {
+            passwordError.textContent = t("register.err.passUpper")
+            valid = false
+        } else if (!/[0-9]/.test(senha)) {
+            passwordError.textContent = t("register.err.passNum")
+            valid = false
+        }
+
+        if (!valid) return
+
+        const nome = nameInput.value.trim()
+        const email = emailInput.value.trim()
+
+        submitBtn.disabled = true
+        submitBtn.value = t("register.creating")
+
+        try {
+            const resp = await fetch("/usuarios", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ nome, email, senha })
+            })
+
+            if (resp.status === 409) {
+                emailError.textContent = t("register.err.emailTaken")
+                return
+            }
+
+            if (!resp.ok) {
+                const dados = await resp.json()
+
+                if (Array.isArray(dados.detail)) {
+                    for (const erro of dados.detail) {
+                        const campo = Array.isArray(erro.loc) ? erro.loc[erro.loc.length - 1] : ""
+                        const msg = (erro.msg || "Erro de validação")
+                            .replace(/^Value error,\s*/i, "")
+                        if (campo === "senha") {
+                            passwordError.textContent = msg
+                        } else if (campo === "email") {
+                            emailError.textContent = msg
+                        } else {
+                            emailError.textContent = msg
+                        }
+                    }
+                } else {
+                    emailError.textContent = dados.detail || t("register.err.create")
+                }
+                return
+            }
+
+            const respLogin = await fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ email, senha })
+            })
+
+            if (!respLogin.ok) {
+                nameError.textContent = t("register.err.autoLogin")
+                return
+            }
+
+            const respJson = await respLogin.json()
+            sessionStorage.setItem("id", respJson.usuario_id)
+            sessionStorage.setItem("logado", "1")
+            window.location.href = "lobby.html"
+
+        } catch (err) {
+            emailError.textContent = t("register.err.connect")
+        } finally {
+            submitBtn.disabled = false
+            submitBtn.value = t("register.submit")
+        }
+    })
+</script>
+</body>
+</html>

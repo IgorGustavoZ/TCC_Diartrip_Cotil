@@ -1,0 +1,115 @@
+services:
+  # ── Backend FastAPI ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: diartrip-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      #- DB_HOST=db
+      #- DB_PORT=3306      
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+      # Controla o retry de conexão MySQL no startup do backend (ver database.py)
+      - DB_RETRY_MAX=15
+      - DB_RETRY_BASE_WAIT=1.0
+      - DB_POOL_SIZE=5
+    # Hot reload em desenvolvimento — sobrescreve o CMD do Dockerfile
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      # Monta o código para hot reload
+      - ./backend:/app
+      # Impede que o venv local do host (Windows) sobrescreva o do container (Linux)
+      - /app/venv
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    networks:
+      - diartrip-net
+
+  # ── Flutter Web (nginx) ────────────────────────────────────────────────────
+  # ATENÇÃO: o primeiro build compila o Dart para JS — pode demorar 10-15 minutos.
+  # Builds subsequentes usam cache de layers Docker e são muito mais rápidos.
+  flutter:
+    build:
+      context: ./diartrip_flutter
+      dockerfile: Dockerfile
+    container_name: diartrip-flutter
+    restart: unless-stopped
+    ports:
+      - "${FLUTTER_PORT:-7777}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    networks:
+      - diartrip-net
+
+  # ── MySQL 8.0 ─────────────────────────────────────────────────────────────
+  
+
+  # ── Redis 7 ───────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: diartrip-redis
+    restart: unless-stopped
+    # AOF com fsync a cada segundo: equilíbrio entre durabilidade e performance.
+    #
+    # A3 — Política de memória corrigida:
+    #   ANTES: allkeys-lru  → evictava QUALQUER chave, incluindo blacklists JWT sem TTL
+    #          128mb         → insuficiente com WebSocket pub/sub + segurança em prod
+    #   AGORA: volatile-lru → evicta APENAS chaves com TTL definido
+    #          256mb         → margem adequada para pub/sub + rate limit + blacklists
+    #
+    # Por que volatile-lru é seguro aqui:
+    #   Todas as chaves de segurança (bl:{jti}, rt:user:{uid}, rl:{chave})
+    #   possuem TTL definido explicitamente no código.
+    #   volatile-lru as evicta por LRU — as mais recentes permanecem intactas.
+    #   Chaves sem TTL (se alguma for criada inadvertidamente) NÃO são evictadas.
+    #
+    # Em produção com > 1000 usuários simultâneos, considere 512mb ou Redis dedicado.
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy volatile-lru
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+    networks:
+      - diartrip-net
+
+volumes:
+  mysql_data:
+    name: diartrip-mysql-data
+  redis_data:
+    name: diartrip-redis-data
+
+networks:
+  diartrip-net:
+    name: diartrip-network
+    driver: bridge

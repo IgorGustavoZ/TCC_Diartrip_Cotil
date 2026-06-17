@@ -1,0 +1,9 @@
+﻿<Application x:Class="frmLobby.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:frmLobby"
+             StartupUri="Login.xaml">
+    <Application.Resources>
+         
+    </Application.Resources>
+</Application>

@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diartrip - Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../static/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+<link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
+<script src="../static/i18n.js"></script>
+<style>
+/* ── layout fixes ────────────────────────────────────────────────────────── */
+/* .main is a flex column; align-items:center centers children horizontally */
+.main {
+    align-items: center;
+}
+/* safety: hide mobile-logout-btn at desktop, fix position at mobile */
+.mobile-logout-btn {
+    display: none !important;
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+}
+@media (max-width: 900px) {
+    .mobile-logout-btn {
+        display: block !important;
+    }
+}
+
+/* ── override perfil-page to use the proven centering + new width ─────────── */
+.perfil-page {
+    width: 100%;
+    max-width: 700px !important;
+    margin: 32px auto !important;
+    padding: 0 20px 24px !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    box-sizing: border-box;
+}
+
+/* ── Instagram header: avatar left, stats right ──────────────────────────── */
+.p-header {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    margin-bottom: 14px;
+}
+
+/* Avatar */
+.p-av-wrap {
+    position: relative;
+    width: 90px; height: 90px;
+    flex-shrink: 0;
+}
+.p-av-img {
+    width: 90px; height: 90px;
+    border-radius: 50%; object-fit: cover; display: block;
+    border: 2px solid rgba(59,130,246,0.4);
+}
+.p-av-iniciais {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; font-weight: 700; color: #fff;
+    box-shadow: 0 4px 20px rgba(59,130,246,0.4);
+    user-select: none;
+}
+.p-av-overlay {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: rgba(0,0,0,0.5); display: none;
+    align-items: center; justify-content: center;
+    cursor: pointer; font-size: 20px;
+}
+.perfil-page.edit-mode .p-av-wrap { cursor: pointer; }
+.perfil-page.edit-mode .p-av-overlay { display: flex; }
+#fotoInput { display: none; }
+
+/* Right: name + stats + actions */
+.p-right {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.p-nome {
+    font-size: 20px; font-weight: 600; color: #f1f5f9;
+    margin: 0;
+}
+
+/* Stats */
+.p-stats { display: flex; gap: 28px; }
+/* reset global button styles for stat buttons */
+.p-stat {
+    display: flex; flex-direction: column; align-items: center;
+    font-family: inherit; color: inherit; text-align: center;
+    background: none; border: none;
+    padding: 0 !important; height: auto !important;
+    cursor: default; min-width: 54px;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+.p-stat:focus { outline: none; box-shadow: none !important; border: none !important; }
+.p-stat-clk { cursor: pointer; }
+.p-stat-clk:hover .p-stat-n { color: #60a5fa; }
+.p-stat-n { font-size: 18px; font-weight: 800; color: #f1f5f9; line-height: 1; }
+.p-stat-l { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+/* Action row */
+.p-acoes { display: flex; gap: 8px; align-items: center; }
+
+.btn-edit-p {
+    flex: 1; height: 34px !important; padding: 0 !important;
+    border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
+    background: transparent; color: #e2e8f0;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: background 0.2s;
+}
+.btn-edit-p:hover { background: rgba(255,255,255,0.07); }
+.btn-edit-p:focus { outline: none; box-shadow: none; border-color: rgba(255,255,255,0.35); }
+
+.btn-seguir-p {
+    flex: 1; height: 34px !important; padding: 0 !important;
+    border: none; border-radius: 8px;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    color: #fff; font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+}
+.btn-seguir-p:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-seguir-p:focus { outline: none; box-shadow: none; }
+.btn-seguir-p.ja-segue {
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    color: #e2e8f0 !important; font-weight: 600;
+}
+
+.btn-cfg-p {
+    width: 34px; height: 34px !important; padding: 0 !important;
+    flex-shrink: 0; border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px; background: transparent; color: #94a3b8;
+    font-size: 17px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none; font-family: inherit; transition: background 0.2s;
+}
+.btn-cfg-p:hover { background: rgba(255,255,255,0.07); color: #e2e8f0; }
+.btn-cfg-p:focus { outline: none; box-shadow: none; }
+
+/* Info: bio + date */
+.p-info { margin-bottom: 0; }
+.p-bio { font-size: 14px; color: #94a3b8; margin: 0 0 4px; white-space: pre-wrap; line-height: 1.55; }
+.p-desde { font-size: 12px; color: #475569; margin: 0; }
+
+/* Inline edit form */
+.p-edit-form {
+    display: none; flex-direction: column; gap: 14px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px; padding: 20px; margin-top: 14px;
+}
+.p-edit-form.aberto { display: flex; }
+.p-edit-form label { font-size: 12px; color: #64748b; margin-bottom: 4px; display: block; }
+.p-edit-form input,
+.p-edit-form textarea {
+    width: 100%; padding: 10px 14px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
+    color: #e2e8f0; font-size: 14px; font-family: inherit;
+    transition: border 0.2s; box-sizing: border-box;
+    height: auto !important;
+}
+.p-edit-form input { height: 42px !important; }
+.p-edit-form textarea { height: 90px !important; resize: vertical; }
+.p-edit-form input:focus,
+.p-edit-form textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+.p-edit-acoes { display: flex; gap: 10px; }
+.btn-pef-save {
+    flex: 1; height: 40px !important; padding: 0 !important;
+    border: none; border-radius: 10px;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit;
+}
+.btn-pef-save:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-pef-cancel {
+    height: 40px !important; padding: 0 20px !important;
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+    background: transparent; color: #64748b; font-size: 14px; cursor: pointer; font-family: inherit;
+}
+.p-msg-ok  { font-size: 13px; color: #4ade80; text-align: center; display: none; }
+.p-msg-err { font-size: 13px; color: #f87171; text-align: center; display: none; }
+
+/* Config link */
+.p-config-link {
+    display: none;
+}
+
+/* ── Posts grid ──────────────────────────────────────────────────────────── */
+.perfil-posts {
+    width: 100%;
+    max-width: 700px !important;
+    margin: 0 auto 60px !important;
+    padding: 0 20px !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 3px !important;
+    box-sizing: border-box;
+}
+.p-cell {
+    position: relative; aspect-ratio: 1; cursor: pointer;
+    overflow: hidden; background: rgba(255,255,255,0.04); transition: opacity 0.2s;
+}
+.p-cell:hover { opacity: 0.8; }
+.p-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.p-cell-txt {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: #334155;
+}
+.p-cell-badge {
+    position: absolute; bottom: 6px; left: 6px;
+    color: #fff; font-size: 11px; font-weight: 700;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    display: flex; align-items: center; gap: 3px;
+    pointer-events: none;
+}
+.p-grid-vazio {
+    grid-column: 1/-1; text-align: center;
+    color: #475569; font-size: 15px; padding: 40px 0;
+}
+
+/* ── Modais ──────────────────────────────────────────────────────────────── */
+.modal-ov {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.78); z-index: 900;
+    align-items: center; justify-content: center; padding: 16px;
+}
+.modal-ov.ativo { display: flex; }
+
+.modal-post {
+    background: #0f172a; border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 16px; max-width: 500px; width: 100%;
+    max-height: 90vh; overflow-y: auto; position: relative;
+    animation: fadeIn 0.2s ease;
+}
+.modal-post-img { width: 100%; max-height: 320px; object-fit: cover; border-radius: 16px 16px 0 0; display: block; }
+.modal-post-body { padding: 16px; }
+.modal-post-autor { font-size: 14px; font-weight: 700; color: #f1f5f9; }
+.modal-post-texto { font-size: 14px; color: #cbd5f5; line-height: 1.6; white-space: pre-wrap; word-break: break-word; margin-top: 2px; }
+.modal-post-meta { display: flex; gap: 14px; font-size: 12px; color: #475569; margin-top: 8px; }
+.modal-post-sep { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 14px 0 10px; }
+.modal-coments-titulo { font-size: 14px; font-weight: 700; color: #f1f5f9; margin: 0 0 10px; }
+.modal-coment { display: flex; gap: 8px; margin-bottom: 10px; }
+.m-cav {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff;
+}
+.m-cav img { width: 100%; height: 100%; object-fit: cover; }
+.m-ctxt { font-size: 13px; color: #cbd5f5; line-height: 1.5; }
+.m-cnome { font-weight: 700; color: #f1f5f9; }
+.btn-del-modal {
+    width: 100%; height: 38px !important; padding: 0 !important;
+    margin-top: 12px; border: 1px solid rgba(248,113,113,0.4); border-radius: 10px;
+    background: transparent; color: #f87171; font-size: 13px;
+    cursor: pointer; font-family: inherit;
+}
+.btn-del-modal:hover { background: rgba(248,113,113,0.1); }
+.modal-close-btn {
+    position: absolute; top: 10px; right: 10px;
+    width: 30px; height: 30px !important; padding: 0 !important;
+    border-radius: 50%; border: none; background: rgba(0,0,0,0.55);
+    color: #e2e8f0; font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2; font-family: inherit;
+}
+
+.modal-users {
+    background: #0f172a; border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 16px; max-width: 380px; width: 100%;
+    max-height: 80vh; overflow-y: auto; animation: fadeIn 0.2s ease;
+}
+.modal-users-hdr {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.07);
+    position: sticky; top: 0; background: #0f172a; z-index: 1;
+}
+.modal-users-title { font-size: 15px; font-weight: 700; color: #f1f5f9; margin: 0; }
+.modal-users-close {
+    background: none; border: none; color: #64748b;
+    font-size: 16px; cursor: pointer; padding: 4px !important;
+    height: auto !important; line-height: 1; font-family: inherit;
+}
+.modal-u-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 16px; cursor: pointer; transition: background 0.15s;
+    border: none; background: none; width: 100%; font-family: inherit;
+    height: auto !important;
+}
+.modal-u-item:hover { background: rgba(255,255,255,0.05); }
+.modal-u-av {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; color: #fff;
+}
+.modal-u-av img { width: 100%; height: 100%; object-fit: cover; }
+.modal-u-nome { font-size: 14px; font-weight: 600; color: #e2e8f0; text-align: left; }
+.modal-info { text-align: center; padding: 32px; color: #475569; font-size: 14px; }
+
+@media (max-width: 600px) {
+    .p-header { gap: 20px; }
+    .p-av-wrap, .p-av-img, .p-av-iniciais { width: 72px; height: 72px; }
+    .p-av-iniciais { font-size: 24px; }
+    .p-stats { gap: 16px; }
+    .p-stat-n { font-size: 15px; }
+    .p-nome { font-size: 17px; }
+}
+
+/* ── Like + comment in modal ─────────────────────────────────────────────── */
+.modal-acoes { display: flex; gap: 8px; margin-top: 10px; }
+.modal-btn-curtir {
+    display: flex; align-items: center; gap: 5px;
+    background: none; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
+    color: #94a3b8; font-size: 13px; padding: 5px 14px !important; height: auto !important;
+    cursor: pointer; font-family: inherit; transition: background 0.2s, border-color 0.2s;
+}
+.modal-btn-curtir:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+.modal-btn-curtir.curtido { color: #f43f5e; border-color: rgba(244,63,94,0.35); }
+.modal-btn-curtir:disabled { opacity: 0.6; cursor: not-allowed; }
+.modal-coment-input {
+    display: flex; gap: 6px; align-items: flex-end; margin-top: 10px;
+}
+.modal-coment-input textarea {
+    flex: 1; resize: none; padding: 8px 12px; border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
+    color: #e2e8f0; font-size: 13px; font-family: inherit;
+    transition: border 0.2s; height: auto !important; max-height: 80px;
+}
+.modal-coment-input textarea:focus { outline: none; border-color: #3b82f6; }
+.modal-coment-input button {
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    border: none; border-radius: 50%; width: 32px; height: 32px !important;
+    color: #fff; font-size: 16px; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 !important;
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+    <div class="sidebar">
+        <a href="../lobby.html">
+            <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
+        </a>
+        <a href="../lobby.html">
+            <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
+        </a>
+        <a href="grupos.html">
+            <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
+        </a>
+        <a href="feed.html">
+            <div class="menu-item" data-i18n="nav.feed">📰 Feed</div>
+        </a>
+        <a href="perfil.html">
+            <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
+        </a>
+        <a href="form-viagem.html">
+            <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
+        </a>
+        <div class="sidebar-spacer"></div>
+        <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Log Out</div>
+    </div>
+
+    <button class="mobile-logout-btn" onclick="performLogout()" data-i18n="nav.logout">Log Out</button>
+
+    <div class="main">
+
+        <!-- ── Profile Header ───────────────────────────────────────────── -->
+        <div class="perfil-page" id="perfilPage">
+
+            <div class="p-header">
+                <!-- Avatar -->
+                <div class="p-av-wrap" onclick="clicarFoto()">
+                    <div class="p-av-iniciais" id="pAvIniciais">?</div>
+                    <div class="p-av-overlay">📷</div>
+                    <input type="file" id="fotoInput" accept="image/jpeg,image/png,image/webp">
+                </div>
+
+                <!-- Right: name + stats + actions -->
+                <div class="p-right">
+                    <h1 class="p-nome" id="pNome">...</h1>
+
+                    <div class="p-stats">
+                        <div class="p-stat">
+                            <span class="p-stat-n" id="statPosts">–</span>
+                            <span class="p-stat-l" data-i18n="perfil.postsTitle">Posts</span>
+                        </div>
+                        <button class="p-stat p-stat-clk" onclick="abrirLista('seguidores')">
+                            <span class="p-stat-n" id="statSeguidores">–</span>
+                            <span class="p-stat-l" data-i18n="perfil.followers">Followers</span>
+                        </button>
+                        <button class="p-stat p-stat-clk" onclick="abrirLista('seguindo')">
+                            <span class="p-stat-n" id="statSeguindo">–</span>
+                            <span class="p-stat-l" data-i18n="perfil.following">Following</span>
+                        </button>
+                    </div>
+
+                    <div class="p-acoes">
+                        <button class="btn-edit-p" id="btnEditarP" style="display:none"
+                                onclick="entrarEdicao()" data-i18n="perfil.edit">✏️ Edit Profile</button>
+                        <button class="btn-seguir-p" id="btnSeguir" style="display:none"
+                                onclick="toggleSeguir()"></button>
+                        <a href="config.html" class="btn-cfg-p" id="linkConfig" style="display:none"
+                           title="Settings">⚙</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bio + date -->
+            <div class="p-info">
+                <p class="p-bio" id="pBio"></p>
+                <p class="p-desde" id="pDesde"></p>
+            </div>
+
+            <!-- Inline edit form -->
+            <form class="p-edit-form" id="editForm" onsubmit="salvarPerfil(event)">
+                <div>
+                    <label data-i18n="perfil.name.label">Name</label>
+                    <input id="editNome" type="text" required>
+                </div>
+                <div>
+                    <label>
+                        <span data-i18n="perfil.bio.label">Bio</span>
+                        <span style="color:#475569" data-i18n="perfil.bio.hint"> (max. 200 characters)</span>
+                    </label>
+                    <textarea id="editBio" maxlength="200"
+                              data-i18n-placeholder="perfil.bio.placeholder"
+                              placeholder="Tell us a bit about yourself..."></textarea>
+                </div>
+                <div class="p-msg-ok" id="msgOk"></div>
+                <div class="p-msg-err" id="msgErr"></div>
+                <div class="p-edit-acoes">
+                    <button type="submit" class="btn-pef-save" id="btnSalvar"
+                            data-i18n="perfil.save">Save</button>
+                    <button type="button" class="btn-pef-cancel"
+                            onclick="sairEdicao()" data-i18n="perfil.cancel">Cancel</button>
+                </div>
+            </form>
+
+        </div><!-- /.perfil-page -->
+
+        <!-- ── Posts Grid ────────────────────────────────────────────────── -->
+        <div class="perfil-posts" id="perfilGrid">
+            <p class="p-grid-vazio" id="gridVazio" style="display:none"
+               data-i18n="perfil.emptyPosts">No posts yet.</p>
+        </div>
+
+    </div><!-- /.main -->
+</div><!-- /.app -->
+
+<!-- Crop Modal -->
+<div class="crop-modal" id="cropModal">
+    <div class="crop-container">
+        <img id="cropImg" src="" alt="">
+    </div>
+    <div class="crop-actions">
+        <button class="btn-crop-ok" onclick="confirmarCrop()" data-i18n="perfil.usePhoto">✓ Usar esta foto</button>
+        <button class="btn-crop-cancel" onclick="sairCrop()" data-i18n="perfil.cancel">Cancelar</button>
+    </div>
+</div>
+
+<!-- Post detail modal -->
+<div class="modal-ov" id="modalOvPost" onclick="fecharModalPost(event)">
+    <div class="modal-post">
+        <button class="modal-close-btn"
+                onclick="document.getElementById('modalOvPost').classList.remove('ativo')">✕</button>
+        <div id="modalPostContent"></div>
+    </div>
+</div>
+
+<!-- Followers / Following modal -->
+<div class="modal-ov" id="modalOvUsuarios" onclick="fecharModalUsuarios(event)">
+    <div class="modal-users">
+        <div class="modal-users-hdr">
+            <p class="modal-users-title" id="modalUsersTitulo"></p>
+            <button class="modal-users-close"
+                    onclick="document.getElementById('modalOvUsuarios').classList.remove('ativo')">✕</button>
+        </div>
+        <div id="modalUsersLista"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+<script>
+const meuId   = parseInt(sessionStorage.getItem("id"))
+const params  = new URLSearchParams(window.location.search)
+const alvoId  = parseInt(params.get("id")) || meuId
+const ehDono  = alvoId === meuId
+
+let _posts        = []
+let _savingFollow = false
+
+if (!sessionStorage.getItem("logado")) window.location.href = "../login.html"
+
+document.addEventListener('languageChanged', () => {
+    carregarPerfil()
+    carregarPosts()
+})
+
+// ── Perfil ──────────────────────────────────────────────────────────────────
+
+async function carregarPerfil() {
+    const url = ehDono ? "/usuarios/me" : `/usuarios/${alvoId}`
+    const resp = await fetch(url, { credentials: "include" })
+    if (!resp.ok) { document.getElementById("pNome").textContent = t('perfil.notFound'); return }
+
+    const u = await resp.json()
+
+    // Avatar
+    const iniciais = u.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+    if (u.foto_perfil) {
+        let img = document.getElementById("pAvImg")
+        if (!img) {
+            img = document.createElement("img")
+            img.className = "p-av-img"
+            img.id = "pAvImg"
+            const el = document.getElementById("pAvIniciais")
+            if (el) el.replaceWith(img)
+        }
+        img.src = u.foto_perfil
+    } else {
+        const el = document.getElementById("pAvIniciais")
+        if (el) el.textContent = iniciais
+    }
+
+    document.getElementById("pNome").textContent = u.nome
+
+    const bioEl = document.getElementById("pBio")
+    bioEl.textContent = u.bio || (ehDono ? t('perfil.addBio') : "")
+    bioEl.style.color = u.bio ? "#94a3b8" : "#334155"
+
+    if (u.data_criacao) {
+        const d = new Date(u.data_criacao)
+        document.getElementById("pDesde").textContent =
+            `${t('perfil.memberSince')} ${d.toLocaleDateString(getLang(), { month: "long", year: "numeric" })}`
+    }
+
+    document.getElementById("statSeguidores").textContent = u.seguidores ?? 0
+    document.getElementById("statSeguindo").textContent   = u.seguindo   ?? 0
+
+    document.getElementById("editNome").value = u.nome
+    document.getElementById("editBio").value  = u.bio || ""
+
+    if (ehDono) {
+        document.getElementById("btnEditarP").style.display = "block"
+        document.getElementById("linkConfig").style.display = "flex"
+    } else {
+        const btn = document.getElementById("btnSeguir")
+        btn.style.display = "block"
+        const jaSegue = u.ja_segue ?? false
+        btn.textContent = jaSegue ? t('perfil.following.btn') : t('perfil.follow')
+        btn.className   = "btn-seguir-p" + (jaSegue ? " ja-segue" : "")
+    }
+}
+
+// ── Edição ───────────────────────────────────────────────────────────────────
+
+function entrarEdicao() {
+    document.getElementById("perfilPage").classList.add("edit-mode")
+    document.getElementById("editForm").classList.add("aberto")
+    document.getElementById("btnEditarP").style.display = "none"
+    document.getElementById("linkConfig").style.display = "none"
+    document.getElementById("msgOk").style.display  = "none"
+    document.getElementById("msgErr").style.display = "none"
+}
+
+function sairEdicao() {
+    document.getElementById("perfilPage").classList.remove("edit-mode")
+    document.getElementById("editForm").classList.remove("aberto")
+    document.getElementById("btnEditarP").style.display = "block"
+    document.getElementById("linkConfig").style.display = "flex"
+}
+
+async function salvarPerfil(e) {
+    e.preventDefault()
+    const nome = document.getElementById("editNome").value.trim()
+    const bio  = document.getElementById("editBio").value.trim()
+    const btn  = document.getElementById("btnSalvar")
+
+    document.getElementById("msgOk").style.display  = "none"
+    document.getElementById("msgErr").style.display = "none"
+    if (!nome) return
+    btn.disabled = true
+
+    const meResp = await fetch("/usuarios/me", { credentials: "include" })
+    const me = await meResp.json()
+
+    const resp = await fetch(`/usuarios/${meuId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ nome, email: me.email, bio })
+    })
+
+    btn.disabled = false
+
+    if (resp.ok) {
+        document.getElementById("msgOk").textContent = t('perfil.updated')
+        document.getElementById("msgOk").style.display = "block"
+        setTimeout(() => { sairEdicao(); carregarPerfil() }, 1200)
+    } else {
+        const err = await resp.json().catch(() => ({}))
+        document.getElementById("msgErr").textContent = err.detail || t('perfil.saveError')
+        document.getElementById("msgErr").style.display = "block"
+    }
+}
+
+// ── Follow ───────────────────────────────────────────────────────────────────
+
+async function toggleSeguir() {
+    if (_savingFollow) return
+    _savingFollow = true
+    const btn = document.getElementById("btnSeguir")
+    btn.disabled = true
+    try {
+        const resp = await fetch(`/usuarios/${alvoId}/seguir`, { method: "POST", credentials: "include" })
+        if (!resp.ok) return
+        const data = await resp.json()
+        const agora = data.seguindo
+        btn.textContent = agora ? t('perfil.following.btn') : t('perfil.follow')
+        btn.className   = "btn-seguir-p" + (agora ? " ja-segue" : "")
+        document.getElementById("statSeguidores").textContent = data.total_seguidores
+    } finally {
+        btn.disabled  = false
+        _savingFollow = false
+    }
+}
+
+// ── Grid ────────────────────────────────────────────────────────────────────
+
+async function carregarPosts() {
+    const resp = await fetch(`/posts/usuario/${alvoId}`, { credentials: "include" })
+    if (!resp.ok) return
+    _posts = await resp.json()
+
+    document.getElementById("statPosts").textContent = _posts.length
+
+    const grid = document.getElementById("perfilGrid")
+    grid.querySelectorAll(".p-cell").forEach(c => c.remove())
+
+    const vazioEl = document.getElementById("gridVazio")
+    if (_posts.length === 0) { vazioEl.style.display = "block"; return }
+    vazioEl.style.display = "none"
+
+    _posts.forEach(post => {
+        const cell = document.createElement("div")
+        cell.className = "p-cell"
+        cell.onclick   = () => abrirPost(post)
+
+        if (post.imagem) {
+            const img = document.createElement("img")
+            img.src = post.imagem; img.alt = ""; img.loading = "lazy"
+            cell.appendChild(img)
+        } else {
+            const txt = document.createElement("div")
+            txt.className = "p-cell-txt"; txt.textContent = "📝"
+            cell.appendChild(txt)
+        }
+
+        const badge = document.createElement("div")
+        badge.className = "p-cell-badge"
+        badge.id = `badge-${post.id_post}`
+        badge.textContent = `❤ ${post.curtidas ?? 0}`
+        cell.appendChild(badge)
+
+        grid.appendChild(cell)
+    })
+}
+
+// ── Post Modal ───────────────────────────────────────────────────────────────
+
+let _modalPostId = null
+
+function abrirPost(post) {
+    _modalPostId = post.id_post
+    const content = document.getElementById("modalPostContent")
+    const d = new Date(post.data_criacao)
+    const data = d.toLocaleDateString(getLang(), { day: "2-digit", month: "short", year: "numeric" })
+    let curtidas = post.curtidas ?? 0
+    let jaCurtiu = post.ja_curtiu === 1
+
+    let html = ""
+    if (post.imagem) html += `<img class="modal-post-img" src="${escHtml(post.imagem)}" alt="">`
+    html += `<div class="modal-post-body">`
+    html += `<span class="modal-post-autor">${escHtml(post.nome)}</span> `
+    html += `<span class="modal-post-texto">${escHtml(post.conteudo)}</span>`
+    html += `<div class="modal-post-meta"><span>${data}</span></div>`
+    html += `<div class="modal-acoes">
+        <button class="modal-btn-curtir${jaCurtiu ? " curtido" : ""}" id="modalBtnCurtir" onclick="curtirModal(${post.id_post})">
+            <span class="curtir-icon">${jaCurtiu ? "❤️" : "🤍"}</span>
+            <span class="curtir-count">${curtidas}</span>
+        </button>
+    </div>`
+    if (ehDono) {
+        html += `<button class="btn-del-modal" onclick="deletarPost(${post.id_post},this)">${t('perfil.deletePost')}</button>`
+    }
+    html += `<hr class="modal-post-sep"><p class="modal-coments-titulo">${t('perfil.comments')}</p>`
+    html += `<div id="modalComentsList">`
+    if (post.comentarios?.length) {
+        post.comentarios.forEach(c => {
+            const ini = (c.nome||"?").trim().split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase()
+            const av  = c.foto_perfil ? `<img src="${escHtml(c.foto_perfil)}" alt="">` : escHtml(ini)
+            html += `<div class="modal-coment">
+                <div class="m-cav">${av}</div>
+                <div class="m-ctxt"><span class="m-cnome">${escHtml(c.nome)}</span> ${escHtml(c.conteudo)}</div>
+            </div>`
+        })
+    }
+    html += `</div>`
+    html += `<div class="modal-coment-input">
+        <textarea id="modalInputComent" placeholder="${t('perfil.addComment')}" rows="1"
+                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarComentarioModal(${post.id_post})}"></textarea>
+        <button onclick="enviarComentarioModal(${post.id_post})">↩</button>
+    </div>`
+    html += `</div>`
+    content.innerHTML = html
+    document.getElementById("modalOvPost").classList.add("ativo")
+}
+
+async function curtirModal(idPost) {
+    const btn = document.getElementById("modalBtnCurtir")
+    if (!btn) return
+    btn.disabled = true
+    try {
+        const resp = await fetch(`/posts/${idPost}/curtir`, { method: "POST", credentials: "include" })
+        if (!resp.ok) return
+        const data = await resp.json()
+        const icon  = btn.querySelector(".curtir-icon")
+        const count = btn.querySelector(".curtir-count")
+        if (data.curtiu) {
+            btn.classList.add("curtido")
+            icon.textContent = "❤️"
+        } else {
+            btn.classList.remove("curtido")
+            icon.textContent = "🤍"
+        }
+        count.textContent = data.total_curtidas
+        const postObj = _posts.find(p => p.id_post === idPost)
+        if (postObj) {
+            postObj.curtidas = data.total_curtidas
+            postObj.ja_curtiu = data.curtiu ? 1 : 0
+            const badge = document.getElementById(`badge-${idPost}`)
+            if (badge) badge.textContent = `❤ ${data.total_curtidas}`
+        }
+    } finally {
+        btn.disabled = false
+    }
+}
+
+async function enviarComentarioModal(idPost) {
+    const input = document.getElementById("modalInputComent")
+    const texto = input?.value.trim()
+    if (!texto) return
+    input.disabled = true
+    try {
+        const resp = await fetch(`/posts/${idPost}/comentar`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ conteudo: texto })
+        })
+        if (!resp.ok) return
+        const c = await resp.json()
+        const lista = document.getElementById("modalComentsList")
+        const ini = (c.nome||"?").trim().split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase()
+        const av  = c.foto_perfil ? `<img src="${escHtml(c.foto_perfil)}" alt="">` : escHtml(ini)
+        lista.insertAdjacentHTML("beforeend", `
+            <div class="modal-coment">
+                <div class="m-cav">${av}</div>
+                <div class="m-ctxt"><span class="m-cnome">${escHtml(c.nome)}</span> ${escHtml(c.conteudo)}</div>
+            </div>`)
+        const postObj = _posts.find(p => p.id_post === idPost)
+        if (postObj) {
+            if (!postObj.comentarios) postObj.comentarios = []
+            postObj.comentarios.push(c)
+        }
+        input.value = ""
+    } finally {
+        input.disabled = false
+        input.focus()
+    }
+}
+
+function fecharModalPost(e) {
+    if (e.target === document.getElementById("modalOvPost"))
+        document.getElementById("modalOvPost").classList.remove("ativo")
+}
+
+async function deletarPost(idPost, btn) {
+    if (!confirm(t('perfil.confirmDeletePost'))) return
+    btn.disabled = true
+    const resp = await fetch(`/posts/${idPost}`, { method: "DELETE", credentials: "include" })
+    if (resp.ok) { document.getElementById("modalOvPost").classList.remove("ativo"); carregarPosts() }
+    else btn.disabled = false
+}
+
+// ── Users Modal ──────────────────────────────────────────────────────────────
+
+async function abrirLista(tipo) {
+    const titulo = document.getElementById("modalUsersTitulo")
+    const lista  = document.getElementById("modalUsersLista")
+    titulo.textContent = tipo === "seguidores" ? t('perfil.followers') : t('perfil.following')
+    lista.innerHTML = `<div class="modal-info">${t('common.loading')}</div>`
+    document.getElementById("modalOvUsuarios").classList.add("ativo")
+
+    const resp = await fetch(`/usuarios/${alvoId}/${tipo}`, { credentials: "include" })
+    if (!resp.ok) { lista.innerHTML = `<div class="modal-info">${t('perfil.notFound')}</div>`; return }
+
+    const lista2 = await resp.json()
+    if (!lista2.length) { lista.innerHTML = `<div class="modal-info">${t('perfil.noUsers')}</div>`; return }
+
+    lista.innerHTML = lista2.map(u => {
+        const ini = (u.nome||"?").trim().split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase()
+        const av  = u.foto_perfil ? `<img src="${escHtml(u.foto_perfil)}" alt="">` : escHtml(ini)
+        return `<button class="modal-u-item" onclick="irParaPerfil(${u.id_usuario})">
+            <div class="modal-u-av">${av}</div>
+            <span class="modal-u-nome">${escHtml(u.nome)}</span>
+        </button>`
+    }).join("")
+}
+
+function fecharModalUsuarios(e) {
+    if (e.target === document.getElementById("modalOvUsuarios"))
+        document.getElementById("modalOvUsuarios").classList.remove("ativo")
+}
+
+function irParaPerfil(id) {
+    document.getElementById("modalOvUsuarios").classList.remove("ativo")
+    window.location.href = id === meuId ? "perfil.html" : `perfil.html?id=${id}`
+}
+
+// ── Foto / Cropper ───────────────────────────────────────────────────────────
+
+function clicarFoto() {
+    if (!ehDono) return
+    if (!document.getElementById("perfilPage").classList.contains("edit-mode")) return
+    document.getElementById("fotoInput").click()
+}
+
+document.getElementById("fotoInput").addEventListener("change", (e) => {
+    const file = e.target.files[0]; if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => abrirCropper(ev.target.result)
+    reader.readAsDataURL(file)
+    e.target.value = ""
+})
+
+let cropperInstance = null
+
+function abrirCropper(src) {
+    const img = document.getElementById("cropImg")
+    img.src = src
+    document.getElementById("cropModal").classList.add("ativo")
+    if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null }
+    cropperInstance = new Cropper(img, {
+        aspectRatio: 1, viewMode: 1, dragMode: "move",
+        autoCropArea: 0.9, background: false, movable: true, zoomable: true, rotatable: false
+    })
+}
+
+function sairCrop() {
+    document.getElementById("cropModal").classList.remove("ativo")
+    if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null }
+}
+
+async function confirmarCrop() {
+    if (!cropperInstance) return
+    const canvas = cropperInstance.getCroppedCanvas({ width: 400, height: 400 })
+    canvas.toBlob(async (blob) => {
+        sairCrop()
+        const form = new FormData()
+        form.append("foto", blob, "perfil.jpg")
+        const resp = await fetch(`/usuarios/${meuId}/foto`, { method: "PATCH", credentials: "include", body: form })
+        if (resp.ok) {
+            const data = await resp.json()
+            const src  = `${data.foto_perfil}?t=${Date.now()}`
+            let img = document.getElementById("pAvImg")
+            if (!img) {
+                img = document.createElement("img")
+                img.className = "p-av-img"; img.id = "pAvImg"
+                const ini = document.getElementById("pAvIniciais")
+                if (ini) ini.replaceWith(img)
+            }
+            img.src = src
+        }
+    }, "image/jpeg", 0.92)
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function escHtml(txt) {
+    if (!txt) return ""
+    return String(txt)
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;").replace(/"/g,"&quot;")
+}
+
+carregarPerfil()
+carregarPosts()
+</script>
+</body>
+</html>
