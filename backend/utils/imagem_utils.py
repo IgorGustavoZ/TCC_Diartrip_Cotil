@@ -6,7 +6,6 @@ logger = logging.getLogger("diartrip.imagem")
 
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 MAX_SIZE = 5 * 1024 * 1024
-# Limite de dimensões: evita decompression bombs (ex: JPEG 1x1 que expande para GB)
 MAX_LARGURA = 4096
 MAX_ALTURA = 4096
 MAX_PIXELS = MAX_LARGURA * MAX_ALTURA  # ~16 MP
@@ -23,13 +22,6 @@ def _magic_bytes_ok(conteudo: bytes, ext: str) -> bool:
 
 
 def strip_exif(conteudo: bytes, ext: str) -> bytes:
-    """Re-encodes image removing all EXIF/GPS metadata via Pillow.
-
-    NUNCA retorna o conteúdo original: se o processamento falhar (arquivo
-    corrompido, formato inesperado, etc.) levanta HTTPException 400.
-    Isso impede que metadados sensíveis ou payloads malformados cheguem
-    ao Cloudinary caso a validação inicial seja burlada.
-    """
     try:
         from PIL import Image  # noqa: PLC0415
         img = Image.open(io.BytesIO(conteudo))
@@ -66,17 +58,6 @@ def validar_imagem(conteudo: bytes, ext: str, max_size: int = MAX_SIZE) -> None:
 
 
 def _validar_dimensoes(conteudo: bytes) -> None:
-    """Verifica dimensões da imagem para prevenir decompression bombs.
-
-    Duas camadas de proteção:
-    1. PIL.Image.MAX_IMAGE_PIXELS → Pillow levanta DecompressionBombError para
-       imagens > 2×MAX_PIXELS (≈32 MP) automaticamente.
-    2. warnings.catch_warnings com simplefilter("error") converte
-       DecompressionBombWarning (imagens entre MAX_PIXELS e 2×MAX_PIXELS) em
-       exceção capturável — sem esta conversão, o Warning seria silenciado.
-    3. Checagem explícita de largura/altura para rejeitar imagens com dimensão
-       em um eixo acima de MAX_LARGURA/MAX_ALTURA independentemente do total.
-    """
     import warnings
     try:
         from PIL import Image  # noqa: PLC0415

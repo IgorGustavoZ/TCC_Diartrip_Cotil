@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 
-/// Stub para criação de MultipartFile.
 Future<MultipartFile> createMultipartFile({
   required String filePath,
   required String filename,

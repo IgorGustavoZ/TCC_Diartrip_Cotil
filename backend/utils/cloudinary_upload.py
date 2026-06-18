@@ -50,7 +50,6 @@ def deletar_imagem(url: str) -> None:
         return
     _configurar()
     try:
-        # URL: https://res.cloudinary.com/cloud/image/upload/vXXX/pasta/arquivo.ext
         partes = url.split("/upload/")
         if len(partes) < 2:
             return

@@ -43,9 +43,6 @@ def _conn_seq(fetchones, fetchalls=None):
     return conn
 
 
-# =========================================================================== #
-# Dashboard geral
-# =========================================================================== #
 
 class TestDashboardGeral:
     def test_membro_acessa_dashboard_geral(self, client_usuario):
@@ -71,9 +68,6 @@ class TestDashboardGeral:
         assert resp.status_code == 401
 
 
-# =========================================================================== #
-# Dashboard pessoal
-# =========================================================================== #
 
 class TestDashboardPessoal:
     def test_membro_acessa_dashboard_pessoal(self, client_usuario):
@@ -94,9 +88,6 @@ class TestDashboardPessoal:
         assert resp.status_code == 403
 
 
-# =========================================================================== #
-# Dashboard completo
-# =========================================================================== #
 
 class TestDashboardCompleto:
     def test_membro_acessa_dashboard_completo(self, client_usuario):
@@ -136,9 +127,6 @@ class TestDashboardCompleto:
         assert data.get("admin") is not None
 
 
-# =========================================================================== #
-# Dashboard admin exclusivo
-# =========================================================================== #
 
 class TestDashboardAdmin:
     def test_admin_acessa_dashboard_admin(self, client_admin):

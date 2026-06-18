@@ -23,9 +23,6 @@ def _make_login_db(senha_plain):
     return conn, hashed
 
 
-# =========================================================================== #
-# Login
-# =========================================================================== #
 
 class TestLogin:
     def test_login_valido_seta_cookie(self, client):
@@ -86,9 +83,6 @@ class TestLogin:
         assert resp.status_code == 200
 
 
-# =========================================================================== #
-# JWT — validacoes de token
-# =========================================================================== #
 
 class TestTokenJWT:
     def test_token_expirado_retorna_401(self, client):
@@ -150,9 +144,6 @@ class TestTokenJWT:
         assert resp.status_code == 401
 
 
-# =========================================================================== #
-# Seguranca de senhas
-# =========================================================================== #
 
 class TestSenhaSeguranca:
     def test_hash_bcrypt_nao_e_plaintext(self):
@@ -202,9 +193,6 @@ class TestSenhaSeguranca:
         assert exc.value.status_code == 401
 
 
-# =========================================================================== #
-# Escalada de privilegio
-# =========================================================================== #
 
 class TestEscaladaPrivilegio:
     def test_usuario_nao_pode_deletar_outro_usuario(self, client_usuario):

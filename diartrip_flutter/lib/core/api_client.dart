@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
@@ -31,11 +33,7 @@ Future<void> initApiClient() async {
 
   dio.interceptors.addAll([
     if (!kIsWeb) CookieManager(cookieJar),
-
-    // Injeta X-CSRF-Token em mutações
     _CsrfInterceptor(cookieJar),
-
-    // Renova access token automaticamente quando recebe 401
     _RefreshInterceptor(cookieJar),
 
     if (kDebugMode)
@@ -49,8 +47,6 @@ Future<void> initApiClient() async {
       ),
   ]);
 }
-
-// ─── Interceptor de CSRF ──────────────────────────────────────────────────────
 
 class _CsrfInterceptor extends Interceptor {
   final CookieJar _jar;
@@ -87,11 +83,9 @@ class _CsrfInterceptor extends Interceptor {
   }
 }
 
-// ─── Interceptor de Refresh Token ─────────────────────────────────────────────
-
 class _RefreshInterceptor extends Interceptor {
   final CookieJar _jar;
-  bool _refreshing = false;
+  Completer<bool>? _refreshCompleter;
 
   _RefreshInterceptor(this._jar);
 
@@ -100,20 +94,18 @@ class _RefreshInterceptor extends Interceptor {
     Response response,
     ResponseInterceptorHandler handler,
   ) async {
-    // Ignora o próprio endpoint de refresh para evitar loop infinito
     final path = response.requestOptions.path;
-    if (response.statusCode == 401 &&
-        !path.contains('/token/refresh') &&
-        !path.contains('/login')) {
-      if (_refreshing) {
-        handler.next(response);
-        return;
-      }
-      _refreshing = true;
-      try {
-        final refreshed = await _tryRefresh();
-        if (refreshed) {
-          // Refaz a requisição original com os novos cookies
+    if (response.statusCode != 401 ||
+        path.contains('/token/refresh') ||
+        path.contains('/login')) {
+      handler.next(response);
+      return;
+    }
+
+    if (_refreshCompleter != null) {
+      final refreshed = await _refreshCompleter!.future;
+      if (refreshed) {
+        try {
           final opts = response.requestOptions;
           final newToken = await _readCsrfToken(opts.uri);
           if (newToken != null) {
@@ -123,19 +115,37 @@ class _RefreshInterceptor extends Interceptor {
           final retry = await dio.fetch(opts);
           handler.resolve(retry);
           return;
-        }
-      } catch (_) {
-        // Refresh falhou — deixa o 401 propagar normalmente
-      } finally {
-        _refreshing = false;
+        } catch (_) {}
       }
+      handler.next(response);
+      return;
+    }
+
+    _refreshCompleter = Completer<bool>();
+    try {
+      final refreshed = await _tryRefresh();
+      _refreshCompleter!.complete(refreshed);
+      if (refreshed) {
+        final opts = response.requestOptions;
+        final newToken = await _readCsrfToken(opts.uri);
+        if (newToken != null) {
+          opts.headers['X-CSRF-Token'] = newToken;
+          opts.headers['X-CSRFToken'] = newToken;
+        }
+        final retry = await dio.fetch(opts);
+        handler.resolve(retry);
+        return;
+      }
+    } catch (_) {
+      _refreshCompleter!.complete(false);
+    } finally {
+      _refreshCompleter = null;
     }
     handler.next(response);
   }
 
   Future<bool> _tryRefresh() async {
     try {
-      // POST /token/refresh — o browser/cookie jar envia refresh_token automaticamente
       final r = await dio.post('/token/refresh');
       return r.statusCode == 200;
     } catch (_) {
@@ -156,9 +166,6 @@ class _RefreshInterceptor extends Interceptor {
   }
 }
 
-// ─── Utilitários públicos ─────────────────────────────────────────────────────
-
-/// Extrai mensagem legível de respostas de erro da API.
 String apiError(dynamic data, [String fallback = 'Erro desconhecido']) {
   if (data is! Map) return fallback;
   final detail = data['detail'];
@@ -179,7 +186,6 @@ String apiError(dynamic data, [String fallback = 'Erro desconhecido']) {
   return fallback;
 }
 
-/// Constrói o header `Cookie: …` a partir do jar nativo (usado no WebSocket).
 Future<String> buildCookieHeader() async {
   if (kIsWeb) return '';
   try {
@@ -191,7 +197,6 @@ Future<String> buildCookieHeader() async {
   }
 }
 
-/// Retorna o token CSRF do jar (I/O) ou de document.cookie (Web).
 Future<String?> getCsrfToken() async {
   try {
     if (kIsWeb) return readWebCsrfToken();

@@ -1,6 +1,3 @@
-"""
-test_grupos.py — Testes de grupos de viagem com banco mockado.
-"""
 from unittest.mock import MagicMock, patch
 
 from tests.conftest import fake_get_db, fake_grupo
@@ -17,7 +14,6 @@ GRUPO_PAYLOAD = {
 
 
 def _conn_seq(fetchones, fetchalls=None):
-    """Gera conn mock com sequencia de retornos."""
     fa = fetchalls or {}
     fetch_idx = [0]
     fetchall_idx = [0]
@@ -49,10 +45,6 @@ def _conn_seq(fetchones, fetchalls=None):
     return conn
 
 
-# =========================================================================== #
-# Criar grupo
-# =========================================================================== #
-
 class TestCriarGrupo:
     def test_criar_grupo_valido(self, client_usuario):
         conn = _conn_seq([(1,), None, None])
@@ -77,9 +69,6 @@ class TestCriarGrupo:
         assert resp.status_code == 401
 
 
-# =========================================================================== #
-# Listar grupos
-# =========================================================================== #
 
 class TestListarGrupos:
     def test_listar_grupos_do_usuario(self, client_usuario):
@@ -115,9 +104,6 @@ class TestListarGrupos:
         assert resp.status_code == 401
 
 
-# =========================================================================== #
-# Buscar grupo por ID
-# =========================================================================== #
 
 class TestBuscarGrupo:
     def test_membro_pode_buscar_grupo(self, client_usuario):
@@ -134,17 +120,14 @@ class TestBuscarGrupo:
         assert resp.status_code == 403
 
 
-# =========================================================================== #
-# Entrar por codigo de convite
-# =========================================================================== #
 
 class TestEntrarGrupo:
     def test_entrar_com_codigo_valido(self, client_usuario):
         conn = _conn_seq([
-            (1,),                                       # auth
-            {"id_grupo": 10, "nome_grupo": "Paris"},   # SELECT grupo
-            None,                                       # ja e membro? Nao
-            None,                                       # INSERT
+            (1,),
+            {"id_grupo": 10, "nome_grupo": "Paris"},
+            None,
+            None,
         ])
         with patch("database.get_db", fake_get_db(conn)):
             resp = client_usuario.post("/grupos/entrar", json={"codigo_convite": "ABC123"})
@@ -160,24 +143,21 @@ class TestEntrarGrupo:
         conn = _conn_seq([
             (1,),
             {"id_grupo": 10, "nome_grupo": "Grupo"},
-            (1,),   # ja e membro
+            (1,),
         ])
         with patch("database.get_db", fake_get_db(conn)):
             resp = client_usuario.post("/grupos/entrar", json={"codigo_convite": "ABC123"})
         assert resp.status_code == 400
 
 
-# =========================================================================== #
-# Atualizar e deletar grupo (somente admin)
-# =========================================================================== #
 
 class TestAdminGrupo:
     def test_admin_pode_atualizar_grupo(self, client_admin):
         conn = _conn_seq([
-            (99,),              # auth
-            {"cargo": "admin"}, # verificar_pertence_ao_grupo
-            {"cargo": "admin"}, # verificar_admin_do_grupo (encadeado)
-            None,               # UPDATE
+            (99,),
+            {"cargo": "admin"},
+            {"cargo": "admin"},
+            None,
         ])
         with patch("database.get_db", fake_get_db(conn)):
             resp = client_admin.put("/grupos/10", json=GRUPO_PAYLOAD)
@@ -197,7 +177,7 @@ class TestAdminGrupo:
                 c.fetchone.return_value = {"cargo": "admin"}
             else:
                 c.fetchone.return_value = (1,)
-                c.fetchall.return_value = []   # sem fotos
+                c.fetchall.return_value = []
             return c
 
         conn = MagicMock()

@@ -7,6 +7,7 @@ import '../../../core/theme.dart';
 import '../../../models/foto.dart';
 import '../../../providers/language_provider.dart';
 import '../../../services/foto_service.dart';
+import '../../../widgets/image_cropper_modal.dart';
 
 class PhotosTab extends StatefulWidget {
   final int idGrupo;
@@ -43,17 +44,28 @@ class _PhotosTabState extends State<PhotosTab>
 
   Future<void> _upload() async {
     final f = await ImagePicker()
-        .pickImage(source: ImageSource.gallery, imageQuality: 80);
+        .pickImage(source: ImageSource.gallery, imageQuality: 100);
     if (f == null || !mounted) return;
+
+    final originalBytes = await f.readAsBytes();
+    if (!mounted) return;
+
+    // Free aspect ratio for group photos
+    final croppedBytes = await showImageCropperModal(
+      context,
+      originalBytes,
+      aspectRatio: null,
+    );
+    if (croppedBytes == null || !mounted) return;
+
     setState(() => _uploading = true);
     try {
-      final bytes = await f.readAsBytes();
       await FotoService.upload(
         idGrupo: widget.idGrupo,
         filePath: f.path,
-        filename: f.name,
-        mimeType: f.mimeType ?? 'image/jpeg',
-        bytes: bytes,
+        filename: 'group_photo.png',
+        mimeType: 'image/png',
+        bytes: croppedBytes,
       );
       await _load();
     } catch (e) {

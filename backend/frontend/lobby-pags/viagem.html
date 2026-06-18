@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diartrip - Trip</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../static/style.css">
+<link rel="stylesheet" href="../static/style.css?v=2">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="../static/i18n.js"></script>
 </head>
@@ -31,6 +31,8 @@
         <a href="perfil.html">
             <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
         </a>
+        <div class="sidebar-spacer"></div>
+        <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Sair</div>
     </div>
 
     <div class="main">
@@ -60,7 +62,6 @@
 
         <div class="trip-content">
 
-            <!-- TAB GERAL -->
             <div id="tab-geral" class="tab-content active">
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.tab.overview.dashboard">📊 Dashboard do Grupo</h2>
@@ -68,10 +69,14 @@
                         <div class="dashboard-card">
                             <h3 data-i18n="viagem.tab.overview.budget">💰 Orçamento</h3>
                             <div class="stat-row">
+                                <span class="stat-label" data-i18n="viagem.tab.overview.budget.total">Orçamento Total</span>
+                                <span class="stat-value" id="orcamentoTotal">R$ 0,00</span>
+                            </div>
+                            <div class="stat-row">
                                 <span class="stat-label" data-i18n="viagem.tab.overview.totalSpent">Total Gasto</span>
                                 <span class="stat-value" id="totalGasto">R$ 0,00</span>
                             </div>
-                            <div class="stat-row">
+                            <div class="stat-row" id="rowRestante">
                                 <span class="stat-label" data-i18n="viagem.tab.overview.remaining">Restante</span>
                                 <span class="stat-value" id="orcamentoRestante">R$ 0,00</span>
                             </div>
@@ -93,7 +98,6 @@
                 </div>
             </div>
 
-            <!-- TAB PESSOAL -->
             <div id="tab-pessoal" class="tab-content">
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.tab.personal.myView">👤 Minha Visão</h2>
@@ -120,7 +124,6 @@
                 </div>
             </div>
 
-            <!-- TAB ADMIN -->
             <div id="tab-admin" class="tab-content">
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.tab.admin.panel">👑 Painel Administrativo</h2>
@@ -153,7 +156,6 @@
                 </div>
             </div>
 
-            <!-- TAB GASTOS -->
             <div id="tab-gastos" class="tab-content">
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.registerExpense">💸 Registrar Gasto</h2>
@@ -201,12 +203,10 @@
                 </div>
             </div>
 
-            <!-- TAB ROTEIRO -->
             <div id="tab-roteiro" class="tab-content">
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.itineraryTitle">📋 Roteiro da Viagem</h2>
 
-                    <!-- Formulário admin: adicionar item -->
                     <div id="roteiroFormAdd" style="display:none; margin-bottom:24px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:18px;">
                         <p style="margin:0 0 12px; font-size:14px; color:#94a3b8;" data-i18n="viagem.addItem">Adicionar item ao roteiro</p>
                         <input id="roteiroTitulo" type="text" data-i18n-placeholder="viagem.itemTitle" placeholder="Título (ex: Visita ao Coliseu)" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px 12px; color:#f1f5f9; font-size:14px; margin-bottom:10px; outline:none;">
@@ -219,7 +219,6 @@
                 </div>
             </div>
 
-            <!-- TAB CHAT -->
             <div id="tab-chat" class="tab-content">
                 <div class="trip-card-expanded" style="display:flex; flex-direction:column; height:520px; padding:20px;">
                     <h2 style="margin:0 0 16px; flex-shrink:0;" data-i18n="viagem.groupChat">💬 Chat do Grupo</h2>
@@ -231,7 +230,6 @@
                 </div>
             </div>
 
-            <!-- TAB INFO -->
             <div id="tab-info" class="tab-content">
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.infoTitle">📌 Informações da viagem</h2>
@@ -278,11 +276,15 @@
 <script>
 const params = new URLSearchParams(window.location.search)
 const idGrupo = params.get("id")
+if (!idGrupo) { window.location.replace("../lobby.html"); throw new Error("sem id") }
 const meuId = parseInt(sessionStorage.getItem("id"))
 let isAdmin = false
 let chatWS = null
 let ultimaMsgId = 0
 let grupoAtual = null
+let _wsRetryTimer = null
+let _wsRetryDelay = 1000
+const _msgIdsRendered = new Set()
 
 if (!sessionStorage.getItem("logado")) window.location.href = "../login.html"
 
@@ -307,8 +309,19 @@ async function carregarGrupo() {
     document.getElementById("datasViagem").innerText = `${grupo.data_inicio} → ${grupo.data_fim}`
     document.getElementById("infoDestino").innerText = grupo.destino_principal
     document.getElementById("infoPeriodo").innerText = `${grupo.data_inicio} ${t('common.at')} ${grupo.data_fim}`
-    document.getElementById("codigoConvite").innerText = grupo.codigo_convite
-    document.getElementById("inviteInput").value = grupo.codigo_convite
+    if (grupo.codigo_convite) {
+        document.getElementById("codigoConvite").innerText = grupo.codigo_convite
+        document.getElementById("inviteInput").value = grupo.codigo_convite
+        document.querySelector('.btn-convite').style.display = ""
+        document.getElementById("codigoConvite").closest('.info-item').style.display = ""
+        document.getElementById("inviteInput").closest('.trip-card-expanded').style.display = ""
+    } else {
+        document.getElementById("codigoConvite").innerText = ""
+        document.getElementById("inviteInput").value = ""
+        document.querySelector('.btn-convite').style.display = "none"
+        document.getElementById("codigoConvite").closest('.info-item').style.display = "none"
+        document.getElementById("inviteInput").closest('.trip-card-expanded').style.display = "none"
+    }
 
     carregarDashboard()
     carregarGastos()
@@ -316,14 +329,29 @@ async function carregarGrupo() {
 
 async function carregarDashboard() {
     const resp = await fetch(`/grupos/${idGrupo}/dashboard`, { credentials: "include" })
-    if (!resp.ok) return
+    if (!resp.ok) {
+        console.error("Erro ao carregar dashboard:", resp.status)
+        return
+    }
+    isAdmin = false
+    document.getElementById("adminTabBtn").style.display = "none"
+    document.getElementById("roteiroFormAdd").style.display = "none"
     const data = await resp.json()
 
     const g = data.geral
+    const orcTotal = g.orcamento_total || 0
+    document.getElementById("orcamentoTotal").innerText = `R$ ${orcTotal.toLocaleString(getLang(), {minimumFractionDigits:2})}`
     document.getElementById("totalGasto").innerText = `R$ ${g.total_consumido.toLocaleString(getLang(), {minimumFractionDigits:2})}`
-    document.getElementById("orcamentoRestante").innerText = `R$ ${g.orcamento_restante.toLocaleString(getLang(), {minimumFractionDigits:2})}`
-    document.getElementById("percentualGasto").innerText = g.percentual_consumido
-    document.getElementById("progressBar").style.width = `${Math.min(g.percentual_consumido, 100)}%`
+    if (orcTotal > 0) {
+        document.getElementById("rowRestante").style.display = ""
+        document.getElementById("orcamentoRestante").innerText = `R$ ${g.orcamento_restante.toLocaleString(getLang(), {minimumFractionDigits:2})}`
+        document.getElementById("percentualGasto").innerText = g.percentual_consumido
+        document.getElementById("progressBar").style.width = `${Math.min(g.percentual_consumido, 100)}%`
+    } else {
+        document.getElementById("rowRestante").style.display = "none"
+        document.getElementById("percentualGasto").innerText = "—"
+        document.getElementById("progressBar").style.width = "0%"
+    }
     if (g.distribuicao_categorias.length > 0) {
         document.getElementById("listaCategorias").innerHTML = g.distribuicao_categorias.map(cat => `
             <div class="category-item">
@@ -436,7 +464,7 @@ async function registrarGasto() {
         document.getElementById("gastoDescricao").value = ""
         document.getElementById("gastoData").value = ""
         carregarGastos()
-        carregarDashboard()
+        await carregarDashboard()
 
     } catch (e) {
         erroEl.textContent = t('lobby.chat.noServer')
@@ -463,30 +491,46 @@ async function deletarGasto(idGasto) {
 
 function copiarCodigo() {
     const codigo = document.getElementById("inviteInput").value
+    if (!codigo) return
     navigator.clipboard.writeText(codigo)
     alert(t('common.copied'))
 }
 
-// ---- Chat do grupo ----
 function conectarChatWS() {
     if (chatWS && chatWS.readyState < WebSocket.CLOSING) return
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:'
     chatWS = new WebSocket(`${proto}//${location.host}/grupos/${idGrupo}/chat/ws`)
+    window._chatWS = chatWS
     chatWS.onopen = () => {
+        _wsRetryDelay = 1000
         if (ultimaMsgId > 0) carregarChat(false)
     }
     chatWS.onmessage = (ev) => {
         let m
         try { m = JSON.parse(ev.data) } catch { return }
         if (m.erro) return
+        if (_msgIdsRendered.has(m.id_mensagem)) return
+        _msgIdsRendered.add(m.id_mensagem)
         const container = document.getElementById("chatGrupoMsgs")
         container.insertAdjacentHTML("beforeend", _renderMsgHtml(m))
         ultimaMsgId = m.id_mensagem
         container.scrollTop = container.scrollHeight
     }
-    chatWS.onclose = () => setTimeout(conectarChatWS, 3000)
+    chatWS.onclose = () => {
+        clearTimeout(_wsRetryTimer)
+        if (document.hidden) return
+        _wsRetryTimer = setTimeout(conectarChatWS, _wsRetryDelay)
+        _wsRetryDelay = Math.min(_wsRetryDelay * 2, 30000)
+    }
     chatWS.onerror = () => chatWS.close()
 }
+
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && chatWS && chatWS.readyState > WebSocket.OPEN) {
+        _wsRetryDelay = 1000
+        conectarChatWS()
+    }
+})
 
 function switchTab(btn, tabName) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
@@ -529,9 +573,15 @@ async function carregarChat(cargaInicial) {
 
     const container = document.getElementById("chatGrupoMsgs")
     if (cargaInicial) {
+        _msgIdsRendered.clear()
         container.innerHTML = msgs.map(_renderMsgHtml).join("")
+        msgs.forEach(m => _msgIdsRendered.add(m.id_mensagem))
     } else {
-        msgs.forEach(m => container.insertAdjacentHTML("beforeend", _renderMsgHtml(m)))
+        msgs.forEach(m => {
+            if (_msgIdsRendered.has(m.id_mensagem)) return
+            _msgIdsRendered.add(m.id_mensagem)
+            container.insertAdjacentHTML("beforeend", _renderMsgHtml(m))
+        })
     }
     ultimaMsgId = msgs[msgs.length - 1].id_mensagem
     container.scrollTop = container.scrollHeight
@@ -559,7 +609,6 @@ document.getElementById("chatGrupoInput").addEventListener("keydown", e => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviarMsgGrupo() }
 })
 
-// ---- Roteiro ----
 async function carregarRoteiro() {
     const resp = await fetch(`/grupos/${idGrupo}/roteiros`, {
         credentials: "include"
@@ -584,10 +633,9 @@ async function carregarRoteiro() {
                 ${isAdmin ? `
                 <div style="display:flex;gap:6px;flex-shrink:0;">
                     <button onclick="iniciarEdicaoRoteiro(${r.id_roteiro},'${escapeAtr(r.titulo)}','${escapeAtr(r.descricao)}')" style="background:rgba(255,255,255,0.08);border:none;border-radius:6px;padding:6px 10px;color:#cbd5f5;font-size:12px;cursor:pointer;">${t('viagem.itinerary.edit')}</button>
-                    <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:rgba(239,68,68,0.15);border:none;border-radius:6px;padding:6px 10px;color:#f87171;font-size:12px;cursor:pointer;">🗑</button>
+                    <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:rgba(248,113,113,0.15);border:none;border-radius:6px;padding:6px 10px;color:#f87171;font-size:12px;cursor:pointer;">🗑</button>
                 </div>` : ""}
             </div>
-            <!-- formulário de edição inline (oculto por padrão) -->
             <div id="redit-${r.id_roteiro}" style="display:none;margin-top:12px;">
                 <input id="retitulo-${r.id_roteiro}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 12px;color:#f1f5f9;font-size:14px;margin-bottom:8px;outline:none;">
                 <textarea id="redesc-${r.id_roteiro}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 12px;color:#f1f5f9;font-size:14px;resize:vertical;min-height:60px;outline:none;"></textarea>
@@ -653,7 +701,6 @@ async function deletarRoteiroItem(id) {
     if (resp.ok) carregarRoteiro()
 }
 
-// ---- Gerenciar membros (admin) ----
 async function carregarMembrosAdmin() {
     const respMembros = await fetch(`/grupos/${idGrupo}/membros`, {
         credentials: "include"
@@ -670,15 +717,15 @@ async function carregarMembrosAdmin() {
         const iniciais = m.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
 
         const badgeStyle = isCriador
-            ? "background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.3);"
+            ? "background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.35);"
             : isAdminMembro
-                ? "background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);"
+                ? "background:rgba(255,209,102,0.15);color:#ffd166;border:1px solid rgba(255,209,102,0.3);"
                 : "background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.2);"
         const badgeLabel = isCriador ? t('viagem.badge.owner') : isAdminMembro ? t('viagem.badge.admin') : t('viagem.badge.member')
 
         const btnAcao = (isMe || isCriador) ? "" : isAdminMembro
-            ? `<button onclick="rebaixarMembro(${m.id_usuario})" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.action.demote')}</button>`
-            : `<button onclick="promoverMembro(${m.id_usuario})" style="background:rgba(251,191,36,0.12);color:#fbbf24;border:1px solid rgba(251,191,36,0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.action.promote')}</button>`
+            ? `<button onclick="rebaixarMembro(${m.id_usuario})" style="background:rgba(248,113,113,0.12);color:#f87171;border:1px solid rgba(248,113,113,0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.action.demote')}</button>`
+            : `<button onclick="promoverMembro(${m.id_usuario})" style="background:rgba(255,209,102,0.12);color:#ffd166;border:1px solid rgba(255,209,102,0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.action.promote')}</button>`
 
         return `
         <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;">
@@ -719,8 +766,9 @@ function escapeAtr(txt) {
     return String(txt).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\n/g,"\\n")
 }
 
+const TABS_VALIDAS = ["geral", "pessoal", "admin", "gastos", "roteiro", "chat", "info"]
 const tabInicial = params.get("tab")
-if (tabInicial) {
+if (tabInicial && TABS_VALIDAS.includes(tabInicial)) {
     const btn = document.querySelector(`.tab-btn[data-tab="${tabInicial}"]`)
     if (btn) btn.click()
 }

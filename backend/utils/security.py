@@ -26,15 +26,11 @@ if ALGORITHM not in _ALGORITMOS_PERMITIDOS:
         f"ALGORITHM '{ALGORITHM}' não é seguro. Use um destes: {sorted(_ALGORITMOS_PERMITIDOS)}"
     )
 _ACCESS_TOKEN_LIFETIME = timedelta(minutes=30)
-_REFRESH_TOKEN_TTL = 7 * 24 * 3600  # 7 dias em segundos
+_REFRESH_TOKEN_TTL = 7 * 24 * 3600
 _IS_PRODUCTION = os.getenv("ENVIRONMENT", "development") == "production"
 
-# Fallback em memória — APENAS para desenvolvimento local.
-# Em produção o lifespan (main.py) aborta a inicialização sem Redis,
-# mas se Redis cair pós-startup, as funções abaixo falham explicitamente.
 _revogados: dict[str, float] = {}
 _revogados_lock = threading.Lock()
-# Refresh tokens em memória (dev only): token → (usuario_id, exp_timestamp)
 _refresh_tokens_memory: dict[str, tuple[int, float]] = {}
 
 
@@ -47,9 +43,6 @@ def _limpar_revogados() -> None:
 
 
 def revogar_token(token: str) -> None:
-    """Adiciona o JTI do token à blacklist no Redis (TTL automático).
-    Em produção sem Redis: levanta 503 para não silenciar a falha de revogação.
-    Em desenvolvimento: usa dicionário local como fallback."""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         jti = payload.get("jti")
@@ -95,8 +88,6 @@ def revogar_token(token: str) -> None:
 
 
 def _is_revogado(jti: str) -> bool:
-    """Verifica se o JTI está na blacklist.
-    Em produção sem Redis: falha explicitamente para não aceitar tokens potencialmente revogados."""
     r = get_redis()
     if r is not None:
         try:
@@ -142,10 +133,7 @@ def criar_token(usuario_id: int) -> str:
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
-# ── Refresh Token ─────────────────────────────────────────────────────────────
-
 def criar_refresh_token(usuario_id: int) -> str:
-    """Gera refresh token seguro e o armazena no Redis (ou memória em dev)."""
     token = _secrets_module.token_urlsafe(48)
     r = get_redis()
     if r is not None:
@@ -161,8 +149,6 @@ def criar_refresh_token(usuario_id: int) -> str:
 
 
 def validar_e_revogar_refresh_token(token: str) -> int:
-    """Valida refresh token, retorna usuario_id e o revoga atomicamente (rotação).
-    Levanta 401 se o token for inválido ou expirado."""
     r = get_redis()
     if r is not None:
         pipe = r.pipeline()
@@ -185,7 +171,6 @@ def validar_e_revogar_refresh_token(token: str) -> int:
 
 
 def revogar_refresh_token(token: str) -> None:
-    """Remove o refresh token (usado no logout)."""
     r = get_redis()
     if r is not None:
         r.delete(f"rt:{token}")

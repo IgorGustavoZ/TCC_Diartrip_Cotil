@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diartrip</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="static/style.css">
+<link rel="stylesheet" href="static/style.css?v=2">
 <link rel="shortcut icon" href="imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="static/i18n.js"></script>
 </head>
@@ -34,6 +34,9 @@
     <a href="lobby-pags/form-viagem.html">
         <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
     </a>
+
+    <div class="sidebar-spacer"></div>
+    <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Sair</div>
 
     </div>
 
@@ -187,6 +190,7 @@
             aviso.innerHTML = `<strong>AI:</strong> ${t('lobby.chat.selectFirst') || 'Select a trip before sending a message.'}`
             messages.appendChild(aviso)
             messages.scrollTop = messages.scrollHeight
+            input.value = ""
             return
         }
 

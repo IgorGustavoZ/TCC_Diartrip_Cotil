@@ -22,7 +22,6 @@ class _LobbyScreenState extends State<LobbyScreen> {
   List<Grupo> _grupos = [];
   bool _loading = true;
 
-  // Chat IA
   final List<_Msg> _msgs = [];
   final _chatCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
@@ -115,7 +114,6 @@ class _LobbyScreenState extends State<LobbyScreen> {
       appBar: AppBar(
         title: Text(lang.translate('lobby.greeting').replaceFirst('{name}', user?.nome.split(' ').first ?? '')),
         actions: [
-          // AI chat acessível via ícone no AppBar em mobile
           if (!isWide)
             IconButton(
               icon: const Icon(Icons.smart_toy_outlined, color: AppTheme.accent),
@@ -139,11 +137,11 @@ class _LobbyScreenState extends State<LobbyScreen> {
       ),
       body: isWide
           ? Row(children: [
-              Expanded(child: _tripsList(lang)),   // Expanded aqui, não dentro de _tripsList
+              Expanded(child: _tripsList(lang)),
               const VerticalDivider(width: 1),
               Expanded(child: _chatPanel(lang)),
             ])
-          : _tripsList(lang),   // corpo do Scaffold recebe widget normal, não Expanded
+          : _tripsList(lang),
     );
   }
 

@@ -1,11 +1,6 @@
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
 
-/// Lê o token CSRF de document.cookie no Flutter Web.
-///
-/// Cobre os nomes padrão de FastAPI ("csrf_token") e Django ("csrftoken").
-/// O cookie NÃO pode ter o atributo HttpOnly — caso contrário o browser
-/// bloqueia a leitura e este método retorna null.
 String? readWebCsrfToken() {
   const names = ['csrf_token', 'csrftoken'];
   try {

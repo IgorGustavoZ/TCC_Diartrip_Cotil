@@ -28,7 +28,7 @@ def listar_posts(
 
 @router.post("/posts", response_model=PostCriado, status_code=201)
 async def criar_post(
-    conteudo: str = Form(..., max_length=5000),
+    conteudo: str = Form("", max_length=5000),
     imagem: Optional[UploadFile] = File(None),
     usuario_id: int = Depends(get_usuario_logado),
 ):

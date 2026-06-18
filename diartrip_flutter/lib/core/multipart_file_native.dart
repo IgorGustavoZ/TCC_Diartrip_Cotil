@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 
-/// Implementação Nativa: usa fromFile para eficiência de memória.
 Future<MultipartFile> createMultipartFile({
   required String filePath,
   required String filename,

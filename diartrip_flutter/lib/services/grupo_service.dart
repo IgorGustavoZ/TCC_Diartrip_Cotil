@@ -21,7 +21,6 @@ class GrupoService {
     return Grupo.fromJson(r.data as Map<String, dynamic>);
   }
 
-  // Backend retorna {"mensagem", "id_grupo", "codigo_convite"} — não o Grupo completo.
   static Future<int> criar({
     required String nomeGrupo,
     required String destinoPrincipal,
@@ -49,9 +48,6 @@ class GrupoService {
     _check(r);
   }
 
-  // Backend retorna {"mensagem":"Grupo atualizado"} — sem objeto completo.
-  // Chamar GrupoService.get(id) após atualizar se precisar dos dados atualizados.
-  // TODOS os campos são obrigatórios no backend (GrupoInput) — o PUT é substituição total.
   static Future<void> atualizar({
     required int id,
     required String nomeGrupo,

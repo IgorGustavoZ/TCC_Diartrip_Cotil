@@ -42,11 +42,9 @@ class UsuarioService {
       if (bio != null) 'bio': bio,
     });
     _check(r);
-    // O backend retorna {"mensagem": "Usuário atualizado"} — busca o perfil atualizado.
     return getMe();
   }
 
-  /// Envia foto de perfil como multipart.
   static Future<String> atualizarFoto({
     required int id,
     required String filePath,

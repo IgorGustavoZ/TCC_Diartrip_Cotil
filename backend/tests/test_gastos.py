@@ -1,6 +1,3 @@
-"""
-test_gastos.py — Testes de gastos e balanco com banco mockado.
-"""
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -49,10 +46,6 @@ def _conn_seq(fetchones, fetchalls=None):
     return conn
 
 
-# =========================================================================== #
-# Criar gasto
-# =========================================================================== #
-
 class TestCriarGasto:
     def test_criar_gasto_valido(self, client_usuario):
         conn = _conn_seq(
@@ -72,7 +65,6 @@ class TestCriarGasto:
         assert resp.status_code == 422
 
     def test_usuario_fora_do_grupo_na_divisao_retorna_400(self, client_usuario):
-        """Usuario nao-membro na lista de divisao retorna 400."""
         conn = _conn_seq(
             [(1,), {"cargo": "membro"}, {"qtd": 0}]
         )
@@ -92,10 +84,6 @@ class TestCriarGasto:
         assert resp.status_code == 401
 
 
-# =========================================================================== #
-# Divisao com Decimal (testes unitarios)
-# =========================================================================== #
-
 class TestDivisaoDecimal:
     def test_divisao_exata(self):
         from services.gasto_service import _inserir_divisao
@@ -105,7 +93,6 @@ class TestDivisaoDecimal:
         assert sum(Decimal(str(v)) for v in valores) == Decimal("100.00")
 
     def test_divisao_com_centavo_residual(self):
-        """10 / 3 = 3.33 + 3.33 + 3.34."""
         from services.gasto_service import _inserir_divisao
         cursor = MagicMock()
         _inserir_divisao(cursor, id_gasto=1, participantes=[1, 2, 3], valor_total=10.0)
@@ -128,10 +115,6 @@ class TestDivisaoDecimal:
         assert sum(Decimal(str(v)) for v in valores) == Decimal("1000.00")
 
 
-# =========================================================================== #
-# Balanco do grupo
-# =========================================================================== #
-
 class TestBalanco:
     def test_obter_balanco_retorna_lista(self, client_usuario):
         conn = _conn_seq(
@@ -142,8 +125,6 @@ class TestBalanco:
                 4: [{"user_id": 2, "total": 50.0}],
             }
         )
-        # fetchall na pos 2, 3, 4 — o _conn_seq so suporta fa por idx do cursor
-        # vamos usar conn manual para controlar melhor
         call_count = [0]
 
         def factory(**kw):
@@ -183,10 +164,6 @@ class TestBalanco:
         assert isinstance(resp.json(), list)
 
 
-# =========================================================================== #
-# Deletar gasto
-# =========================================================================== #
-
 class TestDeletarGasto:
     def test_dono_pode_deletar_gasto(self, client_usuario):
         conn = _conn_seq([
@@ -200,7 +177,6 @@ class TestDeletarGasto:
         assert resp.status_code == 200
 
     def test_outro_membro_nao_pode_deletar_gasto(self, client_usuario):
-        """Token id=1, mas gasto pertence ao usuario 2."""
         conn = _conn_seq([
             (1,),
             {"id_usuario": 2, "id_grupo": 10},
@@ -217,10 +193,6 @@ class TestDeletarGasto:
         assert resp.status_code == 404
 
 
-# =========================================================================== #
-# Atualizar gasto
-# =========================================================================== #
-
 class TestAtualizarGasto:
     def test_dono_pode_atualizar_gasto(self, client_usuario):
         conn = _conn_seq(
@@ -236,7 +208,6 @@ class TestAtualizarGasto:
         assert resp.status_code == 200
 
     def test_nao_dono_nao_pode_atualizar(self, client_usuario):
-        """Token id=1, gasto pertence ao usuario 2, nao e admin."""
         conn = _conn_seq([
             (1,),
             {"id_usuario": 2, "id_grupo": 10, "valor": 50.0},

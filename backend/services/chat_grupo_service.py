@@ -40,7 +40,6 @@ def enviar(id_grupo: int, usuario_id: int, conteudo: str) -> dict:
             )
             id_mensagem = cursor.lastrowid
 
-            # Retorna mensagem completa para compatibilidade com Mensagem.fromJson()
             cursor.execute(
                 """
                 SELECT m.id_mensagem, m.id_grupo, m.conteudo, m.data_envio,

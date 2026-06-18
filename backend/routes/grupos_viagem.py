@@ -19,7 +19,7 @@ class GrupoInput(BaseModel):
     data_inicio: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")
     data_fim: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")
     orcamento: float
-    tipo_viagem: str = Field(..., max_length=100)   # alinhado com DB VARCHAR(100)
+    tipo_viagem: str = Field(..., max_length=100)
     preferencias: str = Field(..., max_length=1000)
 
     @field_validator("orcamento")
@@ -51,7 +51,6 @@ def listar_grupos(usuario_id: int = Depends(get_usuario_logado)):
 
 @router.get("/gruposAll", response_model=list[GrupoLista])
 def listar_grupos_all(usuario_id: int = Depends(get_usuario_logado)):
-    """Alias de /grupos mantido para compatibilidade com o cliente desktop."""
     return grupo_service.listar_por_usuario(usuario_id)
 
 
@@ -88,7 +87,6 @@ def rotacionar_codigo_convite(
     days: int = Query(7, ge=1, le=365, description="Validade do novo código em dias"),
     usuario_id: int = Depends(get_usuario_logado),
 ):
-    """Gera um novo código de convite e invalida o anterior. Exclusivo para admins."""
     return grupo_service.rotacionar_codigo_convite(id_grupo, usuario_id, days)
 
 

@@ -20,7 +20,6 @@ class AppDrawer extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // Cabeçalho do usuário
             Padding(
               padding: const EdgeInsets.all(20),
               child: Row(
@@ -61,7 +60,6 @@ class AppDrawer extends StatelessWidget {
             ),
             const Divider(height: 1),
             const SizedBox(height: 8),
-            // Itens de menu
             _item(context, Icons.home_outlined, lang.translate('nav.myTrips'), '/lobby'),
             _item(context, Icons.groups_outlined, lang.translate('nav.groups'), '/grupos'),
             _item(context, Icons.dynamic_feed_outlined, lang.translate('nav.feed'), '/feed'),
@@ -69,7 +67,6 @@ class AppDrawer extends StatelessWidget {
             _item(context, Icons.settings_outlined, lang.translate('nav.settings'), '/config'),
             const Spacer(),
             const Divider(height: 1),
-            // Logout
             ListTile(
               leading: const Icon(Icons.logout, color: AppTheme.error, size: 20),
               title: Text(

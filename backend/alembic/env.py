@@ -27,8 +27,6 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Constrói a URL de conexão a partir das variáveis de ambiente —
-# nunca armazenadas em texto plano em alembic.ini ou no repositório.
 def _build_url() -> str:
     user     = os.getenv("DB_USER", "root")
     password = os.getenv("DB_PASSWORD", "")
@@ -54,7 +52,7 @@ def run_migrations_online() -> None:
     """Conecta ao banco e executa as migrations diretamente."""
     engine = create_engine(
         _build_url(),
-        poolclass=pool.NullPool,  # Alembic usa conexão única, não precisa de pool
+        poolclass=pool.NullPool,
     )
     with engine.connect() as connection:
         context.configure(connection=connection)

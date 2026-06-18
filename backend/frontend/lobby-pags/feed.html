@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diartrip - Feed</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../static/style.css">
+<link rel="stylesheet" href="../static/style.css?v=2">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="../static/i18n.js"></script>
 <style>
@@ -21,7 +21,7 @@
 .btn-curtir:hover, .btn-comentar:hover {
     background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2);
 }
-.btn-curtir.curtido { color: #f43f5e; border-color: rgba(244,63,94,0.35); }
+.btn-curtir.curtido { color: #f87171; border-color: rgba(248,113,113,0.35); }
 .btn-curtir:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .feed-comentarios { margin-top: 10px; }
@@ -34,25 +34,24 @@
     font-size: 10px; font-weight: 700; color: #fff;
 }
 .feed-cav img { width: 100%; height: 100%; object-fit: cover; }
-.feed-ctxt { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
+.feed-ctxt { font-size: 13px; color: #cbd5f5; line-height: 1.5; }
 .feed-cnome { font-weight: 700; color: #f1f5f9; margin-right: 4px; }
 .feed-coment-input {
     display: flex; gap: 6px; align-items: flex-end; margin-top: 4px;
 }
-.feed-coment-input textarea {
-    flex: 1; resize: none; padding: 8px 12px; border-radius: 16px;
+.feed-coment-input input {
+    flex: 1; padding: 8px 14px; border-radius: 20px;
     border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
     color: #e2e8f0; font-size: 13px; font-family: inherit;
-    transition: border 0.2s; height: auto !important; max-height: 80px;
+    transition: border 0.2s;
 }
-.feed-coment-input textarea:focus { outline: none; border-color: #3b82f6; }
+.feed-coment-input input:focus { outline: none; border-color: #3b82f6; }
 .feed-coment-input button {
-    background: linear-gradient(135deg, #3b82f6, #06b6d4);
-    border: none; border-radius: 50%; width: 32px; height: 32px !important;
-    color: #fff; font-size: 16px; cursor: pointer; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    padding: 0 !important;
+    background: none; border: none; padding: 0 4px !important; height: auto !important;
+    color: #3b82f6; font-size: 13px; font-weight: 600; cursor: pointer;
+    flex-shrink: 0; white-space: nowrap;
 }
+.feed-coment-input button:hover { color: #06b6d4; }
 </style>
 </head>
 <body>
@@ -77,6 +76,8 @@
         <a href="form-viagem.html">
             <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
         </a>
+        <div class="sidebar-spacer"></div>
+        <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Sair</div>
     </div>
 
     <div class="main">
@@ -88,7 +89,6 @@
         </div>
         <div class="feed-wrap">
 
-            <!-- Criar post -->
             <div class="create-card">
                 <div class="av" id="avCreate">?</div>
                 <div class="create-right">
@@ -107,7 +107,6 @@
                 </div>
             </div>
 
-            <!-- Feed -->
             <div id="feedLista"></div>
 
         </div>
@@ -125,7 +124,6 @@ document.addEventListener('languageChanged', () => {
 
 let arquivoSelecionado = null
 
-// ---- Avatar do criador ----
 async function carregarMeu() {
     const resp = await fetch("/usuarios/me", {
         credentials: "include"
@@ -148,7 +146,6 @@ async function carregarMeu() {
     }
 }
 
-// ---- Selecionar imagem ----
 document.getElementById("postFotoInput").addEventListener("change", (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -165,10 +162,9 @@ function removerImagem() {
     document.getElementById("imgPreviewWrap").style.display = "none"
 }
 
-// ---- Publicar ----
 async function publicar() {
     const texto = document.getElementById("postTexto").value.trim()
-    if (!texto) return
+    if (!texto && !arquivoSelecionado) return
 
     const btn = document.getElementById("btnPublicar")
     btn.disabled = true
@@ -197,7 +193,6 @@ document.getElementById("postTexto").addEventListener("keydown", (e) => {
     if (e.key === "Enter" && e.ctrlKey) publicar()
 })
 
-// ---- Carregar feed ----
 async function carregarFeed() {
     const resp = await fetch("/posts", {
         credentials: "include"
@@ -252,7 +247,7 @@ async function carregarFeed() {
                 </div>
                 ${delBtn}
             </div>
-            <p class="post-texto">${escapeHtml(p.conteudo)}</p>
+            ${p.conteudo ? `<p class="post-texto">${escapeHtml(p.conteudo)}</p>` : ''}
             ${imgHtml}
             <div class="post-acoes">
                 ${curtBtn}
@@ -263,9 +258,9 @@ async function carregarFeed() {
             <div class="feed-comentarios" id="coments-${p.id_post}" style="display:none">
                 <div class="feed-coments-lista" id="lista-${p.id_post}">${comentHtml}</div>
                 <div class="feed-coment-input">
-                    <textarea id="inputComent-${p.id_post}" placeholder="${t('feed.addComment')}" rows="1"
-                              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarComentario(${p.id_post})}"></textarea>
-                    <button onclick="enviarComentario(${p.id_post})">↩</button>
+                    <input type="text" id="inputComent-${p.id_post}" placeholder="${t('feed.addComment')}"
+                           onkeydown="if(event.key==='Enter'){event.preventDefault();enviarComentario(${p.id_post})}">
+                    <button onclick="enviarComentario(${p.id_post})">${t('feed.publish')}</button>
                 </div>
             </div>
         </div>`
@@ -341,7 +336,6 @@ async function enviarComentario(idPost) {
     }
 }
 
-// ---- Helpers ----
 function formatarData(iso) {
     const d = new Date(iso)
     const agora = new Date()

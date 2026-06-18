@@ -8,7 +8,6 @@ router = APIRouter(prefix="/grupos/{id_grupo}/dashboard", tags=["Dashboard"])
 
 @router.get("", response_model=DashboardCompleto)
 def dashboard_completo(id_grupo: int, usuario_id: int = Depends(get_usuario_logado)):
-    """Retorna geral + pessoal + admin (se admin) em uma única chamada."""
     return dashboard_service.completo(id_grupo, usuario_id)
 
 

@@ -15,7 +15,6 @@ class LanguageProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Helper para facilitar o uso no código
   static Map<String, Map<String, String>> translations = {
     'pt': {
       'nav.myTrips': 'Minhas Viagens',
@@ -134,7 +133,7 @@ class LanguageProvider with ChangeNotifier {
       'grupos.search': 'Pesquisar grupos...',
       'grupos.searchResults': 'Resultados da Busca',
       'grupos.myTrips': 'Minhas Viagens',
-      'grupos.tapHint': 'Toque para chat com IA  ·  Segure para detalhes',
+      'grupos.tapHint': 'Toque para conversar com a IA  ·  Segure para detalhes',
       'grupos.noGroups': 'Nenhum grupo encontrado.',
       'grupos.noTrips': 'Nenhuma viagem ainda.',
       'grupos.invalidCode': 'Código inválido',
@@ -174,6 +173,8 @@ class LanguageProvider with ChangeNotifier {
       'feed.newPostTooltip': 'Novo post',
       'feed.createHint': 'O que você está pensando sobre a sua viagem?',
       'feed.share': 'Compartilhar',
+      'feed.loadError': 'Erro ao carregar o feed. Verifique sua conexão.',
+      'feed.retry': 'Tentar novamente',
       'formViagem.selectDates': 'Selecione as datas de início e fim',
       'grupos.openTrip': 'Abrir viagem',
       'grupos.openTripFull': 'Abrir viagem completa',
@@ -207,6 +208,9 @@ class LanguageProvider with ChangeNotifier {
       'info.aiTip4': '"Como podemos dividir os custos de forma justa no grupo?"',
       'info.aiTip5': '"Quais atrações imperdíveis há perto de [destino]?"',
       'info.aiTip6': '"Alguma dica de costumes locais que devemos saber?"',
+      'cropper.title': 'Recortar Foto',
+      'cropper.usePhoto': '✓ Usar esta foto',
+      'cropper.cancel': 'Cancelar',
     },
     'en': {
       'nav.myTrips': 'My Trips',
@@ -364,6 +368,8 @@ class LanguageProvider with ChangeNotifier {
       'feed.newPostTooltip': 'New post',
       'feed.createHint': "What's on your travel mind?",
       'feed.share': 'Share',
+      'feed.loadError': 'Failed to load the feed. Check your connection.',
+      'feed.retry': 'Retry',
       'formViagem.selectDates': 'Please select start and end dates',
       'grupos.openTrip': 'Open trip',
       'grupos.openTripFull': 'Open full trip',
@@ -397,6 +403,9 @@ class LanguageProvider with ChangeNotifier {
       'info.aiTip4': '"How can we split costs fairly among the group?"',
       'info.aiTip5': '"What are must-see attractions near [destination]?"',
       'info.aiTip6': '"Any local customs or tips we should know?"',
+      'cropper.title': 'Crop Photo',
+      'cropper.usePhoto': '✓ Use this photo',
+      'cropper.cancel': 'Cancel',
     },
   };
 

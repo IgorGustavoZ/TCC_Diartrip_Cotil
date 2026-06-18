@@ -6,7 +6,6 @@ from utils.cloudinary_upload import upload_imagem
 from utils.imagem_utils import validar_imagem, strip_exif
 
 def buscar_tudo(limite: int = 20, offset: int = 0, busca: str | None = None) -> list:
-    """Retorna perfis públicos com paginação obrigatória — nunca inclui senha_hash ou email."""
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:
@@ -24,7 +23,6 @@ def buscar_tudo(limite: int = 20, offset: int = 0, busca: str | None = None) -> 
             cursor.close()
 
 def buscar_por_id(usuario_id: int) -> dict:
-    """Retorna perfil completo (incluindo email). Usar apenas em /usuarios/me."""
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:
@@ -46,7 +44,6 @@ def buscar_por_id(usuario_id: int) -> dict:
 
 
 def buscar_por_id_publico(usuario_id: int, viewer_id: int) -> dict:
-    """Retorna perfil público sem email — usar em endpoints acessíveis por outros usuários."""
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:
@@ -111,22 +108,18 @@ def atualizar(usuario_id: int, nome: str, email: str, bio: str | None = None) ->
 
 
 def atualizar_foto(usuario_id: int, arquivo_nome: str, arquivo_bytes: bytes) -> dict:
-    # Extrai extensão do nome do arquivo
     ext = arquivo_nome.rsplit(".", 1)[-1].lower() if "." in arquivo_nome else ""
-    
-    # Se não houver extensão no nome, tenta inferir pelos magic bytes
     if not ext:
         if arquivo_bytes.startswith(b"\xff\xd8"): ext = "jpg"
         elif arquivo_bytes.startswith(b"\x89PNG"): ext = "png"
         elif b"WEBP" in arquivo_bytes[:16]: ext = "webp"
-        else: ext = "jpg" # Fallback final
+        else: ext = "jpg"
         from utils.logger import get_logger
         get_logger("usuario_service").info("Extensão de perfil inferida: %s", ext)
 
     validar_imagem(arquivo_bytes, ext)
     arquivo_bytes = strip_exif(arquivo_bytes, ext)
 
-    # Usa public_id fixo por usuário: o Cloudinary substitui a imagem anterior automaticamente
     foto_url = upload_imagem(arquivo_bytes, "diartrip/perfis", public_id=f"perfil_{usuario_id}")
 
     with get_db() as conexao:

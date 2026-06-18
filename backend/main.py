@@ -52,8 +52,6 @@ _SECURITY_HEADERS = {
     "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
     "Content-Security-Policy": (
         "default-src 'self'; "
-        # 'unsafe-inline' necessário para scripts inline nas páginas HTML do lobby.
-        # Remover quando os scripts inline forem movidos para arquivos externos.
         "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
         "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
@@ -95,9 +93,6 @@ async def capturar_excecoes(request: Request, call_next):
             content={"detail": "Erro interno do servidor. Tente novamente mais tarde."},
         )
 
-# O CORSMiddleware deve ser o ÚLTIMO a ser adicionado para que ele envolva
-# todos os outros middlewares (incluindo o capturar_excecoes). 
-# Isso garante que erros 500 também tenham cabeçalhos CORS.
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://127.0.0.1:8000").split(",")
 app.add_middleware(
     CORSMiddleware,
@@ -149,16 +144,6 @@ def serve_page(page: str):
 
 @app.get("/health", tags=["Health"])
 def health():
-    """Verificação de saúde mínima.
-
-    Retorna apenas o status agregado para não vazar informações sobre
-    serviços internos, chaves de API ou topologia da infraestrutura.
-
-    Respostas:
-      200 {"status": "ok"}       — banco acessível, sistema operacional.
-      200 {"status": "degraded"} — banco acessível, serviço parcialmente degradado.
-      503 {"status": "error"}    — banco inacessível, serviço indisponível.
-    """
     db_ok = False
     try:
         with get_db() as conexao:
@@ -173,7 +158,6 @@ def health():
     if not db_ok:
         raise HTTPException(status_code=503, detail={"status": "error"})
 
-    # Verifica serviços auxiliares sem expor nomes ou detalhes
     servicos_ok = all([
         bool(os.getenv("OPENROUTER_API_KEY")),
         all(os.getenv(k) for k in (

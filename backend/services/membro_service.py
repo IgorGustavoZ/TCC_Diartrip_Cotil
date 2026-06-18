@@ -55,7 +55,6 @@ def adicionar(id_grupo: int, id_usuario_novo: int, usuario_id: int) -> dict:
 
 
 def _checar_ultimo_admin(cursor, id_grupo: int, id_alvo: int) -> None:
-    """Impede remover/rebaixar o último admin se ainda há outros membros."""
     cursor.execute(
         "SELECT cargo FROM grupo_membros WHERE id_grupo=%s AND id_usuario=%s FOR UPDATE",
         (id_grupo, id_alvo),
@@ -165,7 +164,6 @@ def sair(id_grupo: int, usuario_id: int) -> dict:
         try:
             checar_membro_grupo(cursor, id_grupo, usuario_id)
 
-            # Impedir saída com dívidas pendentes no grupo
             cursor.execute(
                 """
                 SELECT COALESCE(SUM(dg.valor_dividido), 0) AS divida

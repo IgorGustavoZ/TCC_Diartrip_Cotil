@@ -207,12 +207,10 @@ def upgrade() -> None:
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     """)
 
-    # Registra a migration como aplicada
     op.execute("CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) NOT NULL, PRIMARY KEY (version_num))")
 
 
 def downgrade() -> None:
-    # Ordem inversa (respeita FKs)
     for tabela in [
         "seguidores", "post_comentarios", "post_curtidas", "posts",
         "mensagens_grupo", "chat_ia", "fotos", "divisao_gastos",

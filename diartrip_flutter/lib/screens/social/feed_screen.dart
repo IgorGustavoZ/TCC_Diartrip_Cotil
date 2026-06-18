@@ -24,6 +24,7 @@ class FeedScreen extends StatefulWidget {
 class _FeedScreenState extends State<FeedScreen> {
   List<Post> _posts = [];
   bool _loading = true;
+  String? _erro;
   bool _showCreate = false;
   final _conteudoCtrl = TextEditingController();
   XFile? _imagem;
@@ -43,12 +44,12 @@ class _FeedScreenState extends State<FeedScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() { _loading = true; _erro = null; });
     try {
       final p = await PostService.listarTodos();
       if (mounted) setState(() { _posts = p; _loading = false; });
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
+    } catch (e) {
+      if (mounted) setState(() { _loading = false; _erro = e.toString(); });
     }
   }
 
@@ -66,7 +67,7 @@ class _FeedScreenState extends State<FeedScreen> {
 
   Future<void> _publish() async {
     final texto = _conteudoCtrl.text.trim();
-    if (texto.isEmpty) return;
+    if (texto.isEmpty && _imagemBytes == null) return;
     setState(() => _publishing = true);
     try {
       await PostService.criar(
@@ -113,7 +114,26 @@ class _FeedScreenState extends State<FeedScreen> {
         onRefresh: _load,
         child: _loading
             ? const Center(child: CircularProgressIndicator())
-            : ListView(
+            : _erro != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.wifi_off,
+                            size: 48, color: AppTheme.onSurfaceMuted),
+                        const SizedBox(height: 12),
+                        Text(lang.translate('feed.loadError'),
+                            style: const TextStyle(
+                                color: AppTheme.onSurfaceMuted)),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: _load,
+                          child: Text(lang.translate('feed.retry')),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView(
                 children: [
                   if (_showCreate)
                     _CreateCard(
@@ -122,6 +142,10 @@ class _FeedScreenState extends State<FeedScreen> {
                       imagemBytes: _imagemBytes,
                       publishing: _publishing,
                       onPickImage: _pickImage,
+                      onRemoveImage: () => setState(() {
+                        _imagem = null;
+                        _imagemBytes = null;
+                      }),
                       onPublish: _publish,
                     ),
                   if (_posts.isEmpty)
@@ -147,14 +171,13 @@ class _FeedScreenState extends State<FeedScreen> {
   }
 }
 
-// ─── Criar post ───────────────────────────────────────────────────────────────
-
 class _CreateCard extends StatelessWidget {
   final dynamic me;
   final TextEditingController ctrl;
   final Uint8List? imagemBytes;
   final bool publishing;
   final VoidCallback onPickImage;
+  final VoidCallback onRemoveImage;
   final VoidCallback onPublish;
 
   const _CreateCard({
@@ -163,6 +186,7 @@ class _CreateCard extends StatelessWidget {
     required this.imagemBytes,
     required this.publishing,
     required this.onPickImage,
+    required this.onRemoveImage,
     required this.onPublish,
   });
 
@@ -195,10 +219,31 @@ class _CreateCard extends StatelessWidget {
           ),
           if (imagemBytes != null) ...[
             const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.memory(imagemBytes!,
-                  height: 160, fit: BoxFit.cover),
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.memory(imagemBytes!,
+                      height: 160, width: double.infinity, fit: BoxFit.cover),
+                ),
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: GestureDetector(
+                    onTap: onRemoveImage,
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.55),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close,
+                          color: Colors.white, size: 18),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
           const SizedBox(height: 10),
@@ -231,8 +276,6 @@ class _CreateCard extends StatelessWidget {
   }
 }
 
-// ─── Post Card (estilo Instagram) ─────────────────────────────────────────────
-
 class _PostCard extends StatefulWidget {
   final Post post;
   final int meId;
@@ -249,7 +292,6 @@ class _PostCard extends StatefulWidget {
   State<_PostCard> createState() => _PostCardState();
 }
 
-// SEM SingleTickerProviderStateMixin — usa AnimatedScale que não precisa de controller
 class _PostCardState extends State<_PostCard> {
   late bool _jaCurtiu;
   late int _curtidas;
@@ -342,9 +384,7 @@ class _PostCardState extends State<_PostCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Header ──
         _buildHeader(),
-        // ── Imagem (full-bleed, duplo toque para curtir) ──
         if (widget.post.imagem != null)
           GestureDetector(
             onDoubleTap: _curtir,
@@ -357,9 +397,7 @@ class _PostCardState extends State<_PostCard> {
                   child: Center(child: CircularProgressIndicator())),
             ),
           ),
-        // ── Barra de ações ──
         _buildActionBar(),
-        // ── Curtidas ──
         if (_curtidas > 0)
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 0, 14, 4),
@@ -369,26 +407,24 @@ class _PostCardState extends State<_PostCard> {
                   fontWeight: FontWeight.w700, fontSize: 13),
             ),
           ),
-        // ── Legenda ──
-        Padding(
-          padding: const EdgeInsets.fromLTRB(14, 2, 14, 4),
-          child: RichText(
-            text: TextSpan(
-              style: const TextStyle(
-                  fontSize: 14, color: AppTheme.onSurface),
-              children: [
-                TextSpan(
-                  text: '${widget.post.nome} ',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                TextSpan(text: widget.post.conteudo),
-              ],
+        if (widget.post.conteudo.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 2, 14, 4),
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(
+                    fontSize: 14, color: AppTheme.onSurface),
+                children: [
+                  TextSpan(
+                    text: '${widget.post.nome} ',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  TextSpan(text: widget.post.conteudo),
+                ],
+              ),
             ),
           ),
-        ),
-        // ── Comentários ──
         _buildComments(lang),
-        // ── Timestamp ──
         Padding(
           padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
           child: Text(
@@ -444,7 +480,6 @@ class _PostCardState extends State<_PostCard> {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       child: Row(
         children: [
-          // ── Curtir ──
           InkWell(
             onTap: _savingLike ? null : _curtir,
             borderRadius: BorderRadius.circular(20),
@@ -467,7 +502,6 @@ class _PostCardState extends State<_PostCard> {
               ),
             ),
           ),
-          // ── Comentar ──
           InkWell(
             onTap: () => setState(() => _showComments = !_showComments),
             borderRadius: BorderRadius.circular(20),
@@ -528,38 +562,47 @@ class _PostCardState extends State<_PostCard> {
               )),
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _comentCtrl,
-                    style: const TextStyle(fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: lang.translate('feed.addComment'),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                      isDense: true,
-                    ),
-                    onSubmitted: (_) => _enviarComentario(),
-                    textInputAction: TextInputAction.send,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _commenting
-                    ? const SizedBox(
-                        height: 16, width: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : GestureDetector(
-                        onTap: _enviarComentario,
-                        child: Text(lang.translate('perfil.post'),
-                            style: const TextStyle(
-                                color: AppTheme.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13)),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1)),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _comentCtrl,
+                      style: const TextStyle(fontSize: 13),
+                      decoration: InputDecoration(
+                        hintText: lang.translate('feed.addComment'),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                        isDense: true,
                       ),
-              ],
+                      onSubmitted: (_) => _enviarComentario(),
+                      textInputAction: TextInputAction.send,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _commenting
+                      ? const SizedBox(
+                          height: 16, width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : GestureDetector(
+                          onTap: _enviarComentario,
+                          child: Text(lang.translate('perfil.post'),
+                              style: const TextStyle(
+                                  color: AppTheme.primary,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13)),
+                        ),
+                ],
+              ),
             ),
           ),
         ],

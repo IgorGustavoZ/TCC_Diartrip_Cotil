@@ -37,9 +37,6 @@ def _conn_seq(fetchones):
     return conn
 
 
-# =========================================================================== #
-# Criar roteiro
-# =========================================================================== #
 
 class TestCriarRoteiro:
     def test_membro_pode_criar_roteiro(self, client_usuario):
@@ -64,9 +61,6 @@ class TestCriarRoteiro:
         assert resp.status_code == 422
 
 
-# =========================================================================== #
-# Listar roteiros
-# =========================================================================== #
 
 class TestListarRoteiros:
     def test_listar_roteiros_do_grupo(self, client_usuario):
@@ -106,9 +100,6 @@ class TestListarRoteiros:
         assert isinstance(resp.json(), list)
 
 
-# =========================================================================== #
-# Atualizar roteiro (somente admin)
-# =========================================================================== #
 
 class TestAtualizarRoteiro:
     def test_admin_pode_atualizar_roteiro(self, client_admin):
@@ -139,9 +130,6 @@ class TestAtualizarRoteiro:
         assert resp.status_code == 404
 
 
-# =========================================================================== #
-# Deletar roteiro (somente admin)
-# =========================================================================== #
 
 class TestDeletarRoteiro:
     def test_admin_pode_deletar_roteiro(self, client_admin):

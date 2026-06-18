@@ -23,7 +23,6 @@ void main() async {
     AppLogger.captureError('main.initApiClient', e, s, fatal: true);
   }
 
-  // Captura erros Flutter do framework (ex: build errors em widgets)
   FlutterError.onError = (details) {
     AppLogger.captureError(
       'FlutterError',
@@ -41,7 +40,6 @@ void main() async {
     child: const DiartripApp(),
   );
 
-  // AppLogger.init inicializa Sentry em release e chama runApp
   await AppLogger.init(app);
 }
 
@@ -96,7 +94,6 @@ class DiartripApp extends StatelessWidget {
       MaterialPageRoute(builder: (_) => w, settings: s);
 }
 
-/// Verifica sessão salva e redireciona para Login ou Lobby.
 class _Splash extends StatefulWidget {
   const _Splash();
   @override

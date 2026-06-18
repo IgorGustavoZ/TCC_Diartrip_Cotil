@@ -1,6 +1,3 @@
-"""
-test_utils.py — Testes unitarios dos modulos utilitarios sem dependencias externas.
-"""
 import os
 import time
 from datetime import datetime, timedelta, timezone
@@ -13,10 +10,6 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = "HS256"
 
 
-# =========================================================================== #
-# utils/security.py
-# =========================================================================== #
-
 class TestSecurity:
     def test_gerar_hash_retorna_bcrypt(self):
         from utils.security import gerar_hash
@@ -24,7 +17,6 @@ class TestSecurity:
         assert h.startswith("$2b$") or h.startswith("$2a$")
 
     def test_gerar_hash_diferente_cada_vez(self):
-        """bcrypt usa salt aleatorio, cada hash deve ser diferente."""
         from utils.security import gerar_hash
         h1 = gerar_hash("SenhaForte1")
         h2 = gerar_hash("SenhaForte1")
@@ -88,7 +80,6 @@ class TestSecurity:
         payload = pyjwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         jti = payload["jti"]
 
-        # Garantir que usa fallback em memoria
         with patch("utils.security.get_redis", return_value=None):
             revogar_token(token)
             assert _is_revogado(jti) is True
@@ -98,13 +89,9 @@ class TestSecurity:
         token = criar_token(88)
         payload = pyjwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         jti = payload["jti"]
-        # JTI novo nao deve estar na blacklist
         assert _is_revogado(jti) is False
 
 
-# =========================================================================== #
-# utils/rate_limiter.py
-# =========================================================================== #
 
 class TestRateLimiter:
     def _fresh_key(self, prefix="test"):
@@ -115,9 +102,8 @@ class TestRateLimiter:
         """Requisicoes abaixo do limite nao devem levantar HTTPException."""
         from utils.rate_limiter import _verificar_memoria
         chave = self._fresh_key("below")
-        # 5 chamadas com limite=10 nao devem levantar
         for _ in range(5):
-            _verificar_memoria(chave, limite=10)  # nao deve levantar
+            _verificar_memoria(chave, limite=10)
 
     def test_acima_do_limite_levanta_429(self):
         """Apos atingir o limite, deve levantar HTTPException 429."""
@@ -125,10 +111,8 @@ class TestRateLimiter:
         from fastapi import HTTPException
         chave = self._fresh_key("above")
         limite = 3
-        # Preencher ate o limite
         for _ in range(limite):
             _verificar_memoria(chave, limite=limite)
-        # Proxima chamada deve levantar 429
         with pytest.raises(HTTPException) as exc:
             _verificar_memoria(chave, limite=limite)
         assert exc.value.status_code == 429
@@ -140,18 +124,13 @@ class TestRateLimiter:
         chave_a = self._fresh_key("a")
         chave_b = self._fresh_key("b")
         limite = 2
-        # Encher chave_a
         for _ in range(limite):
             _verificar_memoria(chave_a, limite=limite)
         with pytest.raises(HTTPException):
             _verificar_memoria(chave_a, limite=limite)
-        # chave_b ainda tem credito
-        _verificar_memoria(chave_b, limite=limite)  # nao deve levantar
+        _verificar_memoria(chave_b, limite=limite)
 
 
-# =========================================================================== #
-# utils/imagem_utils.py
-# =========================================================================== #
 
 class TestImagemUtils:
     def test_validar_jpeg_valido(self):
@@ -159,7 +138,7 @@ class TestImagemUtils:
         from utils.imagem_utils import validar_imagem
         jpeg = b"\xff\xd8\xff\xe0" + b"\x00" * 100
         with patch("utils.imagem_utils._validar_dimensoes"):
-            validar_imagem(jpeg, "jpg")  # nao deve levantar
+            validar_imagem(jpeg, "jpg")
 
     def test_validar_png_valido(self):
         from utils.imagem_utils import validar_imagem
@@ -190,7 +169,7 @@ class TestImagemUtils:
         from fastapi import HTTPException
         jpeg = b"\xff\xd8\xff\xe0" + b"\x00" * 100
         with pytest.raises(HTTPException) as exc:
-            validar_imagem(jpeg, "jpg", max_size=10)  # max 10 bytes
+            validar_imagem(jpeg, "jpg", max_size=10)
         assert exc.value.status_code == 400
 
     def test_validar_jpeg_bytes_com_extensao_png_lanca_400(self):
@@ -226,9 +205,6 @@ class TestImagemUtils:
         assert result == b"original"
 
 
-# =========================================================================== #
-# utils/cloudinary_upload.py — parse de URL para public_id
-# =========================================================================== #
 
 class TestCloudinaryUpload:
     def test_parse_public_id_da_url(self):

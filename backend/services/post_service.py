@@ -110,12 +110,11 @@ def listar_por_usuario(alvo_id: int, usuario_id: int) -> list:
 
 
 def criar(usuario_id: int, conteudo: str, imagem_bytes: bytes | None, imagem_ext: str | None) -> dict:
-    if not conteudo.strip():
-        raise HTTPException(status_code=400, detail="Conteúdo vazio")
+    if not conteudo.strip() and imagem_bytes is None:
+        raise HTTPException(status_code=400, detail="O post deve ter texto ou imagem")
 
     imagem_url = None
     if imagem_bytes is not None:
-        # Tenta extrair/inferir extensão
         ext = (imagem_ext or "").lstrip(".").lower()
         if not ext:
             if imagem_bytes.startswith(b"\xff\xd8"): ext = "jpg"

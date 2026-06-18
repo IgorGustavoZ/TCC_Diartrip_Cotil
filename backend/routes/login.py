@@ -28,7 +28,6 @@ class LoginInput(BaseModel):
 
 
 def _set_auth_cookies(response: Response, usuario_id: int) -> None:
-    """Emite access_token + refresh_token + csrf_token como cookies."""
     access = criar_token(usuario_id)
     refresh = criar_refresh_token(usuario_id)
     csrf = gerar_csrf_token()
@@ -83,8 +82,6 @@ def token_refresh(
     response: Response,
     refresh_token: str | None = Cookie(default=None),
 ):
-    """Renova access_token usando refresh_token (rotação automática).
-    Isento de CSRF — o refresh_token HttpOnly+SameSite=Strict é a proteção."""
     if not refresh_token:
         raise HTTPException(status_code=401, detail="Refresh token ausente. Faça login novamente.")
 

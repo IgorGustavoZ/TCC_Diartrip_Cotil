@@ -15,8 +15,6 @@ from services import chat_grupo_service
 logger = logging.getLogger("diartrip.chat_grupo")
 router = APIRouter(tags=["Chat Grupo"])
 
-# Re-valida pertencimento ao grupo a cada N mensagens via WebSocket.
-# Previne que ex-membros (removidos durante sessão ativa) continuem enviando msgs.
 _WS_REAUTH_INTERVALO = 20
 
 
@@ -25,13 +23,6 @@ class MensagemInput(BaseModel):
 
 
 def _origem_permitida(ws: WebSocket) -> bool:
-    """Previne CSWSH (Cross-Site WebSocket Hijacking) validando o Origin.
-
-    Regras:
-    - Origin ausente → PERMITIDO  (clientes nativos: Flutter mobile/desktop não enviam Origin).
-    - Origin presente e na lista ALLOWED_ORIGINS → PERMITIDO.
-    - Origin presente e fora da lista → BLOQUEADO.
-    """
     origin = ws.headers.get("origin")
     if origin is None:
         return True
@@ -81,7 +72,6 @@ async def chat_websocket(ws: WebSocket, id_grupo: int, token_query: str | None =
         await ws.close(code=1008)
         return
 
-    # Tenta obter token do cookie ou da query string (fallback para Web)
     token = ws.cookies.get("access_token") or token_query
     if not token:
         logger.warning("WS conexão recusada: token ausente (grupo=%s)", id_grupo)
@@ -133,8 +123,6 @@ async def chat_websocket(ws: WebSocket, id_grupo: int, token_query: str | None =
                 continue
 
             mensagens_count += 1
-            # Re-valida pertencimento a cada _WS_REAUTH_INTERVALO mensagens.
-            # Impede ex-membros removidos durante sessão ativa de continuar enviando.
             if mensagens_count % _WS_REAUTH_INTERVALO == 0:
                 try:
                     with get_db() as conn_check:

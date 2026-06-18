@@ -16,7 +16,7 @@ class PostService {
   }
 
   static Future<void> criar({
-    required String conteudo,
+    String conteudo = '',
     Uint8List? imagemBytes,
     String? imagemFilename,
     String? imagemMime,

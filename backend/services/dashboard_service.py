@@ -96,7 +96,6 @@ def pessoal(id_grupo: int, usuario_id: int) -> dict:
 
 
 def completo(id_grupo: int, usuario_id: int) -> dict:
-    """Retorna geral + pessoal + admin em uma única conexão (evita exaustão do pool)."""
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:

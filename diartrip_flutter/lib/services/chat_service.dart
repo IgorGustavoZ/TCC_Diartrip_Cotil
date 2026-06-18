@@ -3,7 +3,6 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import '../core/api_client.dart';
 import '../core/constants.dart';
 import '../models/mensagem.dart';
-// Importação condicional: usa implementação nativa em mobile/desktop e web no browser.
 import 'chat_ws_web.dart' if (dart.library.io) 'chat_ws_native.dart';
 
 class ChatService {
@@ -24,9 +23,6 @@ class ChatService {
     return Mensagem.fromJson(r.data as Map<String, dynamic>);
   }
 
-  /// Conecta via WebSocket com cookies da sessão.
-  /// Web: o browser envia cookies automaticamente.
-  /// Nativo: injeta Cookie + X-CSRF-Token no header de upgrade.
   static Future<WebSocketChannel> conectarWs(int idGrupo) async {
     final uri = Uri.parse('${Constants.wsBaseUrl}/grupos/$idGrupo/chat/ws');
     final cookieHeader = await buildCookieHeader();

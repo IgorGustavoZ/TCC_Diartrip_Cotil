@@ -6,9 +6,6 @@ from unittest.mock import MagicMock, patch
 from tests.conftest import make_cursor, make_connection, fake_get_db, fake_usuario, JPEG_MAGIC
 
 
-# =========================================================================== #
-# Criar usuario
-# =========================================================================== #
 
 class TestCriarUsuario:
     def test_criar_usuario_valido(self, client):
@@ -92,9 +89,6 @@ class TestCriarUsuario:
         assert "$2b$" not in resp.text
 
 
-# =========================================================================== #
-# Buscar usuario
-# =========================================================================== #
 
 class TestBuscarUsuario:
     def test_buscar_proprio_perfil(self, client_usuario):
@@ -181,9 +175,6 @@ class TestBuscarUsuario:
         assert resp.status_code == 404
 
 
-# =========================================================================== #
-# Atualizar usuario
-# =========================================================================== #
 
 class TestAtualizarUsuario:
     def test_atualizar_proprio_perfil(self, client_usuario):
@@ -227,9 +218,6 @@ class TestAtualizarUsuario:
         assert resp.status_code == 403
 
 
-# =========================================================================== #
-# Deletar usuario
-# =========================================================================== #
 
 class TestDeletarUsuario:
     def test_deletar_proprio_usuario(self, client_usuario):

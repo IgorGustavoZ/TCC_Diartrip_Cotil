@@ -17,7 +17,6 @@ class AuthProvider extends ChangeNotifier {
       _usuario = await UsuarioService.getMe();
       notifyListeners();
     } catch (e, s) {
-      // Sessão inativa ou rede indisponível — não é um erro fatal
       AppLogger.info('AuthProvider.tryAutoLogin', 'sessão inativa ou rede indisponível: $e');
       if (s != StackTrace.empty) {
         AppLogger.captureError('AuthProvider.tryAutoLogin', e, s, fatal: false);

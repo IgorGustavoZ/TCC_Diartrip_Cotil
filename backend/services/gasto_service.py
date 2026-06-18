@@ -37,8 +37,6 @@ def listar(id_grupo: int, usuario_id: int, limite: int = 50, offset: int = 0) ->
 
 
 def _inserir_divisao(cursor, id_gasto: int, participantes: list[int], valor_total: float) -> None:
-    """Insere divisão usando Decimal para evitar imprecisão de ponto flutuante.
-    O centavo restante vai para o último participante da lista."""
     total = Decimal(str(valor_total))
     n = len(participantes)
     parte = (total / n).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -72,7 +70,6 @@ def criar(id_grupo: int, usuario_id: int, dados) -> dict:
                         detail="Um ou mais usuários da divisão não pertencem ao grupo",
                     )
             else:
-                # Se não informado, divide entre TODOS os membros do grupo por padrão
                 cursor.execute(
                     "SELECT id_usuario FROM grupo_membros WHERE id_grupo=%s",
                     (id_grupo,)
@@ -120,7 +117,6 @@ def obter_balanco(id_grupo: int, usuario_id: int) -> list:
             )
             membros = cursor.fetchall()
 
-            # O quanto o usuário 'id_usuario' deve RECEBER (ele pagou, e outros devem a ele)
             cursor.execute(
                 """
                 SELECT g.id_usuario AS user_id,
@@ -134,7 +130,6 @@ def obter_balanco(id_grupo: int, usuario_id: int) -> list:
             )
             receber_map = {r["user_id"]: float(r["total"]) for r in cursor.fetchall()}
 
-            # O quanto o usuário 'id_usuario' deve PAGAR (outros pagaram, e ele deve a eles)
             cursor.execute(
                 """
                 SELECT dg.id_usuario AS user_id,
@@ -185,11 +180,8 @@ def atualizar(id_gasto: int, dados, usuario_id: int) -> dict:
                 (dados.valor, dados.categoria, dados.descricao, id_gasto),
             )
 
-            # Se id_usuarios_divisao foi fornecido (mesmo que lista vazia, tratamos como desejo de atualizar)
             if dados.id_usuarios_divisao is not None:
                 participantes = list(set(dados.id_usuarios_divisao))
-                
-                # Se a lista enviada estiver vazia, aplicamos o padrão: todos os membros do grupo
                 if not participantes:
                     cursor.execute(
                         "SELECT id_usuario FROM grupo_membros WHERE id_grupo=%s",
@@ -197,7 +189,6 @@ def atualizar(id_gasto: int, dados, usuario_id: int) -> dict:
                     )
                     participantes = [r["id_usuario"] for r in cursor.fetchall()]
                 else:
-                    # Validar se os participantes informados pertencem ao grupo
                     fmt = ",".join(["%s"] * len(participantes))
                     cursor.execute(
                         f"SELECT COUNT(*) as qtd FROM grupo_membros "
@@ -214,7 +205,6 @@ def atualizar(id_gasto: int, dados, usuario_id: int) -> dict:
                 if participantes:
                     _inserir_divisao(cursor, id_gasto, participantes, dados.valor)
             else:
-                # Se não informou id_usuarios_divisao, apenas recalcula para os atuais (devido a mudança de valor)
                 cursor.execute(
                     "SELECT id_usuario FROM divisao_gastos WHERE id_gasto=%s", (id_gasto,)
                 )

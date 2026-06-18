@@ -6,7 +6,6 @@ class AuthService {
   static Future<Usuario> login(String email, String senha) async {
     final r = await dio.post('/login', data: {'email': email, 'senha': senha});
     if (r.statusCode != 200) {
-      // apiError() é seguro mesmo se r.data não for um Map.
       throw apiError(r.data, 'Credenciais inválidas');
     }
     return UsuarioService.getMe();

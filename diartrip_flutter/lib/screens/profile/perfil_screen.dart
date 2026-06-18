@@ -15,6 +15,7 @@ import '../../services/social_service.dart';
 import '../../services/usuario_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/avatar_widget.dart';
+import '../../widgets/image_cropper_modal.dart';
 
 class PerfilScreen extends StatefulWidget {
   final int? idUsuario;
@@ -97,16 +98,27 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   Future<void> _trocarFoto() async {
     final f = await ImagePicker()
-        .pickImage(source: ImageSource.gallery, imageQuality: 80);
+        .pickImage(source: ImageSource.gallery, imageQuality: 100);
     if (f == null || !mounted) return;
+
+    final originalBytes = await f.readAsBytes();
+    if (!mounted) return;
+
+    // Show cropper — 1:1 ratio for profile photos
+    final croppedBytes = await showImageCropperModal(
+      context,
+      originalBytes,
+      aspectRatio: 1.0,
+    );
+    if (croppedBytes == null || !mounted) return;
+
     try {
-      final bytes = await f.readAsBytes();
       final url = await UsuarioService.atualizarFoto(
         id: _targetId,
         filePath: f.path,
-        filename: f.name,
-        mimeType: f.mimeType ?? 'image/jpeg',
-        bytes: bytes,
+        filename: 'profile_photo.png',
+        mimeType: 'image/png',
+        bytes: croppedBytes,
       );
       if (!mounted) return;
       final atualizado = Usuario(
@@ -198,8 +210,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
             ),
     );
   }
-
-  // ── Header Instagram-like ─────────────────────────────────────────────────
 
   Widget _buildHeader(LanguageProvider lang) {
     return Padding(
@@ -338,8 +348,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
-  // ── Grade de posts ────────────────────────────────────────────────────────
-
   Widget _buildGrid(LanguageProvider lang) {
     if (_posts.isEmpty) {
       return SliverFillRemaining(
@@ -372,8 +380,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 }
 
-// ─── Thumb da grade ───────────────────────────────────────────────────────────
-
 class _PostThumb extends StatelessWidget {
   final Post post;
   final bool isMe;
@@ -399,7 +405,6 @@ class _PostThumb extends StatelessWidget {
                     color: AppTheme.onSurfaceMuted, size: 28),
               ),
             ),
-          // Badge de curtidas
           Positioned(
             left: 6,
             bottom: 6,
@@ -433,8 +438,6 @@ class _PostThumb extends StatelessWidget {
     );
   }
 }
-
-// ─── Detalhe do post (bottom sheet) ──────────────────────────────────────────
 
 class _PostDetailSheet extends StatefulWidget {
   final Post post;
@@ -540,7 +543,6 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Legenda
                 RichText(
                   text: TextSpan(
                     style: const TextStyle(fontSize: 14, color: AppTheme.onSurface),
@@ -553,7 +555,6 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                // Barra de ações: curtir
                 Row(
                   children: [
                     InkWell(
@@ -607,7 +608,6 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
                     ),
                   ),
                 ],
-                // Seção de comentários — sempre visível
                 const Divider(height: 24),
                 Text(lang.translate('perfil.comments'),
                     style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
@@ -626,7 +626,6 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
                         ),
                       ),
                     )),
-                // Input de comentário
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Row(
@@ -680,8 +679,6 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
   }
 }
 
-// ─── Coluna de estatística ────────────────────────────────────────────────────
-
 class _StatCol extends StatelessWidget {
   final String label;
   final int value;
@@ -704,8 +701,6 @@ class _StatCol extends StatelessWidget {
     );
   }
 }
-
-// ─── Lista de seguidores / seguindo (bottom sheet) ────────────────────────────
 
 class _ListaUsuariosSheet extends StatefulWidget {
   final String titulo;

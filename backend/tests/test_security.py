@@ -28,14 +28,10 @@ def _simple_auth_conn():
     return conn
 
 
-# =========================================================================== #
-# Headers de seguranca
-# =========================================================================== #
 
 class TestHeadersSeguranca:
     def test_x_content_type_options_nosniff(self, client):
         resp = client.get("/health")
-        # health retorna 200 ou 503; de qualquer forma headers devem estar presentes
         assert resp.headers.get("x-content-type-options") == "nosniff"
 
     def test_x_frame_options_presente(self, client):
@@ -86,9 +82,6 @@ class TestHeadersSeguranca:
         assert "test-secret-key" not in body
 
 
-# =========================================================================== #
-# SQL Injection
-# =========================================================================== #
 
 class TestSQLInjection:
     def test_sql_injection_no_email_do_login(self, client):
@@ -152,9 +145,6 @@ class TestSQLInjection:
         assert resp.status_code in (200, 422)
 
 
-# =========================================================================== #
-# XSS
-# =========================================================================== #
 
 class TestXSS:
     def test_xss_em_nome_usuario_retorna_json_nao_html(self, client):
@@ -206,9 +196,6 @@ class TestXSS:
             assert "application/json" in resp.headers.get("content-type", "")
 
 
-# =========================================================================== #
-# Path Traversal
-# =========================================================================== #
 
 class TestPathTraversal:
     def test_nome_arquivo_path_traversal_nao_causa_500(self, client_usuario):
@@ -231,9 +218,6 @@ class TestPathTraversal:
         assert resp.status_code in (400, 415)
 
 
-# =========================================================================== #
-# Prompt Injection
-# =========================================================================== #
 
 class TestPromptInjection:
     def test_prompt_injection_nao_causa_500(self, client_usuario):
@@ -287,9 +271,6 @@ class TestPromptInjection:
         assert resp.status_code != 500
 
 
-# =========================================================================== #
-# CORS e paginas protegidas
-# =========================================================================== #
 
 class TestCORSEPaginasProtegidas:
     def test_origem_maliciosa_nao_recebe_acao(self, client):
@@ -307,5 +288,4 @@ class TestCORSEPaginasProtegidas:
     def test_page_permitida_retorna_conteudo(self, client):
         """Pagina 'login' esta na lista permitida."""
         resp = client.get("/login.html")
-        # Pode retornar 200 (FileResponse) ou 404 se arquivo nao existir no ambiente de teste
         assert resp.status_code in (200, 404)

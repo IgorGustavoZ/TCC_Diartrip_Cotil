@@ -1,6 +1,3 @@
-"""
-conftest.py — Fixtures compartilhadas para toda a suite de testes.
-"""
 import os
 import sys
 import time
@@ -9,9 +6,6 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from unittest.mock import MagicMock, patch
 
-# --------------------------------------------------------------------------- #
-# Configurar variaveis de ambiente ANTES de qualquer import do projeto
-# --------------------------------------------------------------------------- #
 os.environ.setdefault("SECRET_KEY", "test-secret-key-diartrip-2026-pytest")
 os.environ.setdefault("ALGORITHM", "HS256")
 os.environ.setdefault("DB_HOST", "localhost")
@@ -24,9 +18,6 @@ os.environ.setdefault("CLOUDINARY_API_KEY", "test-api-key")
 os.environ.setdefault("CLOUDINARY_API_SECRET", "test-api-secret")
 os.environ["REDIS_URL"] = ""  # forca fallback em memoria
 
-# --------------------------------------------------------------------------- #
-# Mock do mysql.connector ANTES de importar database.py
-# --------------------------------------------------------------------------- #
 _mysql_mock = MagicMock()
 _mysql_connector_mock = MagicMock()
 
@@ -50,9 +41,7 @@ _mock_pool = MagicMock()
 _mock_connection = MagicMock()
 
 def _default_cursor(*args, **kwargs):
-    # Retorna um mock que se comporta como um dicionário para evitar KeyError em rotas
     c = MagicMock()
-    # Configura fetchone para retornar um dicionário real com chaves comuns e TIPOS CORRETOS
     c.fetchone.return_value = {
         "id_usuario": 1,
         "usuario_id": 1,
@@ -95,15 +84,10 @@ sys.modules["mysql"] = _mysql_mock
 sys.modules["mysql.connector"] = _mysql_connector_mock
 sys.modules["mysql.connector.pooling"] = _mysql_connector_mock.pooling
 
-# --------------------------------------------------------------------------- #
-# Global get_db mock support - OVERRIDE REAL database.get_db
-# --------------------------------------------------------------------------- #
 _override_db_conn = [None]
 
 @contextmanager
 def global_get_db_mock():
-    # Se database.get_db foi alterado (ex: por um patch), usamos a versão alterada.
-    # Isso resolve o problema de módulos que já importaram get_db antes do patch.
     import database
     if database.get_db is not global_get_db_mock:
         with database.get_db() as conn:
@@ -113,7 +97,6 @@ def global_get_db_mock():
     if _override_db_conn[0]:
         yield _override_db_conn[0]
     else:
-        # Fallback para o pool mockado
         conn = database._pool.get_connection()
         try:
             yield conn
@@ -124,15 +107,11 @@ import database
 database._pool = _mock_pool
 database.get_db = global_get_db_mock
 
-# Patch cloudinary antes de importar
 _cloudinary_mock = MagicMock()
 _cloudinary_uploader_mock = MagicMock()
 sys.modules["cloudinary"] = _cloudinary_mock
 sys.modules["cloudinary.uploader"] = _cloudinary_uploader_mock
 
-# Garantir que redis_client usa fallback em memória nos testes.
-# _ultima_tentativa = monotonic() força espera de _RETRY_INTERVAL antes de tentar novamente
-# (REDIS_URL vazio retorna None imediatamente, mas evita log desnecessário em cada teste).
 import utils.redis_client as _redis_mod
 import time as _time
 _redis_mod._client = None
@@ -141,16 +120,12 @@ _redis_mod._ultima_tentativa = _time.monotonic()  # simula "tentou agora" → es
 from fastapi.testclient import TestClient
 from main import app
 
-# Token CSRF fixo usado nos testes autenticados.
 _TEST_CSRF = "test-csrf-token-pytest-2026"
 
 _METODOS_MUTANTES = {"POST", "PUT", "PATCH", "DELETE"}
 
 
 class CsrfTestClient(TestClient):
-    """TestClient que injeta X-CSRF-Token automaticamente em requisições mutantes,
-    lendo o valor do cookie csrf_token já presente no jar do cliente."""
-
     def request(self, method, url, **kwargs):
         if method.upper() in _METODOS_MUTANTES:
             csrf = self.cookies.get("csrf_token")
@@ -161,12 +136,7 @@ class CsrfTestClient(TestClient):
         return super().request(method, url, **kwargs)
 
 
-# --------------------------------------------------------------------------- #
-# Helpers para criar cursor mock configuravel
-# --------------------------------------------------------------------------- #
-
 def make_cursor(rows=None, lastrowid=1, rowcount=1):
-    """Cria um cursor MagicMock com fetchone/fetchall configuravel."""
     cursor = MagicMock()
     cursor.lastrowid = lastrowid
     cursor.rowcount = rowcount
@@ -188,7 +158,6 @@ def make_cursor(rows=None, lastrowid=1, rowcount=1):
 
 
 def make_connection(cursor=None):
-    """Cria uma conexao MagicMock."""
     conn = MagicMock()
     if cursor is not None:
         conn.cursor.return_value = cursor
@@ -199,7 +168,6 @@ def make_connection(cursor=None):
 
 
 def fake_get_db(conn):
-    """Factory que retorna um context manager imitando get_db com conn mockado."""
     @contextmanager
     def _inner():
         old = _override_db_conn[0]
@@ -213,13 +181,8 @@ def fake_get_db(conn):
     return _inner
 
 
-# --------------------------------------------------------------------------- #
-# Tokens JWT de sessao
-# --------------------------------------------------------------------------- #
-
 @pytest.fixture(scope="session")
 def token_usuario():
-    """Gera JWT valido para usuario_id=1."""
     import jwt as pyjwt
     payload = {
         "id": 1,
@@ -231,7 +194,6 @@ def token_usuario():
 
 @pytest.fixture(scope="session")
 def token_admin():
-    """Gera JWT valido para usuario_id=99 (admin)."""
     import jwt as pyjwt
     payload = {
         "id": 99,
@@ -241,21 +203,12 @@ def token_admin():
     return pyjwt.encode(payload, os.environ["SECRET_KEY"], algorithm="HS256")
 
 
-# --------------------------------------------------------------------------- #
-# Fixture: client HTTP anonimo (sem cookie)
-# --------------------------------------------------------------------------- #
-
 @pytest.fixture
 def client():
-    """TestClient FastAPI sem autenticacao — um novo por teste para isolamento."""
     from main import app
     with CsrfTestClient(app, raise_server_exceptions=False) as c:
         yield c
 
-
-# --------------------------------------------------------------------------- #
-# Fixtures: client com cookie de autenticacao
-# --------------------------------------------------------------------------- #
 
 @pytest.fixture
 def auth_cookies(token_usuario):
@@ -282,10 +235,6 @@ def client_admin(token_admin):
         c.cookies.set("csrf_token", _TEST_CSRF)
         yield c
 
-
-# --------------------------------------------------------------------------- #
-# Factories para dados fake
-# --------------------------------------------------------------------------- #
 
 def fake_usuario(id_usuario=1, nome="Teste User", email="teste@example.com"):
     return {
@@ -362,10 +311,6 @@ def fake_roteiro(id_roteiro=1, id_grupo=10):
     }
 
 
-# --------------------------------------------------------------------------- #
-# Fixture: bypass rate limiter (autouse — ativo em todos os testes)
-# --------------------------------------------------------------------------- #
-
 @pytest.fixture(autouse=True)
 def clean_security_state():
     from utils.security import _revogados
@@ -379,10 +324,6 @@ def bypass_rate_limiter():
     with patch("utils.rate_limiter.verificar_rate_limit", return_value=None):
         yield
 
-
-# --------------------------------------------------------------------------- #
-# Bytes de imagem minimos validos para testes
-# --------------------------------------------------------------------------- #
 
 JPEG_MAGIC = b"\xff\xd8\xff\xe0" + b"\x00" * 100
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100

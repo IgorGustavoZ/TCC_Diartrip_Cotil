@@ -43,7 +43,6 @@ def buscar_por_nome(usuario_id: int, nome: str | None, limite: int = 50, offset:
             if nome:
                 nome_safe = nome.strip()
                 if len(nome_safe) >= 3:
-                    # FULLTEXT usa índice; LIKE %x% não usa — fallback para termos curtos
                     sql += " AND MATCH(g.nome_grupo) AGAINST(%s IN BOOLEAN MODE)"
                     params.append(f"+{nome_safe}*")
                 else:
@@ -78,7 +77,6 @@ def buscar_por_id(id_grupo: int, usuario_id: int) -> dict:
                 raise HTTPException(status_code=404, detail="Grupo não encontrado")
             if grupo.get("orcamento") is not None:
                 grupo["orcamento"] = float(grupo["orcamento"])
-            # Expõe codigo_convite apenas para admins do grupo
             if cargo == "admin":
                 cursor.execute(
                     "SELECT codigo_convite FROM grupos_viagem WHERE id_grupo=%s", (id_grupo,)
@@ -91,7 +89,6 @@ def buscar_por_id(id_grupo: int, usuario_id: int) -> dict:
 
 
 def obter_codigo_convite(id_grupo: int, usuario_id: int) -> dict:
-    """Retorna o codigo_convite — exclusivo para admins do grupo."""
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:
@@ -113,7 +110,6 @@ def obter_codigo_convite(id_grupo: int, usuario_id: int) -> dict:
 
 
 def _gerar_codigo() -> str:
-    """Gera código de convite criptograficamente seguro (6 chars)."""
     chars = string.ascii_uppercase + string.digits
     return "".join(secrets.choice(chars) for _ in range(6))
 
@@ -122,7 +118,6 @@ def criar(dados, usuario_id: int) -> dict:
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:
-            # Retenta até 5 vezes em caso de colisão de codigo_convite (UNIQUE constraint)
             for _ in range(5):
                 codigo_convite = _gerar_codigo()
                 try:
@@ -194,9 +189,6 @@ def deletar(id_grupo: int) -> dict:
             if not cursor.fetchone():
                 raise HTTPException(status_code=404, detail="Grupo não encontrado")
 
-            # Coleta URLs de fotos ANTES do DELETE para limpeza no Cloudinary.
-            # O ON DELETE CASCADE do schema elimina todas as tabelas filhas automaticamente;
-            # a única limpeza manual necessária é nos recursos externos (Cloudinary).
             cursor.execute("SELECT caminho_arquivo FROM fotos WHERE id_grupo=%s", (id_grupo,))
             fotos = [row[0] for row in cursor.fetchall()]
 
@@ -226,10 +218,8 @@ def entrar_por_codigo(codigo: str, usuario_id: int) -> dict:
             if not grupo:
                 raise HTTPException(status_code=404, detail="Código de convite não encontrado")
 
-            # Valida expiração do convite (NULL = permanente)
             if grupo.get("codigo_validade") is not None:
                 validade = grupo["codigo_validade"]
-                # MySQL retorna datetime; garante comparação com timezone-aware
                 if isinstance(validade, datetime) and validade.tzinfo is None:
                     validade = validade.replace(tzinfo=timezone.utc)
                 if datetime.now(timezone.utc) > validade:
@@ -259,7 +249,6 @@ def entrar_por_codigo(codigo: str, usuario_id: int) -> dict:
 
 
 def rotacionar_codigo_convite(id_grupo: int, usuario_id: int, validade_dias: int = 7) -> dict:
-    """Gera novo código de convite e define prazo de validade. Exclusivo para admins."""
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:

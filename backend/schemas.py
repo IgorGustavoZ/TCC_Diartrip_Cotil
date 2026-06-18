@@ -1,11 +1,3 @@
-"""
-Schemas Pydantic para validação e documentação das respostas da API.
-
-Usar response_model em todos os endpoints garante:
-  - Filtragem automática de campos não declarados (ex: senha_hash)
-  - Documentação Swagger completa e precisa
-  - Validação dos dados antes de enviá-los ao cliente
-"""
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -13,13 +5,9 @@ from typing import Any, Optional
 
 from pydantic import BaseModel
 
-# ─── Genérico ────────────────────────────────────────────────────────────────
-
 class MensagemResponse(BaseModel):
     mensagem: str
 
-
-# ─── Usuários ────────────────────────────────────────────────────────────────
 
 class UsuarioSimples(BaseModel):
     id_usuario: int
@@ -64,8 +52,6 @@ class SeguirResponse(BaseModel):
     total_seguidores: int
 
 
-# ─── Login / Auth ────────────────────────────────────────────────────────────
-
 class LoginResponse(BaseModel):
     mensagem: str
     usuario_id: int
@@ -74,8 +60,6 @@ class LoginResponse(BaseModel):
 class TokenResponse(BaseModel):
     mensagem: str
 
-
-# ─── Grupos de Viagem ────────────────────────────────────────────────────────
 
 class GrupoLista(BaseModel):
     id_grupo: int
@@ -97,7 +81,7 @@ class GrupoDetalhe(BaseModel):
     preferencias: Optional[str] = None
     criador_id: int
     criador: str
-    codigo_convite: Optional[str] = None  # exposto apenas para admins
+    codigo_convite: Optional[str] = None
 
 
 class GrupoCriado(BaseModel):
@@ -115,15 +99,11 @@ class EntrarGrupoResponse(BaseModel):
     id_grupo: int
 
 
-# ─── Membros ─────────────────────────────────────────────────────────────────
-
 class MembroResponse(BaseModel):
     id_usuario: int
     nome: str
     cargo: str
 
-
-# ─── Gastos ──────────────────────────────────────────────────────────────────
 
 class GastoResponse(BaseModel):
     id_gasto: int
@@ -148,8 +128,6 @@ class BalancoItem(BaseModel):
     a_pagar: float
 
 
-# ─── Roteiros ────────────────────────────────────────────────────────────────
-
 class RoteiroResponse(BaseModel):
     id_roteiro: int
     id_grupo: int
@@ -162,8 +140,6 @@ class RoteiroCriado(BaseModel):
     mensagem: str
     id: int
 
-
-# ─── Fotos ───────────────────────────────────────────────────────────────────
 
 class FotoResponse(BaseModel):
     id_foto: int
@@ -179,8 +155,6 @@ class FotoCriada(BaseModel):
     url: str
     id_grupo: int
 
-
-# ─── Posts (Feed Social) ─────────────────────────────────────────────────────
 
 class ComentarioResponse(BaseModel):
     id: int
@@ -201,7 +175,7 @@ class PostResponse(BaseModel):
     nome: str
     foto_perfil: Optional[str] = None
     curtidas: int = 0
-    ja_curtiu: int = 0  # MySQL retorna 0/1 via COALESCE(MAX(...))
+    ja_curtiu: int = 0
     comentarios: list[ComentarioResponse] = []
 
 
@@ -214,8 +188,6 @@ class CurtirResponse(BaseModel):
     curtiu: bool
     total_curtidas: int
 
-
-# ─── Chat IA ─────────────────────────────────────────────────────────────────
 
 class ChatIAResponse(BaseModel):
     pergunta: str
@@ -230,8 +202,6 @@ class ChatIAHistorico(BaseModel):
     data_interacao: datetime
 
 
-# ─── Chat Grupo (WebSocket + REST) ───────────────────────────────────────────
-
 class MensagemGrupoResponse(BaseModel):
     id_mensagem: int
     id_grupo: int
@@ -241,8 +211,6 @@ class MensagemGrupoResponse(BaseModel):
     conteudo: str
     data_envio: datetime
 
-
-# ─── Dashboard ───────────────────────────────────────────────────────────────
 
 class CategoriaGasto(BaseModel):
     categoria: Optional[str] = None
@@ -254,7 +222,7 @@ class GastoRecente(BaseModel):
     valor: float
     categoria: Optional[str] = None
     descricao: Optional[str] = None
-    data_gasto: date
+    data_gasto: Optional[date] = None
 
 
 class RankingItem(BaseModel):

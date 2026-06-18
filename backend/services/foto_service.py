@@ -38,10 +38,7 @@ def salvar(
     arquivo_size: int,
     template_usado: str | None,
 ) -> dict:
-    # Extrai extensão do nome do arquivo
     ext = arquivo_nome.rsplit(".", 1)[-1].lower() if (arquivo_nome and "." in arquivo_nome) else ""
-    
-    # Se não houver extensão no nome, tenta inferir pelos primeiros bytes (magic bytes)
     if not ext:
         if arquivo_bytes.startswith(b"\xff\xd8"): ext = "jpg"
         elif arquivo_bytes.startswith(b"\x89PNG"): ext = "png"

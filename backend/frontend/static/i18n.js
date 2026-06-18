@@ -1,4 +1,3 @@
-// Global fetch interceptor: injects CSRF token header and handles 401 redirects.
 ;(function () {
     const _orig = window.fetch.bind(window)
     const _MUTANTES = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
@@ -31,7 +30,6 @@
                     window.location.href = '/login.html'
                     return resp
                 }
-                // Refresh succeeded — rebuild CSRF header and retry original request.
                 const retryConfig = { ...config }
                 if (_MUTANTES.has(method)) {
                     const newCsrf = _getCsrfToken()
@@ -228,6 +226,7 @@ const TRANSLATIONS = {
     'perfil.following.btn': 'Following',
     'perfil.noUsers': 'No users yet.',
     'perfil.deletePost': 'Delete post',
+    'perfil.photoError': 'Error uploading photo. Please try again.',
     'perfil.comments': 'Comments',
     'perfil.likes': 'likes',
     'config.header': '⚙ Settings',
@@ -245,7 +244,8 @@ const TRANSLATIONS = {
     'config.deleteAccount': 'Delete account',
     'config.updateSuccess': 'User updated successfully!',
     'config.updateError': 'An error occurred while updating the user. Try again.',
-    'config.passMinLen': 'Password must be at least 6 characters.',
+    'config.nameRequired': 'Name cannot be empty.',
+    'config.emailInvalid': 'Please enter a valid email address.',
     'config.deleteSuccess': 'User deleted successfully!',
     'config.deleteError': 'An error occurred while deleting the user. Try again.',
     'config.language': 'Language',
@@ -317,6 +317,7 @@ const TRANSLATIONS = {
     'viagem.itinerary.cancel': 'Cancel',
     'viagem.tab.overview.dashboard': 'Group Dashboard',
     'viagem.tab.overview.budget': 'Budget',
+    'viagem.tab.overview.budget.total': 'Total Budget',
     'viagem.tab.overview.totalSpent': 'Total Spent',
     'viagem.tab.overview.remaining': 'Remaining',
     'viagem.tab.overview.consumed': 'consumed',
@@ -502,6 +503,7 @@ const TRANSLATIONS = {
     'perfil.following.btn': 'Seguindo',
     'perfil.noUsers': 'Nenhum usuário ainda.',
     'perfil.deletePost': 'Excluir post',
+    'perfil.photoError': 'Erro ao enviar foto. Tente novamente.',
     'perfil.comments': 'Comentários',
     'perfil.likes': 'curtidas',
     'config.header': '⚙ Configurações',
@@ -519,7 +521,8 @@ const TRANSLATIONS = {
     'config.deleteAccount': 'Excluir conta',
     'config.updateSuccess': 'Usuário atualizado com sucesso!',
     'config.updateError': 'Aconteceu algum erro ao atualizar o usuário. Tente novamente.',
-    'config.passMinLen': 'A senha deve ter no mínimo 6 caracteres.',
+    'config.nameRequired': 'O nome não pode estar vazio.',
+    'config.emailInvalid': 'Informe um endereço de e-mail válido.',
     'config.deleteSuccess': 'Usuário deletado com sucesso!',
     'config.deleteError': 'Aconteceu algum erro ao deletar o usuário. Tente novamente.',
     'config.language': 'Idioma',
@@ -591,6 +594,7 @@ const TRANSLATIONS = {
     'viagem.itinerary.cancel': 'Cancelar',
     'viagem.tab.overview.dashboard': 'Dashboard do Grupo',
     'viagem.tab.overview.budget': 'Orçamento',
+    'viagem.tab.overview.budget.total': 'Orçamento Total',
     'viagem.tab.overview.totalSpent': 'Total Gasto',
     'viagem.tab.overview.remaining': 'Restante',
     'viagem.tab.overview.consumed': 'consumido',
@@ -618,7 +622,6 @@ const LANG_INFO = {
   'pt-BR': { fiClass: 'fi-br', code: 'BR' }
 }
 
-// Inject flag-icons CSS once
 ;(function injectFlagIcons() {
   if (document.getElementById('flag-icons-css')) return
   const link = document.createElement('link')

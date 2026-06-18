@@ -11,20 +11,6 @@ logger = logging.getLogger("diartrip.database")
 
 _pool = None
 
-# ---------------------------------------------------------------------------
-# Configuração do pool por ambiente.
-#
-# Recomendações:
-#   DEV:  DB_POOL_SIZE=5   (economia de recursos, baixa concorrência)
-#   HML:  DB_POOL_SIZE=10  (padrão)
-#   PROD: DB_POOL_SIZE=20  (ajustar conforme max_connections do MySQL)
-#
-# Atenção: pool_size × workers_uvicorn = conexões totais no MySQL.
-# Exemplo: 20 conexões × 4 workers = 80 conexões simultâneas.
-# Verifique `SHOW VARIABLES LIKE 'max_connections'` no MySQL antes de aumentar.
-#
-# Limites: MySQL Connector aceita pool_size entre 1 e 32.
-# ---------------------------------------------------------------------------
 _POOL_SIZE_MIN = 1
 _POOL_SIZE_MAX = 32
 _POOL_SIZE_DEFAULT = 10
@@ -70,10 +56,6 @@ def _get_pool():
 
 @contextmanager
 def get_db():
-    """
-    Retira uma conexão do pool, cede ao bloco 'with' e a devolve ao pool.
-    Em caso de erro, faz rollback automático antes de devolver.
-    """
     conexao = _get_pool().get_connection()
     try:
         yield conexao

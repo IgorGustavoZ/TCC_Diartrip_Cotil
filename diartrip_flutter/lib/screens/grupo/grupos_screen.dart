@@ -84,7 +84,6 @@ class _GruposScreenState extends State<GruposScreen> {
     }
   }
 
-  // ── Tap → abre chat IA ──────────────────────────────────────────────────────
   void _abrirChatIa(Grupo g) {
     showModalBottomSheet(
       context: context,
@@ -101,7 +100,6 @@ class _GruposScreenState extends State<GruposScreen> {
     );
   }
 
-  // ── Long press → abre informações ──────────────────────────────────────────
   void _abrirInfo(Grupo g) {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
@@ -260,10 +258,6 @@ class _GruposScreenState extends State<GruposScreen> {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Chat IA — bottom sheet
-// ──────────────────────────────────────────────────────────────────────────────
-
 typedef _Msg = ({String texto, bool isUser, bool isError});
 
 class _IaChatSheet extends StatefulWidget {
@@ -349,7 +343,6 @@ class _IaChatSheetState extends State<_IaChatSheet> {
       height: height,
       child: Column(
         children: [
-          // Handle bar
           Center(
             child: Container(
               margin: const EdgeInsets.only(top: 10, bottom: 6),
@@ -361,7 +354,6 @@ class _IaChatSheetState extends State<_IaChatSheet> {
               ),
             ),
           ),
-          // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 8, 10),
             child: Row(
@@ -402,11 +394,9 @@ class _IaChatSheetState extends State<_IaChatSheet> {
             ),
           ),
           Divider(height: 1, color: Colors.white.withValues(alpha: 0.07)),
-          // Área de mensagens
           Expanded(
             child: _msgs.isEmpty ? _emptyState(lang) : _messageList(),
           ),
-          // Loading indicator
           if (_loading)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -432,7 +422,6 @@ class _IaChatSheetState extends State<_IaChatSheet> {
                 ],
               ),
             ),
-          // Campo de input
           Padding(
             padding: EdgeInsets.fromLTRB(12, 8, 12, bottom + 12),
             child: Row(
@@ -493,7 +482,6 @@ class _IaChatSheetState extends State<_IaChatSheet> {
             style: const TextStyle(color: AppTheme.onSurfaceMuted, fontSize: 13),
           ),
           const SizedBox(height: 24),
-          // Chips de sugestão
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -592,7 +580,6 @@ class _IaChatSheetState extends State<_IaChatSheet> {
   }
 }
 
-// Indicador de "digitando" (3 pontos animados)
 class _Dot extends StatefulWidget {
   final int delay;
   const _Dot({required this.delay});
@@ -641,10 +628,6 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Informações da viagem — bottom sheet
-// ──────────────────────────────────────────────────────────────────────────────
-
 class _TripInfoSheet extends StatelessWidget {
   final Grupo grupo;
   final VoidCallback onAbrirViagem;
@@ -665,7 +648,6 @@ class _TripInfoSheet extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle bar
           Center(
             child: Container(
               margin: const EdgeInsets.only(top: 10, bottom: 16),
@@ -677,7 +659,6 @@ class _TripInfoSheet extends StatelessWidget {
               ),
             ),
           ),
-          // Cabeçalho
           Row(
             children: [
               Container(
@@ -711,7 +692,6 @@ class _TripInfoSheet extends StatelessWidget {
           const SizedBox(height: 16),
           Divider(height: 1, color: Colors.white.withValues(alpha: 0.07)),
           const SizedBox(height: 16),
-          // Informações
           if (grupo.dataInicio != null)
             _infoRow(
               Icons.calendar_today_outlined,
@@ -728,7 +708,6 @@ class _TripInfoSheet extends StatelessWidget {
             _infoRow(Icons.category_outlined, lang.translate('grupos.type'), grupo.tipoViagem!),
           if (grupo.preferencias != null && grupo.preferencias!.isNotEmpty)
             _infoRow(Icons.favorite_outline, lang.translate('grupos.preferencesLabel'), grupo.preferencias!),
-          // Código de convite com cópia
           if (grupo.codigoConvite != null) ...[
             const SizedBox(height: 8),
             Text(lang.translate('grupos.inviteCode'),
@@ -768,7 +747,6 @@ class _TripInfoSheet extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 24),
-          // Botões de ação
           Row(
             children: [
               Expanded(

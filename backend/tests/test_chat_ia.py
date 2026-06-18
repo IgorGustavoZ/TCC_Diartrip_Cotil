@@ -49,15 +49,10 @@ _GRUPO = {
 }
 
 
-# =========================================================================== #
-# Perguntas validas e invalidas
-# =========================================================================== #
 
 class TestChatIA:
     def test_pergunta_valida_retorna_resposta(self, client_usuario):
         """Pergunta valida chama a IA e retorna resposta."""
-        # Primeira conexao: auth + checar_membro + SELECT grupo + historico
-        # Segunda conexao: INSERT historico
         call_count = [0]
 
         def factory(**kw):
@@ -173,9 +168,6 @@ class TestChatIA:
         assert "Regras (não negociáveis)" not in body
 
 
-# =========================================================================== #
-# Rate limit
-# =========================================================================== #
 
 class TestRateLimitChatIA:
     def test_rate_limit_retorna_429(self, client_usuario):

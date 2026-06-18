@@ -28,8 +28,6 @@ class GastoService {
     _check(r);
   }
 
-  // GastoUpdate no backend exige: valor (float), categoria (str), descricao (str obrigatório).
-  // data_gasto não existe em GastoUpdate — NÃO enviar.
   static Future<void> atualizar({
     required int idGasto,
     required double valor,
@@ -39,7 +37,7 @@ class GastoService {
     final r = await dio.put('/gastos/$idGasto', data: {
       'valor': valor,
       'categoria': categoria,
-      'descricao': descricao ?? '',   // obrigatório no backend — nunca omitir
+      'descricao': descricao ?? '',
     });
     _check(r);
   }
