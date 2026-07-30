@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="static/style.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <title>Diartrip - Sign Up</title>
     <link rel="shortcut icon" href="imagens/favicon-diartrip.png" type="image/x-icon">
@@ -13,9 +13,9 @@
     <header>
         <a href="index.html"><div class="logo"><img src="imagens/logo-diartrip.png" alt=""></div></a>
     </header>
-    <section style="padding:100px 20px; max-width:600px; margin:auto; position: relative; bottom: 100px;">
+    <section style="padding:100px 20px; max-width:600px; margin:auto; position: relative;">
         <h2 class="section-title titulo" style="margin-bottom:20px;" data-i18n="register.title">Sign Up</h2>
-        <form id="signupForm" style="display:flex; flex-direction:column; gap:22px; background:rgba(255,255,255,0.05); padding:40px; border-radius:16px; border:1px solid rgba(255,255,255,0.08); backdrop-filter:blur(6px); position:relative;">
+        <form id="signupForm" style="display:flex; flex-direction:column; gap:22px; background:var(--surface); padding:40px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow-md); position:relative;">
 
         <div class="field">
         <label data-i18n="register.name.label">Name</label>
@@ -32,8 +32,8 @@
         <div class="field" style="position:relative">
         <label data-i18n="register.pass.label">Password</label>
         <input id="password" type="password" data-i18n-placeholder="register.pass.placeholder" placeholder="Create a password" required>
-        <span id="togglePassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:#94a3b8;" data-i18n="login.pass.show">show</span>
-        <span style="font-size:12px; color:#94a3b8; margin-top:4px; display:block;" data-i18n="register.pass.hint">
+        <span id="togglePassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);" data-i18n="login.pass.show">show</span>
+        <span style="font-size:12px; color:var(--text-muted); margin-top:4px; display:block;" data-i18n="register.pass.hint">
             Minimum 8 characters, with at least one uppercase letter and one number.
         </span>
         <span class="error" id="passwordError"></span>

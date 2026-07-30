@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diartrip - Trip</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../static/style.css?v=2">
+<link rel="stylesheet" href="../static/style.css?v=3">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="../static/i18n.js"></script>
 </head>
@@ -30,6 +30,9 @@
         </a>
         <a href="perfil.html">
             <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
+        </a>
+        <a href="chat-viagem.html">
+            <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
         </a>
         <div class="sidebar-spacer"></div>
         <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Sair</div>
@@ -83,7 +86,7 @@
                             <div class="progress-container">
                                 <div class="progress-bar" id="progressBar"></div>
                             </div>
-                            <p style="font-size:12px; color:#64748b; text-align:center; margin:0;">
+                            <p style="font-size:12px; color:var(--text-muted); text-align:center; margin:0;">
                                 <span id="percentualGasto">0</span>% <span data-i18n="viagem.tab.overview.consumed">consumido</span>
                             </p>
                         </div>
@@ -91,7 +94,7 @@
                         <div class="dashboard-card">
                             <h3 data-i18n="viagem.tab.overview.categories">🏷️ Categorias</h3>
                             <div class="category-list" id="listaCategorias">
-                                <p style="color:#64748b; font-size:14px; text-align:center;" data-i18n="viagem.tab.overview.noExpenses">Nenhum gasto registrado</p>
+                                <p style="color:var(--text-muted); font-size:14px; text-align:center;" data-i18n="viagem.tab.overview.noExpenses">Nenhum gasto registrado</p>
                             </div>
                         </div>
                     </div>
@@ -117,7 +120,7 @@
                         <div class="dashboard-card">
                             <h3 data-i18n="viagem.tab.personal.recent">📜 Últimos Gastos</h3>
                             <div class="category-list" id="meusGastosRecentes">
-                                <p style="color:#64748b; font-size:14px; text-align:center;" data-i18n="viagem.tab.personal.noRecent">Sem gastos recentes</p>
+                                <p style="color:var(--text-muted); font-size:14px; text-align:center;" data-i18n="viagem.tab.personal.noRecent">Sem gastos recentes</p>
                             </div>
                         </div>
                     </div>
@@ -193,9 +196,9 @@
                         </div>
 
                         <div>
-                            <h3 style="margin:0 0 16px; font-size:16px; color:#94a3b8;" data-i18n="viagem.history">Histórico do grupo</h3>
+                            <h3 style="margin:0 0 16px; font-size:16px; color:var(--text-muted);" data-i18n="viagem.history">Histórico do grupo</h3>
                             <div id="listaGastos">
-                                <p style="color:#64748b; font-size:14px;" data-i18n="viagem.emptyExpenses">Nenhum gasto registrado ainda.</p>
+                                <p style="color:var(--text-muted); font-size:14px;" data-i18n="viagem.emptyExpenses">Nenhum gasto registrado ainda.</p>
                             </div>
                         </div>
 
@@ -207,15 +210,15 @@
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.itineraryTitle">📋 Roteiro da Viagem</h2>
 
-                    <div id="roteiroFormAdd" style="display:none; margin-bottom:24px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:18px;">
-                        <p style="margin:0 0 12px; font-size:14px; color:#94a3b8;" data-i18n="viagem.addItem">Adicionar item ao roteiro</p>
-                        <input id="roteiroTitulo" type="text" data-i18n-placeholder="viagem.itemTitle" placeholder="Título (ex: Visita ao Coliseu)" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px 12px; color:#f1f5f9; font-size:14px; margin-bottom:10px; outline:none;">
-                        <textarea id="roteiroDesc" data-i18n-placeholder="viagem.itemDesc" placeholder="Descrição (horário, endereço, dicas...)" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px 12px; color:#f1f5f9; font-size:14px; resize:vertical; min-height:72px; outline:none;"></textarea>
-                        <button onclick="criarRoteiroItem()" style="margin-top:10px; background:linear-gradient(135deg,#3b82f6,#06b6d4); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.addBtn">+ Adicionar</button>
-                        <span id="roteiroAddMsg" style="margin-left:12px; font-size:13px; color:#f87171; display:none;"></span>
+                    <div id="roteiroFormAdd" style="display:none; margin-bottom:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:18px;">
+                        <p style="margin:0 0 12px; font-size:14px; color:var(--text-muted);" data-i18n="viagem.addItem">Adicionar item ao roteiro</p>
+                        <input id="roteiroTitulo" type="text" data-i18n-placeholder="viagem.itemTitle" placeholder="Título (ex: Visita ao Coliseu)" style="width:100%; box-sizing:border-box; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text); font-size:14px; margin-bottom:10px; outline:none;">
+                        <textarea id="roteiroDesc" data-i18n-placeholder="viagem.itemDesc" placeholder="Descrição (horário, endereço, dicas...)" style="width:100%; box-sizing:border-box; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text); font-size:14px; resize:vertical; min-height:72px; outline:none;"></textarea>
+                        <button onclick="criarRoteiroItem()" style="margin-top:10px; background:var(--gradient); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.addBtn">+ Adicionar</button>
+                        <span id="roteiroAddMsg" style="margin-left:12px; font-size:13px; color:var(--danger); display:none;"></span>
                     </div>
 
-                    <div id="roteiroLista"><p style="color:#64748b; font-size:14px; text-align:center; padding:30px 0;" data-i18n="viagem.emptyItinerary">Nenhum item no roteiro ainda.</p></div>
+                    <div id="roteiroLista"><p style="color:var(--text-muted); font-size:14px; text-align:center; padding:30px 0;" data-i18n="viagem.emptyItinerary">Nenhum item no roteiro ainda.</p></div>
                 </div>
             </div>
 
@@ -224,8 +227,8 @@
                     <h2 style="margin:0 0 16px; flex-shrink:0;" data-i18n="viagem.groupChat">💬 Chat do Grupo</h2>
                     <div id="chatGrupoMsgs" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:4px;"></div>
                     <div style="display:flex; gap:8px; margin-top:14px; flex-shrink:0;">
-                        <input id="chatGrupoInput" data-i18n-placeholder="viagem.chatPlaceholder" placeholder="Escreva uma mensagem..." style="flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px 14px; color:#f1f5f9; font-size:14px; outline:none;">
-                        <button onclick="enviarMsgGrupo()" style="background:linear-gradient(135deg,#3b82f6,#06b6d4); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="lobby.chat.send">Enviar</button>
+                        <input id="chatGrupoInput" data-i18n-placeholder="viagem.chatPlaceholder" placeholder="Escreva uma mensagem..." style="flex:1; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px; outline:none;">
+                        <button onclick="enviarMsgGrupo()" style="background:var(--gradient); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="lobby.chat.send">Enviar</button>
                     </div>
                 </div>
             </div>
@@ -249,7 +252,7 @@
 
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.inviteTitle">👥 Convidar pessoas</h2>
-                    <p style="color:#94a3b8; font-size:14px; margin:0 0 4px;" data-i18n="viagem.inviteDesc">Compartilhe este código com seus amigos.</p>
+                    <p style="color:var(--text-muted); font-size:14px; margin:0 0 4px;" data-i18n="viagem.inviteDesc">Compartilhe este código com seus amigos.</p>
                     <div class="invite-box">
                         <input id="inviteInput" readonly>
                         <button onclick="copiarCodigo()" data-i18n="common.copy">Copiar</button>
@@ -258,8 +261,8 @@
 
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.aiAssistant">🤖 Assistente IA</h2>
-                    <p style="color:#94a3b8; font-size:14px; margin:0 0 12px;" data-i18n="viagem.aiUses">Use o chat da IA no lobby para pedir:</p>
-                    <ul style="color:#cbd5f5; font-size:14px; padding-left:20px; margin:0; line-height:2;">
+                    <p style="color:var(--text-muted); font-size:14px; margin:0 0 12px;" data-i18n="viagem.aiUses">Use o chat da IA no lobby para pedir:</p>
+                    <ul style="color:var(--text-secondary); font-size:14px; padding-left:20px; margin:0; line-height:2;">
                         <li data-i18n="viagem.aiFeature1">Roteiros personalizados</li>
                         <li data-i18n="viagem.aiFeature2">Pontos turísticos</li>
                         <li data-i18n="viagem.aiFeature3">Restaurantes</li>
@@ -355,7 +358,7 @@ async function carregarDashboard() {
     if (g.distribuicao_categorias.length > 0) {
         document.getElementById("listaCategorias").innerHTML = g.distribuicao_categorias.map(cat => `
             <div class="category-item">
-                <span>${t('viagem.cat.' + cat.categoria) || escapeHtml(cat.categoria)}</span>
+                <span>${t('viagem.cat.' + (cat.categoria||'').toLowerCase()) || escapeHtml(cat.categoria)}</span>
                 <strong>R$ ${cat.total.toLocaleString(getLang(), {minimumFractionDigits:2})}</strong>
             </div>
         `).join('')
@@ -368,8 +371,8 @@ async function carregarDashboard() {
         document.getElementById("meusGastosRecentes").innerHTML = p.ultimos_gastos_pessoais.map(g => `
             <div class="category-item">
                 <div>
-                    <div style="font-size:14px;">${escapeHtml(g.descricao || t('viagem.cat.' + g.categoria) || g.categoria)}</div>
-                    <div style="font-size:11px; color:#64748b;">${escapeHtml(g.data_gasto || '')}</div>
+                    <div style="font-size:14px;">${escapeHtml(g.descricao || t('viagem.cat.' + (g.categoria||'').toLowerCase()) || g.categoria)}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(g.data_gasto || '')}</div>
                 </div>
                 <strong>R$ ${g.valor.toLocaleString(getLang(), {minimumFractionDigits:2})}</strong>
             </div>
@@ -404,22 +407,25 @@ async function carregarGastos() {
     const container = document.getElementById("listaGastos")
 
     if (lista.length === 0) {
-        container.innerHTML = `<p style="color:#64748b; font-size:14px;">${t('viagem.emptyExpenses')}</p>`
+        container.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t('viagem.emptyExpenses')}</p>`
         return
     }
 
     const meuId = parseInt(sessionStorage.getItem("id"))
 
-    container.innerHTML = lista.map(g => `
+    container.innerHTML = lista.map(g => {
+        const catKey = (g.categoria || '').toLowerCase()
+        return `
         <div class="gasto-item">
             <div class="gasto-info">
-                <div class="desc">${escapeHtml(g.descricao || t('viagem.cat.' + g.categoria) || g.categoria)}</div>
-                <div class="meta">${t('viagem.cat.' + g.categoria) || escapeHtml(g.categoria)} · ${escapeHtml(g.nome)} · ${escapeHtml(g.data_gasto || '')}</div>
+                <div class="desc">${escapeHtml(g.descricao || t('viagem.cat.' + catKey) || g.categoria)}</div>
+                <div class="meta">${t('viagem.cat.' + catKey) || escapeHtml(g.categoria)} · ${escapeHtml(g.nome)} · ${escapeHtml(g.data_gasto || '')}</div>
             </div>
             <span class="gasto-valor">R$ ${parseFloat(g.valor).toLocaleString(getLang(), {minimumFractionDigits:2})}</span>
             ${g.id_usuario == meuId ? `<button class="btn-del-gasto" onclick="deletarGasto(${g.id_gasto})">${t('common.delete')}</button>` : ''}
         </div>
-    `).join('')
+    `
+    }).join('')
 }
 
 async function registrarGasto() {
@@ -550,14 +556,14 @@ function _renderMsgHtml(m) {
     const iniciais = m.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
     const av = m.foto_perfil
         ? `<img src="${m.foto_perfil}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
-        : `<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;">${iniciais}</div>`
+        : `<div style="width:32px;height:32px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;">${iniciais}</div>`
     const hora = new Date(m.data_envio).toLocaleTimeString(getLang(), { hour: "2-digit", minute: "2-digit" })
     return `
     <div style="display:flex;gap:10px;align-items:flex-start;${sou ? 'flex-direction:row-reverse;' : ''}">
         ${av}
         <div style="max-width:70%;">
-            <div style="font-size:11px;color:#64748b;margin-bottom:3px;${sou ? 'text-align:right;' : ''}">${escapeHtml(m.nome)} · ${hora}</div>
-            <div style="background:${sou ? 'linear-gradient(135deg,#3b82f6,#06b6d4)' : 'rgba(255,255,255,0.07)'};color:#f1f5f9;border-radius:${sou ? '12px 4px 12px 12px' : '4px 12px 12px 12px'};padding:10px 14px;font-size:14px;line-height:1.5;word-break:break-word;">${escapeHtml(m.conteudo)}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;${sou ? 'text-align:right;' : ''}">${escapeHtml(m.nome)} · ${hora}</div>
+            <div style="background:${sou ? 'var(--gradient)' : 'var(--surface-2)'};color:${sou ? '#fff' : 'var(--text)'};border-radius:${sou ? '12px 4px 12px 12px' : '4px 12px 12px 12px'};padding:10px 14px;font-size:14px;line-height:1.5;word-break:break-word;">${escapeHtml(m.conteudo)}</div>
         </div>
     </div>`
 }
@@ -618,30 +624,30 @@ async function carregarRoteiro() {
     const lista = document.getElementById("roteiroLista")
 
     if (!itens.length) {
-        lista.innerHTML = `<p style="color:#64748b;font-size:14px;text-align:center;padding:30px 0;">${t('viagem.emptyItinerary')}</p>`
+        lista.innerHTML = `<p style="color:var(--text-muted);font-size:14px;text-align:center;padding:30px 0;">${t('viagem.emptyItinerary')}</p>`
         return
     }
 
     lista.innerHTML = itens.map((r, i) => `
-        <div id="ritem-${r.id_roteiro}" style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px 18px;margin-bottom:10px;background:rgba(255,255,255,0.03);">
+        <div id="ritem-${r.id_roteiro}" style="border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:10px;background:var(--surface-2);">
             <div style="display:flex;align-items:flex-start;gap:12px;">
-                <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${i + 1}</div>
+                <div style="width:28px;height:28px;border-radius:8px;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${i + 1}</div>
                 <div style="flex:1;min-width:0;" id="rview-${r.id_roteiro}">
-                    <div style="font-size:15px;font-weight:600;color:#f1f5f9;margin-bottom:4px;">${escapeHtml(r.titulo)}</div>
-                    <div style="font-size:13px;color:#94a3b8;white-space:pre-wrap;">${escapeHtml(r.descricao)}</div>
+                    <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;">${escapeHtml(r.titulo)}</div>
+                    <div style="font-size:13px;color:var(--text-muted);white-space:pre-wrap;">${escapeHtml(r.descricao)}</div>
                 </div>
                 ${isAdmin ? `
                 <div style="display:flex;gap:6px;flex-shrink:0;">
-                    <button onclick="iniciarEdicaoRoteiro(${r.id_roteiro},'${escapeAtr(r.titulo)}','${escapeAtr(r.descricao)}')" style="background:rgba(255,255,255,0.08);border:none;border-radius:6px;padding:6px 10px;color:#cbd5f5;font-size:12px;cursor:pointer;">${t('viagem.itinerary.edit')}</button>
-                    <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:rgba(248,113,113,0.15);border:none;border-radius:6px;padding:6px 10px;color:#f87171;font-size:12px;cursor:pointer;">🗑</button>
+                    <button onclick="iniciarEdicaoRoteiro(${r.id_roteiro},'${escapeAtr(r.titulo)}','${escapeAtr(r.descricao)}')" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text-secondary);font-size:12px;cursor:pointer;">${t('viagem.itinerary.edit')}</button>
+                    <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:var(--danger-soft);border:none;border-radius:6px;padding:6px 10px;color:var(--danger);font-size:12px;cursor:pointer;">🗑</button>
                 </div>` : ""}
             </div>
             <div id="redit-${r.id_roteiro}" style="display:none;margin-top:12px;">
-                <input id="retitulo-${r.id_roteiro}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 12px;color:#f1f5f9;font-size:14px;margin-bottom:8px;outline:none;">
-                <textarea id="redesc-${r.id_roteiro}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 12px;color:#f1f5f9;font-size:14px;resize:vertical;min-height:60px;outline:none;"></textarea>
+                <input id="retitulo-${r.id_roteiro}" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;margin-bottom:8px;outline:none;">
+                <textarea id="redesc-${r.id_roteiro}" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;resize:vertical;min-height:60px;outline:none;"></textarea>
                 <div style="display:flex;gap:8px;margin-top:8px;">
-                    <button onclick="salvarEdicaoRoteiro(${r.id_roteiro})" style="background:linear-gradient(135deg,#3b82f6,#06b6d4);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">${t('viagem.itinerary.save')}</button>
-                    <button onclick="cancelarEdicaoRoteiro(${r.id_roteiro})" style="background:rgba(255,255,255,0.07);color:#94a3b8;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;">${t('viagem.itinerary.cancel')}</button>
+                    <button onclick="salvarEdicaoRoteiro(${r.id_roteiro})" style="background:var(--gradient);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">${t('viagem.itinerary.save')}</button>
+                    <button onclick="cancelarEdicaoRoteiro(${r.id_roteiro})" style="background:var(--surface);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;">${t('viagem.itinerary.cancel')}</button>
                 </div>
             </div>
         </div>
@@ -717,21 +723,21 @@ async function carregarMembrosAdmin() {
         const iniciais = m.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
 
         const badgeStyle = isCriador
-            ? "background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.35);"
+            ? "background:var(--primary-soft);color:var(--primary);border:1px solid rgba(var(--primary-rgb),0.35);"
             : isAdminMembro
-                ? "background:rgba(255,209,102,0.15);color:#ffd166;border:1px solid rgba(255,209,102,0.3);"
-                : "background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.2);"
+                ? "background:var(--warning-soft);color:var(--warning);border:1px solid rgba(var(--warning-rgb),0.3);"
+                : "background:var(--surface-2);color:var(--text-secondary);border:1px solid var(--border);"
         const badgeLabel = isCriador ? t('viagem.badge.owner') : isAdminMembro ? t('viagem.badge.admin') : t('viagem.badge.member')
 
         const btnAcao = (isMe || isCriador) ? "" : isAdminMembro
-            ? `<button onclick="rebaixarMembro(${m.id_usuario})" style="background:rgba(248,113,113,0.12);color:#f87171;border:1px solid rgba(248,113,113,0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.action.demote')}</button>`
-            : `<button onclick="promoverMembro(${m.id_usuario})" style="background:rgba(255,209,102,0.12);color:#ffd166;border:1px solid rgba(255,209,102,0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.action.promote')}</button>`
+            ? `<button onclick="rebaixarMembro(${m.id_usuario})" style="background:var(--danger-soft);color:var(--danger);border:1px solid rgba(var(--danger-rgb),0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.action.demote')}</button>`
+            : `<button onclick="promoverMembro(${m.id_usuario})" style="background:var(--warning-soft);color:var(--warning);border:1px solid rgba(var(--warning-rgb),0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.action.promote')}</button>`
 
         return `
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;">
-            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${iniciais}</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${iniciais}</div>
             <div style="flex:1;min-width:0;">
-                <div style="font-size:14px;font-weight:600;color:#f1f5f9;">${escapeHtml(m.nome)}${isMe ? " <span style='color:#64748b;font-weight:400;font-size:12px;'>(você)</span>" : ""}</div>
+                <div style="font-size:14px;font-weight:600;color:var(--text);">${escapeHtml(m.nome)}${isMe ? " <span style='color:var(--text-muted);font-weight:400;font-size:12px;'>(você)</span>" : ""}</div>
             </div>
             <span style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;${badgeStyle}">${badgeLabel}</span>
             ${btnAcao}

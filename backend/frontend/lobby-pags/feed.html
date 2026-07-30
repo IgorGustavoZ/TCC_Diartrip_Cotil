@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diartrip - Feed</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../static/style.css?v=2">
+<link rel="stylesheet" href="../static/style.css?v=3">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="../static/i18n.js"></script>
 <style>
@@ -14,14 +14,14 @@
 }
 .btn-curtir, .btn-comentar {
     display: flex; align-items: center; gap: 5px;
-    background: none; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
-    color: #94a3b8; font-size: 13px; padding: 5px 12px !important; height: auto !important;
+    background: none; border: 1px solid var(--border); border-radius: 20px;
+    color: var(--text-muted); font-size: 13px; padding: 5px 12px !important; height: auto !important;
     cursor: pointer; font-family: inherit; transition: background 0.2s, border-color 0.2s;
 }
 .btn-curtir:hover, .btn-comentar:hover {
-    background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2);
+    background: var(--surface-2); border-color: var(--border-strong);
 }
-.btn-curtir.curtido { color: #f87171; border-color: rgba(248,113,113,0.35); }
+.btn-curtir.curtido { color: var(--danger); border-color: rgba(var(--danger-rgb),0.35); }
 .btn-curtir:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .feed-comentarios { margin-top: 10px; }
@@ -29,29 +29,29 @@
 .feed-coment { display: flex; gap: 8px; align-items: flex-start; }
 .feed-cav {
     width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
-    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    background: var(--gradient);
     display: flex; align-items: center; justify-content: center;
     font-size: 10px; font-weight: 700; color: #fff;
 }
 .feed-cav img { width: 100%; height: 100%; object-fit: cover; }
-.feed-ctxt { font-size: 13px; color: #cbd5f5; line-height: 1.5; }
-.feed-cnome { font-weight: 700; color: #f1f5f9; margin-right: 4px; }
+.feed-ctxt { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.feed-cnome { font-weight: 700; color: var(--text); margin-right: 4px; }
 .feed-coment-input {
     display: flex; gap: 6px; align-items: flex-end; margin-top: 4px;
 }
 .feed-coment-input input {
     flex: 1; padding: 8px 14px; border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
-    color: #e2e8f0; font-size: 13px; font-family: inherit;
+    border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--text); font-size: 13px; font-family: inherit;
     transition: border 0.2s;
 }
-.feed-coment-input input:focus { outline: none; border-color: #3b82f6; }
+.feed-coment-input input:focus { outline: none; border-color: var(--primary); background: var(--surface); }
 .feed-coment-input button {
     background: none; border: none; padding: 0 4px !important; height: auto !important;
-    color: #3b82f6; font-size: 13px; font-weight: 600; cursor: pointer;
+    color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer;
     flex-shrink: 0; white-space: nowrap;
 }
-.feed-coment-input button:hover { color: #06b6d4; }
+.feed-coment-input button:hover { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -73,6 +73,9 @@
         <a href="perfil.html">
             <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
         </a>
+        <a href="chat-viagem.html">
+            <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
+        </a>
         <a href="form-viagem.html">
             <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
         </a>
@@ -83,8 +86,8 @@
     <div class="main">
         <div class="header">
             <h2 data-i18n="feed.header">Feed</h2>
-            <a href="perfil.html" id="userChip" style="display:flex;align-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);padding:4px;border-radius:50%;cursor:pointer;transition:background 0.2s;text-decoration:none;color:inherit;">
-                <div id="avatarMini" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">?</div>
+            <a href="perfil.html" id="userChip" style="display:flex;align-items:center;background:var(--surface-2);border:1px solid var(--border);padding:4px;border-radius:50%;cursor:pointer;transition:background 0.2s;text-decoration:none;color:inherit;">
+                <div id="avatarMini" style="width:36px;height:36px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">?</div>
             </a>
         </div>
         <div class="feed-wrap">
@@ -356,4 +359,3 @@ carregarFeed()
 </script>
 </body>
 </html>
-tml>

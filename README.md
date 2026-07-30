@@ -1,8 +1,10 @@
-# Diartrip API
+# Diartrip
 
-API REST feita em Python usando FastAPI para gerenciamento de viagens em grupo.
+Plataforma de gerenciamento de viagens em grupo com app mobile (Flutter), app desktop (C# WPF) e API REST (Python/FastAPI).
 
 ## Tecnologias
+
+### Backend (API)
 - Python 3.11+
 - FastAPI
 - MySQL (connection pool com retry automático)
@@ -13,9 +15,30 @@ API REST feita em Python usando FastAPI para gerenciamento de viagens em grupo.
 - JWT (autenticação via Cookies HttpOnly)
 - Pydantic v2 (validação de dados e limites)
 - OpenAI SDK via OpenRouter (IA)
+- Cloudinary (upload e hospedagem de imagens)
 - pytest (testes automatizados E2E)
 - python-multipart (upload de arquivos)
 - Decimal (precisão financeira)
+
+### Mobile (Flutter)
+- Flutter 3.41.5 / Dart SDK ≥ 3.0
+- Dio + cookie_jar (HTTP com CSRF automático)
+- web_socket_channel (chat em tempo real via WebSocket)
+- Provider (gerenciamento de estado)
+- image_picker + crop_your_image (câmera e recorte)
+- cached_network_image (cache de imagens)
+- flutter_markdown (renderização de respostas da IA)
+- Sentry (crash reporting em produção)
+- mockito + http_mock_adapter (testes)
+
+### Desktop (C# WPF)
+- .NET 8 / WPF
+- QuestPDF (geração de relatórios em PDF)
+- PDFsharp (manipulação de PDF)
+
+### CI/CD
+- GitHub Actions (pytest + cobertura ≥ 70 %, flutter analyze + testes ≥ 80 %, docker build)
+- Codecov (relatórios de cobertura)
 
 ---
 
@@ -41,6 +64,11 @@ API REST feita em Python usando FastAPI para gerenciamento de viagens em grupo.
 - **Precisão Financeira**: uso de Decimal para evitar erros de arredondamento
 - Balanço dinâmico de débitos e créditos entre participantes
 - Dashboard geral, pessoal e administrativo
+- Exportação de relatório em PDF (desktop)
+
+### Chat em Tempo Real
+- WebSocket por grupo (sem polling)
+- Mensagens entregues instantaneamente a todos os membros conectados
 
 ### Chat IA
 - Assistente contextualizado por viagem (destino, orçamento, datas)
@@ -60,7 +88,7 @@ API REST feita em Python usando FastAPI para gerenciamento de viagens em grupo.
 
 ## Como executar
 
-### Com Docker (recomendado)
+### API — Com Docker (recomendado)
 
 **Pré-requisitos:** Docker Desktop instalado e rodando.
 
@@ -83,7 +111,7 @@ Para parar: `docker compose down`. Para resetar o banco: `docker compose down -v
 
 ---
 
-### Sem Docker (ambiente local)
+### API — Sem Docker (ambiente local)
 
 ```bash
 # 1. Ambiente
@@ -102,12 +130,64 @@ uvicorn main:app --reload
 
 ---
 
+### App Mobile (Flutter)
+
+**Pré-requisitos:** Flutter SDK 3.41.5+ instalado.
+
+```bash
+cd diartrip_flutter
+
+# Instalar dependências e gerar mocks
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+
+# Rodar (escolha o dispositivo/emulador)
+flutter run
+
+# Rodar no Chrome (web)
+flutter run -d chrome
+```
+
+> Certifique-se de que a API está rodando e que o endereço base no app aponta para `http://localhost:8000`.
+
+---
+
+### App Desktop (C# WPF)
+
+**Pré-requisitos:** .NET 8 SDK instalado.
+
+```bash
+# Login
+cd desktop/frmLogin
+dotnet run
+
+# Lobby (após login)
+cd desktop/frmLobby
+dotnet run
+```
+
+Ou abra a solução no Visual Studio e pressione F5.
+
+---
+
 ## Testes
 
+### Backend
 ```bash
 pytest tests/test_api_full.py -v
 ```
 A suíte de testes valida o fluxo completo: criação de usuários, grupos, gastos, balanço financeiro e travas de segurança.
+
+### Flutter
+```bash
+cd diartrip_flutter
+
+# Unit + widget
+flutter test test/unit test/widget --reporter expanded
+
+# No Chrome
+flutter test test/unit test/widget --platform chrome --reporter expanded
+```
 
 ---
 
@@ -143,5 +223,5 @@ A suíte de testes valida o fluxo completo: criação de usuários, grupos, gast
 │   ├── Dockerfile
 │   └── .env.example     → Template de variáveis de ambiente
 ├── diartrip_flutter/    → App mobile Flutter
-└── desktop/             → App desktop C# WPF
+└── desktop/             → App desktop C# WPF (.NET 8)
 ```

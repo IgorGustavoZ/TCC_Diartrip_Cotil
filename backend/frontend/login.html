@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="static/style.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <title>Diartrip - Login</title>
@@ -14,9 +14,9 @@
     <header>
         <a href="index.html"><div class="logo"><img src="imagens/logo-diartrip.png" alt=""></div></a>
     </header>
-    <section style="padding:100px 20px; max-width:600px; max-height: 550px; margin:auto; position: relative; bottom: 70px;">
+    <section style="padding:100px 20px; max-width:600px; max-height: 550px; margin:auto; position: relative;">
         <h2 class="section-title titulo" style="margin-bottom:20px;" data-i18n="login.title">Login</h2>
-        <form id="signupForm" style="display:flex; flex-direction:column; gap:22px; background:rgba(255,255,255,0.05); padding:40px; border-radius:16px; border:1px solid rgba(255,255,255,0.08); backdrop-filter:blur(6px); position:relative;">
+        <form id="signupForm" style="display:flex; flex-direction:column; gap:22px; background:var(--surface); padding:40px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow-md); position:relative;">
 
             <div class="field">
                 <label data-i18n="login.email.label">Email</label>
@@ -26,7 +26,7 @@
             <div class="field" style="position:relative">
                 <label data-i18n="login.pass.label">Password</label>
                 <input id="password" type="password" data-i18n-placeholder="login.pass.placeholder" placeholder="Enter your password" required>
-                <span class="togglePassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:#94a3b8;" data-i18n="login.pass.show">show</span>
+                <span class="togglePassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);" data-i18n="login.pass.show">show</span>
             </div>
 
             <span class="error" id="submitError" style="display: none;" data-i18n="login.error">Could not log in, please try again.</span>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diartrip - Profile</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../static/style.css?v=2">
+<link rel="stylesheet" href="../static/style.css?v=3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="../static/i18n.js"></script>
@@ -34,7 +34,7 @@
     max-width: 700px !important;
     margin: 32px auto !important;
     padding: 0 20px 24px !important;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid var(--border);
     box-sizing: border-box;
 }
 
@@ -55,14 +55,14 @@
 .p-av-img {
     width: 90px; height: 90px;
     border-radius: 50%; object-fit: cover; display: block;
-    border: 2px solid rgba(59,130,246,0.4);
+    border: 2px solid rgba(var(--primary-rgb),0.4);
 }
 .p-av-iniciais {
     width: 90px; height: 90px; border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    background: var(--gradient);
     display: flex; align-items: center; justify-content: center;
     font-size: 30px; font-weight: 700; color: #fff;
-    box-shadow: 0 4px 20px rgba(59,130,246,0.4);
+    box-shadow: 0 4px 20px rgba(var(--primary-rgb),0.3);
     user-select: none;
 }
 .p-av-overlay {
@@ -84,7 +84,7 @@
     gap: 12px;
 }
 .p-nome {
-    font-size: 20px; font-weight: 600; color: #f1f5f9;
+    font-size: 20px; font-weight: 600; color: var(--text);
     margin: 0;
 }
 
@@ -102,27 +102,27 @@
 }
 .p-stat:focus { outline: none; box-shadow: none !important; border: none !important; }
 .p-stat-clk { cursor: pointer; }
-.p-stat-clk:hover .p-stat-n { color: #60a5fa; }
-.p-stat-n { font-size: 18px; font-weight: 800; color: #f1f5f9; line-height: 1; }
-.p-stat-l { font-size: 12px; color: #64748b; margin-top: 2px; }
+.p-stat-clk:hover .p-stat-n { color: var(--primary); }
+.p-stat-n { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
+.p-stat-l { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
 /* Action row */
 .p-acoes { display: flex; gap: 8px; align-items: center; }
 
 .btn-edit-p {
     flex: 1; height: 34px !important; padding: 0 !important;
-    border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
-    background: transparent; color: #e2e8f0;
+    border: 1px solid var(--border-strong); border-radius: 8px;
+    background: transparent; color: var(--text-secondary);
     font-size: 13px; font-weight: 600; cursor: pointer;
     font-family: inherit; transition: background 0.2s;
 }
-.btn-edit-p:hover { background: rgba(255,255,255,0.07); }
-.btn-edit-p:focus { outline: none; box-shadow: none; border-color: rgba(255,255,255,0.35); }
+.btn-edit-p:hover { background: var(--surface-2); }
+.btn-edit-p:focus { outline: none; box-shadow: none; border-color: var(--primary); }
 
 .btn-seguir-p {
     flex: 1; height: 34px !important; padding: 0 !important;
     border: none; border-radius: 8px;
-    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    background: var(--gradient);
     color: #fff; font-size: 13px; font-weight: 700;
     cursor: pointer; font-family: inherit;
 }
@@ -130,61 +130,62 @@
 .btn-seguir-p:focus { outline: none; box-shadow: none; }
 .btn-seguir-p.ja-segue {
     background: transparent !important;
-    border: 1px solid rgba(255,255,255,0.2) !important;
-    color: #e2e8f0 !important; font-weight: 600;
+    border: 1px solid var(--border-strong) !important;
+    color: var(--text-secondary) !important; font-weight: 600;
 }
 
 .btn-cfg-p {
     width: 34px; height: 34px !important; padding: 0 !important;
-    flex-shrink: 0; border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 8px; background: transparent; color: #94a3b8;
+    flex-shrink: 0; border: 1px solid var(--border);
+    border-radius: 8px; background: transparent; color: var(--text-muted);
     font-size: 17px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     text-decoration: none; font-family: inherit; transition: background 0.2s;
 }
-.btn-cfg-p:hover { background: rgba(255,255,255,0.07); color: #e2e8f0; }
+.btn-cfg-p:hover { background: var(--surface-2); color: var(--text-secondary); }
 .btn-cfg-p:focus { outline: none; box-shadow: none; }
 
 /* Info: bio + date */
 .p-info { margin-bottom: 0; }
-.p-bio { font-size: 14px; color: #94a3b8; margin: 0 0 4px; white-space: pre-wrap; line-height: 1.55; }
-.p-desde { font-size: 12px; color: #475569; margin: 0; }
+.p-bio { font-size: 14px; color: var(--text-muted); margin: 0 0 4px; white-space: pre-wrap; line-height: 1.55; }
+.p-desde { font-size: 12px; color: var(--text-muted); margin: 0; }
 
 /* Inline edit form */
 .p-edit-form {
     display: none; flex-direction: column; gap: 14px;
-    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+    background: var(--surface-2); border: 1px solid var(--border);
     border-radius: 14px; padding: 20px; margin-top: 14px;
+    backdrop-filter: blur(14px);
 }
 .p-edit-form.aberto { display: flex; }
-.p-edit-form label { font-size: 12px; color: #64748b; margin-bottom: 4px; display: block; }
+.p-edit-form label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; }
 .p-edit-form input,
 .p-edit-form textarea {
     width: 100%; padding: 10px 14px; border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
-    color: #e2e8f0; font-size: 14px; font-family: inherit;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); font-size: 14px; font-family: inherit;
     transition: border 0.2s; box-sizing: border-box;
     height: auto !important;
 }
 .p-edit-form input { height: 42px !important; }
 .p-edit-form textarea { height: 90px !important; resize: vertical; }
 .p-edit-form input:focus,
-.p-edit-form textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+.p-edit-form textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); }
 .p-edit-acoes { display: flex; gap: 10px; }
 .btn-pef-save {
     flex: 1; height: 40px !important; padding: 0 !important;
     border: none; border-radius: 10px;
-    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    background: var(--gradient);
     color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit;
 }
 .btn-pef-save:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-pef-cancel {
     height: 40px !important; padding: 0 20px !important;
-    border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
-    background: transparent; color: #64748b; font-size: 14px; cursor: pointer; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 10px;
+    background: transparent; color: var(--text-muted); font-size: 14px; cursor: pointer; font-family: inherit;
 }
-.p-msg-ok  { font-size: 13px; color: #4ade80; text-align: center; display: none; }
-.p-msg-err { font-size: 13px; color: #f87171; text-align: center; display: none; }
+.p-msg-ok  { font-size: 13px; color: var(--success); text-align: center; display: none; }
+.p-msg-err { font-size: 13px; color: var(--danger); text-align: center; display: none; }
 
 /* Config link */
 .p-config-link {
@@ -204,14 +205,14 @@
 }
 .p-cell {
     position: relative; aspect-ratio: 1; cursor: pointer;
-    overflow: hidden; background: rgba(255,255,255,0.04); transition: opacity 0.2s;
+    overflow: hidden; background: var(--surface-2); transition: opacity 0.2s;
 }
 .p-cell:hover { opacity: 0.8; }
 .p-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .p-cell-txt {
     width: 100%; height: 100%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 28px; color: #475569;
+    font-size: 28px; color: var(--text-muted);
 }
 .p-cell-badge {
     position: absolute; bottom: 6px; left: 6px;
@@ -222,7 +223,7 @@
 }
 .p-grid-vazio {
     grid-column: 1/-1; text-align: center;
-    color: #475569; font-size: 15px; padding: 40px 0;
+    color: var(--text-muted); font-size: 15px; padding: 40px 0;
 }
 
 /* ── Modais ──────────────────────────────────────────────────────────────── */
@@ -234,57 +235,62 @@
 .modal-ov.ativo { display: flex; }
 
 .modal-post {
-    background: #0f172a; border: 1px solid rgba(255,255,255,0.09);
+    background: var(--surface); border: 1px solid var(--border);
     border-radius: 16px; max-width: 500px; width: 100%;
     max-height: 90vh; overflow-y: auto; position: relative;
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(18px);
     animation: fadeIn 0.2s ease;
 }
 .modal-post-img { width: 100%; max-height: 320px; object-fit: cover; border-radius: 16px 16px 0 0; display: block; }
 .modal-post-body { padding: 16px; }
-.modal-post-autor { font-size: 14px; font-weight: 700; color: #f1f5f9; }
-.modal-post-texto { font-size: 14px; color: #cbd5f5; line-height: 1.6; white-space: pre-wrap; word-break: break-word; margin-top: 2px; }
-.modal-post-meta { display: flex; gap: 14px; font-size: 12px; color: #475569; margin-top: 8px; }
-.modal-post-sep { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 14px 0 10px; }
-.modal-coments-titulo { font-size: 14px; font-weight: 700; color: #f1f5f9; margin: 0 0 10px; }
+.modal-post-autor { font-size: 14px; font-weight: 700; color: var(--text); }
+.modal-post-texto { font-size: 14px; color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap; word-break: break-word; margin-top: 2px; }
+.modal-post-meta { display: flex; gap: 14px; font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+.modal-post-sep { border: none; border-top: 1px solid var(--border); margin: 14px 0 10px; }
+.modal-coments-titulo { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 10px; }
 .modal-coment { display: flex; gap: 8px; margin-bottom: 10px; }
 .m-cav {
     width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
-    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    background: var(--gradient);
     display: flex; align-items: center; justify-content: center;
     font-size: 11px; font-weight: 700; color: #fff;
 }
 .m-cav img { width: 100%; height: 100%; object-fit: cover; }
-.m-ctxt { font-size: 13px; color: #cbd5f5; line-height: 1.5; }
-.m-cnome { font-weight: 700; color: #f1f5f9; }
+.m-ctxt { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.m-cnome { font-weight: 700; color: var(--text); }
 .btn-del-modal {
     width: 100%; height: 38px !important; padding: 0 !important;
-    margin-top: 12px; border: 1px solid rgba(248,113,113,0.4); border-radius: 10px;
-    background: transparent; color: #f87171; font-size: 13px;
+    margin-top: 12px; border: 1px solid rgba(var(--danger-rgb),0.4); border-radius: 10px;
+    background: transparent; color: var(--danger); font-size: 13px;
     cursor: pointer; font-family: inherit;
 }
-.btn-del-modal:hover { background: rgba(248,113,113,0.1); }
+.btn-del-modal:hover { background: var(--danger-soft); }
 .modal-close-btn {
     position: absolute; top: 10px; right: 10px;
     width: 30px; height: 30px !important; padding: 0 !important;
-    border-radius: 50%; border: none; background: rgba(0,0,0,0.55);
+    border-radius: 50%; border: none; background: rgba(11,18,32,0.6);
     color: #e2e8f0; font-size: 15px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-sm);
     z-index: 2; font-family: inherit;
 }
 
 .modal-users {
-    background: #0f172a; border: 1px solid rgba(255,255,255,0.09);
+    background: var(--surface); border: 1px solid var(--border);
     border-radius: 16px; max-width: 380px; width: 100%;
-    max-height: 80vh; overflow-y: auto; animation: fadeIn 0.2s ease;
+    max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(18px);
+    animation: fadeIn 0.2s ease;
 }
 .modal-users-hdr {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.07);
-    position: sticky; top: 0; background: #0f172a; z-index: 1;
+    padding: 14px 16px 12px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: var(--surface); z-index: 1;
 }
-.modal-users-title { font-size: 15px; font-weight: 700; color: #f1f5f9; margin: 0; }
+.modal-users-title { font-size: 15px; font-weight: 700; color: var(--text); margin: 0; }
 .modal-users-close {
-    background: none; border: none; color: #64748b;
+    background: none; border: none; color: var(--text-muted);
     font-size: 16px; cursor: pointer; padding: 4px !important;
     height: auto !important; line-height: 1; font-family: inherit;
 }
@@ -294,16 +300,16 @@
     border: none; background: none; width: 100%; font-family: inherit;
     height: auto !important;
 }
-.modal-u-item:hover { background: rgba(255,255,255,0.05); }
+.modal-u-item:hover { background: var(--surface-2); }
 .modal-u-av {
     width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
-    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    background: var(--gradient);
     display: flex; align-items: center; justify-content: center;
     font-size: 15px; font-weight: 700; color: #fff;
 }
 .modal-u-av img { width: 100%; height: 100%; object-fit: cover; }
-.modal-u-nome { font-size: 14px; font-weight: 600; color: #e2e8f0; text-align: left; }
-.modal-info { text-align: center; padding: 32px; color: #475569; font-size: 14px; }
+.modal-u-nome { font-size: 14px; font-weight: 600; color: var(--text); text-align: left; }
+.modal-info { text-align: center; padding: 32px; color: var(--text-muted); font-size: 14px; }
 
 @media (max-width: 600px) {
     .p-header { gap: 20px; }
@@ -318,25 +324,25 @@
 .modal-acoes { display: flex; gap: 8px; margin-top: 10px; }
 .modal-btn-curtir {
     display: flex; align-items: center; gap: 5px;
-    background: none; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
-    color: #94a3b8; font-size: 13px; padding: 5px 14px !important; height: auto !important;
+    background: none; border: 1px solid var(--border); border-radius: 20px;
+    color: var(--text-muted); font-size: 13px; padding: 5px 14px !important; height: auto !important;
     cursor: pointer; font-family: inherit; transition: background 0.2s, border-color 0.2s;
 }
-.modal-btn-curtir:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
-.modal-btn-curtir.curtido { color: #f87171; border-color: rgba(248,113,113,0.35); }
+.modal-btn-curtir:hover { background: var(--surface-2); border-color: var(--border-strong); }
+.modal-btn-curtir.curtido { color: var(--danger); border-color: rgba(var(--danger-rgb),0.35); }
 .modal-btn-curtir:disabled { opacity: 0.6; cursor: not-allowed; }
 .modal-coment-input {
     display: flex; gap: 6px; align-items: flex-end; margin-top: 10px;
 }
 .modal-coment-input textarea {
     flex: 1; resize: none; padding: 8px 12px; border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
-    color: #e2e8f0; font-size: 13px; font-family: inherit;
+    border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--text); font-size: 13px; font-family: inherit;
     transition: border 0.2s; height: auto !important; max-height: 80px;
 }
-.modal-coment-input textarea:focus { outline: none; border-color: #3b82f6; }
+.modal-coment-input textarea:focus { outline: none; border-color: var(--primary); background: var(--surface); }
 .modal-coment-input button {
-    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    background: var(--gradient);
     border: none; border-radius: 50%; width: 32px; height: 32px !important;
     color: #fff; font-size: 16px; cursor: pointer; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
@@ -362,6 +368,9 @@
         </a>
         <a href="perfil.html">
             <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
+        </a>
+        <a href="chat-viagem.html">
+            <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
         </a>
         <a href="form-viagem.html">
             <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
@@ -425,7 +434,7 @@
                 <div>
                     <label>
                         <span data-i18n="perfil.bio.label">Bio</span>
-                        <span style="color:#475569" data-i18n="perfil.bio.hint"> (max. 200 characters)</span>
+                        <span style="color:var(--text-muted)" data-i18n="perfil.bio.hint"> (max. 200 characters)</span>
                     </label>
                     <textarea id="editBio" maxlength="200"
                               data-i18n-placeholder="perfil.bio.placeholder"
@@ -529,7 +538,7 @@ async function carregarPerfil() {
 
     const bioEl = document.getElementById("pBio")
     bioEl.textContent = u.bio || (ehDono ? t('perfil.addBio') : "")
-    bioEl.style.color = u.bio ? "#94a3b8" : "#475569"
+    bioEl.style.color = u.bio ? "var(--text-secondary)" : "var(--text-muted)"
 
     if (u.data_criacao) {
         const d = new Date(u.data_criacao)

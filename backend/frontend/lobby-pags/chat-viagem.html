@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diartrip</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../static/style.css?v=3">
+<link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
+<script src="../static/i18n.js"></script>
+<style>
+.chat-wizard {
+    height: 68vh;
+    display: flex;
+    flex-direction: column;
+}
+.bubble-row { display: flex; gap: 10px; align-items: flex-start; }
+.bubble-row.user { flex-direction: row-reverse; }
+.bubble-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--gradient);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+}
+.bubble-avatar.user { background: var(--surface-2); }
+.bubble {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 4px 12px 12px 12px;
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    animation: msgEnter .25s ease;
+}
+.bubble-row.user .bubble {
+    border-radius: 12px 4px 12px 12px;
+    background: var(--gradient);
+    color: #fff;
+}
+.quick-replies { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.qr-btn {
+    height: auto !important;
+    padding: 8px 14px !important;
+    border-radius: 20px !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+    font-size: 13px !important;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+}
+.qr-btn:hover { background: var(--primary-soft) !important; border-color: var(--primary) !important; }
+.summary-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
+.summary-table td { padding: 4px 0; vertical-align: top; }
+.summary-table td:first-child { color: var(--text-muted); padding-right: 12px; white-space: nowrap; }
+</style>
+</head>
+<body>
+    <div class="app">
+
+    <div class="sidebar">
+
+    <a href="../lobby.html">
+        <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
+    </a>
+
+    <a href="../lobby.html">
+        <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
+    </a>
+    <a href="grupos.html">
+        <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
+    </a>
+    <a href="feed.html">
+        <div class="menu-item" data-i18n="nav.feed">📰 Feed</div>
+    </a>
+    <a href="perfil.html">
+        <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
+    </a>
+    <a href="chat-viagem.html">
+        <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
+    </a>
+
+    <a href="form-viagem.html">
+        <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
+    </a>
+
+    <div class="sidebar-spacer"></div>
+    <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Sair</div>
+
+    </div>
+
+    <div class="main">
+
+        <h1 data-i18n="chatViagem.title">💬 AI Trip Chat</h1>
+
+        <div class="container" style="display:flex; flex-direction:column; gap:20px;">
+            <div class="chat chat-wizard">
+                <div class="chat-header" data-i18n="chatViagem.header">🤖 Diartrip Assistant</div>
+                <div id="chatMsgs" class="chat-messages" style="display:flex; flex-direction:column; gap:14px;"></div>
+                <div id="chatInputArea" class="chat-input"></div>
+            </div>
+        </div>
+
+    </div>
+    </div>
+
+<script>
+if (!sessionStorage.getItem("logado")) window.location.href = "../login.html"
+
+function escapeHtml(txt) {
+    return String(txt).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")
+}
+
+const TIPOS = [
+    { value: "gastronomico", key: "formViagem.type.gastronomic" },
+    { value: "aventura",     key: "formViagem.type.adventure" },
+    { value: "cultural",     key: "formViagem.type.cultural" },
+    { value: "relax",        key: "formViagem.type.relax" },
+]
+
+// Sequential slot-filling steps. Only nome_grupo, destino_principal, data_inicio,
+// data_fim, orcamento e tipo_viagem/preferencias existem no modelo de dados atual
+// (POST /grupos). "participantes" e "transporte" são perguntas conversacionais que
+// não têm coluna própria — suas respostas são anexadas ao texto de "preferencias".
+const STEPS = ["nome", "destino", "data_inicio", "data_fim", "participantes", "orcamento", "transporte", "tipo", "preferencias"]
+
+const dados = {
+    nome: "", destino: "", data_inicio: "", data_fim: "",
+    participantes: "", orcamento: null, transporte: "", tipo: "", preferencias: "",
+}
+
+let stepIndex = 0
+let editing = false // true quando voltamos de um "corrigir" no resumo
+
+const msgsEl = document.getElementById("chatMsgs")
+const inputAreaEl = document.getElementById("chatInputArea")
+
+function addBotBubble(html) {
+    const row = document.createElement("div")
+    row.className = "bubble-row"
+    row.innerHTML = `<div class="bubble-avatar">🤖</div><div class="bubble">${html}</div>`
+    msgsEl.appendChild(row)
+    msgsEl.scrollTop = msgsEl.scrollHeight
+    return row.querySelector(".bubble")
+}
+
+function addUserBubble(text) {
+    const row = document.createElement("div")
+    row.className = "bubble-row user"
+    row.innerHTML = `<div class="bubble-avatar user">🧑</div><div class="bubble">${escapeHtml(text)}</div>`
+    msgsEl.appendChild(row)
+    msgsEl.scrollTop = msgsEl.scrollHeight
+}
+
+function clearInputArea() {
+    inputAreaEl.innerHTML = ""
+}
+
+function afterAnswer() {
+    if (editing) {
+        renderSummary()
+        return
+    }
+    stepIndex++
+    if (stepIndex < STEPS.length) {
+        renderStep(STEPS[stepIndex])
+    } else {
+        renderSummary()
+    }
+}
+
+function renderStep(step) {
+    if (step === "nome") return perguntarTexto(step, "chatViagem.ask.nome", "formViagem.name.placeholder", 100)
+    if (step === "destino") return perguntarDestino()
+    if (step === "data_inicio") return perguntarData(step, "chatViagem.ask.dataInicio")
+    if (step === "data_fim") return perguntarData(step, "chatViagem.ask.dataFim")
+    if (step === "participantes") return perguntarTexto(step, "chatViagem.ask.participantes", "chatViagem.ph.participantes", 20, true)
+    if (step === "orcamento") return perguntarOrcamento()
+    if (step === "transporte") return perguntarTexto(step, "chatViagem.ask.transporte", "chatViagem.ph.transporte", 100, true)
+    if (step === "tipo") return perguntarTipo()
+    if (step === "preferencias") return perguntarTexto(step, "chatViagem.ask.preferencias", "formViagem.prefs.placeholder", 1000, true)
+}
+
+function perguntarTexto(campo, askKey, phKey, maxLen, opcional) {
+    addBotBubble(escapeHtml(t(askKey)))
+    clearInputArea()
+    inputAreaEl.innerHTML = `
+        <input id="stepInput" maxlength="${maxLen}" placeholder="${escapeHtml(t(phKey))}" value="${escapeHtml(dados[campo] || "")}">
+        <button id="stepSend">${escapeHtml(t('lobby.chat.send'))}</button>
+        ${opcional ? `<button id="stepSkip" class="qr-btn">${escapeHtml(t('chatViagem.skip'))}</button>` : ""}
+    `
+    const input = document.getElementById("stepInput")
+    const errKeyMap = { nome: "chatViagem.errNome", destino: "chatViagem.errDestino" }
+
+    const enviar = () => {
+        const valor = input.value.trim()
+        if (!opcional && !valor) {
+            mostrarErro(errKeyMap[campo] || "chatViagem.errNome")
+            return
+        }
+        dados[campo] = valor
+        addUserBubble(valor || t('chatViagem.none'))
+        afterAnswer()
+    }
+
+    document.getElementById("stepSend").addEventListener("click", enviar)
+    input.addEventListener("keydown", e => { if (e.key === "Enter") enviar() })
+    const skipBtn = document.getElementById("stepSkip")
+    if (skipBtn) skipBtn.addEventListener("click", () => {
+        dados[campo] = ""
+        addUserBubble(t('chatViagem.none'))
+        afterAnswer()
+    })
+    input.focus()
+}
+
+function mostrarErro(key) {
+    const el = document.createElement("div")
+    el.style.cssText = "color:var(--danger);font-size:12px;margin-top:6px;"
+    el.textContent = t(key)
+    inputAreaEl.appendChild(el)
+    setTimeout(() => el.remove(), 3000)
+}
+
+function perguntarDestino() {
+    addBotBubble(escapeHtml(t('chatViagem.ask.destino')))
+    clearInputArea()
+    inputAreaEl.innerHTML = `
+        <div style="flex:1; position:relative;">
+            <input id="stepInput" maxlength="150" placeholder="${escapeHtml(t('formViagem.cityPlaceholder'))}" value="${escapeHtml(dados.destino || "")}" style="width:100%; box-sizing:border-box;">
+            <div id="sugCidade" style="position:absolute; bottom:100%; left:0; right:0; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:6px; max-height:200px; overflow-y:auto; z-index:5; box-shadow:var(--shadow-md);"></div>
+        </div>
+        <button id="stepSend">${escapeHtml(t('lobby.chat.send'))}</button>
+    `
+    const input = document.getElementById("stepInput")
+    const sugEl = document.getElementById("sugCidade")
+
+    input.addEventListener("input", () => {
+        setTimeout(async () => {
+            if (input.value.trim() === "") { sugEl.innerHTML = ""; return }
+            try {
+                const resp = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(input.value)}&apiKey=803e071045c64d13a3dbb8c9058c323a&lang=pt`, { method: "GET" })
+                if (!resp.ok) return
+                const dadosResp = await resp.json()
+                mostrarCidades(dadosResp.features || [])
+            } catch (e) {}
+        }, 300)
+    })
+
+    function mostrarCidades(array) {
+        sugEl.innerHTML = ""
+        array.forEach(item => {
+            const props = item.properties
+            const cidade = props.city || props.town || props.village || props.name || ""
+            if (!cidade) return
+            const div = document.createElement("div")
+            div.className = "item-sugest"
+            div.textContent = props.formatted
+            div.addEventListener("click", () => {
+                input.value = props.formatted
+                sugEl.innerHTML = ""
+            })
+            sugEl.appendChild(div)
+        })
+    }
+
+    const enviar = () => {
+        const valor = input.value.trim()
+        if (!valor) { mostrarErro("chatViagem.errDestino"); return }
+        dados.destino = valor
+        sugEl.innerHTML = ""
+        addUserBubble(valor)
+        afterAnswer()
+    }
+
+    document.getElementById("stepSend").addEventListener("click", enviar)
+    input.addEventListener("keydown", e => { if (e.key === "Enter") { sugEl.innerHTML = ""; enviar() } })
+    input.focus()
+}
+
+function perguntarData(campo, askKey) {
+    addBotBubble(escapeHtml(t(askKey)))
+    clearInputArea()
+    inputAreaEl.innerHTML = `
+        <input id="stepInput" type="date" value="${dados[campo] || ""}">
+        <button id="stepSend">${escapeHtml(t('lobby.chat.send'))}</button>
+    `
+    const input = document.getElementById("stepInput")
+
+    const enviar = () => {
+        const valor = input.value
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0)
+        if (!valor) { mostrarErro("chatViagem.errData"); return }
+        const dt = new Date(valor + "T00:00:00")
+        if (dt < hoje) { mostrarErro("chatViagem.errData"); return }
+        if (campo === "data_fim" && dados.data_inicio) {
+            const dtInicio = new Date(dados.data_inicio + "T00:00:00")
+            if (dt <= dtInicio) { mostrarErro("chatViagem.errDataFim"); return }
+        }
+        dados[campo] = valor
+        addUserBubble(valor)
+        afterAnswer()
+    }
+
+    document.getElementById("stepSend").addEventListener("click", enviar)
+    input.addEventListener("keydown", e => { if (e.key === "Enter") enviar() })
+}
+
+function perguntarOrcamento() {
+    addBotBubble(escapeHtml(t('chatViagem.ask.orcamento')))
+    clearInputArea()
+    inputAreaEl.innerHTML = `
+        <input id="stepInput" type="number" min="0" step="0.01" placeholder="Ex: 3000.00" value="${dados.orcamento ?? ""}">
+        <button id="stepSend">${escapeHtml(t('lobby.chat.send'))}</button>
+    `
+    const input = document.getElementById("stepInput")
+
+    const enviar = () => {
+        const valor = parseFloat(input.value)
+        if (isNaN(valor) || valor < 0) { mostrarErro("formViagem.invalidBudget"); return }
+        dados.orcamento = valor
+        addUserBubble(`R$ ${valor.toLocaleString(getLang(), { minimumFractionDigits: 2 })}`)
+        afterAnswer()
+    }
+
+    document.getElementById("stepSend").addEventListener("click", enviar)
+    input.addEventListener("keydown", e => { if (e.key === "Enter") enviar() })
+    input.focus()
+}
+
+function perguntarTipo() {
+    addBotBubble(escapeHtml(t('chatViagem.ask.tipo')))
+    clearInputArea()
+    inputAreaEl.innerHTML = `<div class="quick-replies" style="flex:1;"></div>`
+    const wrap = inputAreaEl.querySelector(".quick-replies")
+    TIPOS.forEach(tipo => {
+        const btn = document.createElement("button")
+        btn.className = "qr-btn"
+        btn.textContent = t(tipo.key)
+        btn.addEventListener("click", () => {
+            dados.tipo = tipo.value
+            addUserBubble(t(tipo.key))
+            afterAnswer()
+        })
+        wrap.appendChild(btn)
+    })
+}
+
+const CAMPOS_RESUMO = [
+    { campo: "nome", labelKey: "formViagem.name" },
+    { campo: "destino", labelKey: "formViagem.city" },
+    { campo: "data_inicio", labelKey: "formViagem.start" },
+    { campo: "data_fim", labelKey: "formViagem.end" },
+    { campo: "participantes", labelKey: "chatViagem.summary.participants" },
+    { campo: "orcamento", labelKey: "formViagem.budget" },
+    { campo: "transporte", labelKey: "chatViagem.summary.transport" },
+    { campo: "tipo", labelKey: "formViagem.type" },
+    { campo: "preferencias", labelKey: "formViagem.prefs.label" },
+]
+
+function formatarValorResumo(campo) {
+    if (campo === "orcamento") {
+        return dados.orcamento != null ? `R$ ${Number(dados.orcamento).toLocaleString(getLang(), { minimumFractionDigits: 2 })}` : t('chatViagem.none')
+    }
+    if (campo === "tipo") {
+        const tipo = TIPOS.find(x => x.value === dados.tipo)
+        return tipo ? t(tipo.key) : t('chatViagem.none')
+    }
+    const valor = dados[campo]
+    return (valor === "" || valor == null) ? t('chatViagem.none') : escapeHtml(String(valor))
+}
+
+function renderSummary() {
+    clearInputArea()
+    const linhas = CAMPOS_RESUMO.map(c => `<tr><td>${escapeHtml(t(c.labelKey))}</td><td>${formatarValorResumo(c.campo)}</td></tr>`).join("")
+    addBotBubble(`
+        <strong>${escapeHtml(t('chatViagem.summary.title'))}</strong>
+        <table class="summary-table">${linhas}</table>
+        <div style="margin-top:8px;">${escapeHtml(t('chatViagem.summary.confirm'))}</div>
+    `)
+
+    inputAreaEl.innerHTML = `<div class="quick-replies" style="flex:1;"></div>`
+    const wrap = inputAreaEl.querySelector(".quick-replies")
+
+    const btnConfirmar = document.createElement("button")
+    btnConfirmar.className = "qr-btn"
+    btnConfirmar.textContent = t('chatViagem.confirmBtn')
+    btnConfirmar.addEventListener("click", confirmarCriacao)
+    wrap.appendChild(btnConfirmar)
+
+    const btnCorrigir = document.createElement("button")
+    btnCorrigir.className = "qr-btn"
+    btnCorrigir.textContent = t('chatViagem.editBtn')
+    btnCorrigir.addEventListener("click", mostrarOpcoesEdicao)
+    wrap.appendChild(btnCorrigir)
+}
+
+function mostrarOpcoesEdicao() {
+    addBotBubble(escapeHtml(t('chatViagem.editPick')))
+    clearInputArea()
+    inputAreaEl.innerHTML = `<div class="quick-replies" style="flex:1;"></div>`
+    const wrap = inputAreaEl.querySelector(".quick-replies")
+    CAMPOS_RESUMO.forEach(c => {
+        const btn = document.createElement("button")
+        btn.className = "qr-btn"
+        btn.textContent = t(c.labelKey)
+        btn.addEventListener("click", () => {
+            editing = true
+            renderStep(c.campo)
+        })
+        wrap.appendChild(btn)
+    })
+}
+
+async function confirmarCriacao() {
+    clearInputArea()
+    addBotBubble(escapeHtml(t('chatViagem.creating')))
+
+    const preferenciasPartes = []
+    if (dados.participantes) preferenciasPartes.push(`${t('chatViagem.summary.participants')}: ${dados.participantes}`)
+    if (dados.transporte) preferenciasPartes.push(`${t('chatViagem.summary.transport')}: ${dados.transporte}`)
+    if (dados.preferencias) preferenciasPartes.push(dados.preferencias)
+    const preferenciasFinal = preferenciasPartes.join(" | ").slice(0, 1000)
+
+    try {
+        const resp = await fetch("/grupos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+                nome_grupo: dados.nome,
+                destino_principal: dados.destino,
+                data_inicio: dados.data_inicio,
+                data_fim: dados.data_fim,
+                orcamento: dados.orcamento,
+                tipo_viagem: dados.tipo,
+                preferencias: preferenciasFinal,
+            }),
+        })
+
+        const resposta = await resp.json()
+
+        if (!resp.ok) {
+            addBotBubble(escapeHtml(resposta.detail || t('formViagem.error')))
+            renderSummary()
+            return
+        }
+
+        addBotBubble(escapeHtml(t('formViagem.success')))
+        setTimeout(() => { window.location.href = "../lobby.html" }, 1200)
+
+    } catch (e) {
+        addBotBubble(escapeHtml(t('formViagem.serverError')))
+        renderSummary()
+    }
+}
+
+addBotBubble(escapeHtml(t('chatViagem.intro')))
+renderStep(STEPS[0])
+</script>
+</body>
+</html>
