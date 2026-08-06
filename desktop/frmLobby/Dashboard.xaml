@@ -3,63 +3,180 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Dashboard"
         WindowState="Maximized"
-        Background="#0F172A" Height="1011" Width="1499">
+        Background="#0F172A"
+        Height="1011" Width="1499"
+        FontFamily="Segoe UI">
 
-    <Grid Height="689" Width="938">
+    <Window.Resources>
+
+        <!-- Color palette -->
+        <SolidColorBrush x:Key="BgBrush" Color="#0F172A"/>
+        <SolidColorBrush x:Key="SidebarBrush" Color="#111827"/>
+        <SolidColorBrush x:Key="CardBrush" Color="#1E293B"/>
+        <SolidColorBrush x:Key="CardBrushHover" Color="#243248"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6"/>
+        <SolidColorBrush x:Key="AccentBrushHover" Color="#2563EB"/>
+        <SolidColorBrush x:Key="DangerBrush" Color="#7F1D1D"/>
+        <SolidColorBrush x:Key="DangerBrushHover" Color="#991B1B"/>
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F8FAFC"/>
+        <SolidColorBrush x:Key="TextMutedBrush" Color="#94A3B8"/>
+
+        <!-- Drop shadow used on cards -->
+        <DropShadowEffect x:Key="CardShadow" BlurRadius="18" ShadowDepth="2"
+                           Direction="270" Color="#000000" Opacity="0.35"/>
+
+        <!-- Sidebar nav button style -->
+        <Style x:Key="NavButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="52"/>
+            <Setter Property="Margin" Value="0,6,0,0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="10"
+                                Padding="16,0">
+                            <ContentPresenter VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1E293B"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Logout button style (danger) -->
+        <Style x:Key="LogoutButtonStyle" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+            <Setter Property="Foreground" Value="#FCA5A5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="#2A1414"
+                                CornerRadius="10"
+                                Padding="16,0">
+                            <ContentPresenter VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource DangerBrushHover}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Primary accent button (Export PDF) -->
+        <Style x:Key="AccentButtonStyle" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{StaticResource AccentBrush}"
+                                CornerRadius="10"
+                                Padding="16,0">
+                            <ContentPresenter VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentBrushHover}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Stat card style -->
+        <Style x:Key="StatCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="Effect" Value="{StaticResource CardShadow}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#27324A"/>
+        </Style>
+
+    </Window.Resources>
+
+    <Grid Background="{StaticResource BgBrush}">
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="250"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- SIDEBAR -->
+        <!-- ============ SIDEBAR ============ -->
 
-        <Border Grid.Column="0"
-                Background="#111827" Margin="10,20,49,20">
+        <Border Grid.Column="0" Background="{StaticResource SidebarBrush}">
 
-            <StackPanel Margin="20">
+            <DockPanel Margin="18,24,18,24">
 
-                <TextBlock Text="DiarTrip"
-                           FontSize="30"
-                           FontWeight="Bold"
-                           Foreground="White"
-                           Margin="0,20,0,40"/>
+                <StackPanel DockPanel.Dock="Top">
 
-                <Button Content="👥 Usuários"
-                        Height="55"
-                        Margin="0,10,0,0"
-                        Click="BtnUsuarios_Click"/>
+                    <StackPanel Orientation="Horizontal" Margin="6,0,0,44">
+                        <Border Width="34" Height="34" CornerRadius="10" Background="{StaticResource AccentBrush}">
+                            <TextBlock Text="✈" FontSize="16" Foreground="White"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="DiarTrip"
+                                   FontSize="24"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center"
+                                   Margin="10,0,0,0"/>
+                    </StackPanel>
 
-                <Button Content="✈ Viagens"
-                        Height="55"
-                        Margin="0,10,0,0"
-                        Click="BtnViagens_Click"/>
+                    <TextBlock Text="MENU" FontSize="11" FontWeight="SemiBold"
+                               Foreground="#475569" Margin="16,0,0,10"/>
 
-                <Button Content="⚙ Configurações"
-                        Height="55"
-                        Margin="0,10,0,0"
-                        Click="BtnConfiguracoes_Click"/>
+                    <Button Content="👥   Usuários"
+                            Style="{StaticResource NavButtonStyle}"
+                            Click="BtnUsuarios_Click"/>
 
-                <Button x:Name="BtnExpPdf" Content="📄 Exportar PDF"
-                    Height="55"
-                    Margin="0,10,0,0"
-                    Click="BtnExpPdf_Click"/>
+                    <Button Content="✈   Viagens"
+                            Style="{StaticResource NavButtonStyle}"
+                            Click="BtnViagens_Click"/>
 
-                <Button Content="🚪 Sair"
-                        Height="55"
-                        Margin="0,30,0,0"
-                        Background="#7F1D1D"
-                        Foreground="White"
+                    <Button Content="⚙   Configurações"
+                            Style="{StaticResource NavButtonStyle}"
+                            Click="BtnConfiguracoes_Click"/>
+
+                    <Button x:Name="BtnExpPdf" Content="📄   Exportar PDF"
+                            Style="{StaticResource AccentButtonStyle}"
+                            Margin="0,20,0,0"
+                            Click="BtnExpPdf_Click"/>
+
+                </StackPanel>
+
+                <Button DockPanel.Dock="Bottom"
+                        Content="🚪   Sair"
+                        Style="{StaticResource LogoutButtonStyle}"
                         Click="BtnLogout_Click"/>
 
-            </StackPanel>
+            </DockPanel>
 
         </Border>
 
-        <!-- ÁREA PRINCIPAL -->
+        <!-- ============ MAIN AREA ============ -->
 
-        <Grid Grid.Column="1"
-              Margin="20,20,-44,20">
+        <Grid Grid.Column="1" Margin="36,32,36,32">
 
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -69,50 +186,51 @@
 
             <!-- HEADER -->
 
-            <Grid Margin="0,0,10,164" Grid.RowSpan="2">
+            <Grid Grid.Row="0" Margin="0,0,0,28">
 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel RenderTransformOrigin="0.516,0.159" Margin="59,0,0,19">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
 
                     <TextBlock Text="Dashboard"
-                               FontSize="36"
+                               FontSize="32"
                                FontWeight="Bold"
-                               Foreground="White"/>
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
 
                     <TextBlock Text="Painel administrativo"
-                               Foreground="#94A3B8"
-                               FontSize="16"/>
+                               Foreground="{StaticResource TextMutedBrush}"
+                               FontSize="15"
+                               Margin="0,4,0,0"/>
 
                 </StackPanel>
 
                 <Border Grid.Column="1"
-                        Width="180"
-                        Height="50"
-                        CornerRadius="12"
-                        Background="#1E293B">
+                        Height="52"
+                        CornerRadius="14"
+                        Background="{StaticResource CardBrush}"
+                        BorderBrush="#27324A"
+                        BorderThickness="1"
+                        Padding="14,0">
 
-                    <StackPanel Orientation="Horizontal"
-                                VerticalAlignment="Center"
-                                Margin="15,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 
-                        <Border Width="30"
-                        Height="30"
-                        CornerRadius="0"
-                        BorderBrush="#3B82F6"
-                        BorderThickness="1">
-
-                        <Image x:Name="imgPerfil"
-                           Stretch="Fill"/>
+                        <Border Width="32" Height="32"
+                                CornerRadius="16"
+                                BorderBrush="{StaticResource AccentBrush}"
+                                BorderThickness="2">
+                            <Border CornerRadius="14" ClipToBounds="True">
+                                <Image x:Name="imgPerfil" Stretch="UniformToFill"/>
+                            </Border>
                         </Border>
 
                         <TextBlock Name="txtUsuario"
                                    Text="Admin"
-                                   Foreground="White"
-                                   Margin="10,0,0,0"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   FontWeight="SemiBold"
+                                   Margin="10,0,2,0"
                                    VerticalAlignment="Center"/>
 
                     </StackPanel>
@@ -121,84 +239,94 @@
 
             </Grid>
 
-            <!-- CARDS -->
+            <!-- STAT CARDS -->
 
-            <UniformGrid Grid.Row="1"
-                         Columns="3"
-                         Margin="0,84,-96,48">
+            <UniformGrid Grid.Row="1" Columns="3" Margin="-10,0,-10,28">
 
-                <Border Background="#1E293B"
-                        CornerRadius="15"
-                        Margin="10">
-
-                    <StackPanel Margin="20">
-
-                        <TextBlock Text="Viagens"
-                                   Foreground="#CBD5E1"/>
-
-                        <TextBlock x:Name="txtViagens"
-                                   Text="0"
-                                   FontSize="40"
-                                   FontWeight="Bold"
-                                   Foreground="White"/>
-
-                    </StackPanel>
-
+                <Border Style="{StaticResource StatCardStyle}">
+                    <Grid Margin="22,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="VIAGENS" Foreground="#FF94A3B8"
+                                       FontSize="12" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="txtViagens" Text="0"
+                                       FontSize="36" FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       Margin="0,6,0,0"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Width="44" Height="44" CornerRadius="12"
+                                Background="#1D3A63" VerticalAlignment="Top">
+                            <TextBlock Text="✈" FontSize="18" Foreground="#60A5FA"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
                 </Border>
 
-                <Border Background="#1E293B"
-                        CornerRadius="15"
-                        Margin="10">
-
-                    <StackPanel Margin="20">
-
-                        <TextBlock Text="Usuários"
-                                   Foreground="#CBD5E1"/>
-
-                        <TextBlock Text="0"
-                                   FontSize="40"
-                                   FontWeight="Bold"
-                                   Foreground="White"
-                                   Name="txtUsuarios"
-                                   />
-
-                    </StackPanel>
-
+                <Border Style="{StaticResource StatCardStyle}">
+                    <Grid Margin="22,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="USUÁRIOS" Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="12" FontWeight="SemiBold"/>
+                            <TextBlock Name="txtUsuarios" Text="0"
+                                       FontSize="36" FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       Margin="0,6,0,0"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Width="44" Height="44" CornerRadius="12"
+                                Background="#1D3A2E" VerticalAlignment="Top">
+                            <TextBlock Text="👥" FontSize="18" Foreground="#4ADE80"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
                 </Border>
 
-                <Border Background="#1E293B"
-                        CornerRadius="15"
-                        Margin="10">
-
-                    <StackPanel Margin="20">
-
-                        <TextBlock Text="Chat IA"
-                       Foreground="#CBD5E1"/>
-
-                                <TextBlock Text="0"
-                       FontSize="40"
-                       FontWeight="Bold"
-                       Foreground="White"  
-                       Name="txtChatIA"
-                       />
-
-                    </StackPanel>
-
+                <Border Style="{StaticResource StatCardStyle}">
+                    <Grid Margin="22,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="CHAT IA" Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="12" FontWeight="SemiBold"/>
+                            <TextBlock Name="txtChatIA" Text="0"
+                                       FontSize="36" FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       Margin="0,6,0,0"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Width="44" Height="44" CornerRadius="12"
+                                Background="#3A2A1D" VerticalAlignment="Top">
+                            <TextBlock Text="💬" FontSize="18" Foreground="#FBBF24"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
                 </Border>
 
             </UniformGrid>
 
-            <!-- CONTEÚDO NAVEGÁVEL -->
+            <!-- NAVIGABLE CONTENT -->
 
-            <Border Grid.Row="1"
-                    Background="#111827"
-                    CornerRadius="20"
-                    Padding="15" Margin="0,226,-154,-46" Grid.RowSpan="2">
+            <Border Grid.Row="2"
+                    Background="{StaticResource CardBrush}"
+                    BorderBrush="#27324A"
+                    BorderThickness="1"
+                    CornerRadius="18"
+                    Padding="18"
+                    Effect="{StaticResource CardShadow}">
 
                 <Frame x:Name="MainFrame"
-                       NavigationUIVisibility="Hidden" Margin="-1,-5,-5,0" Navigated="MainFrame_Navigated"
+                       NavigationUIVisibility="Hidden"
+                       Navigated="MainFrame_Navigated"
                        HorizontalAlignment="Stretch"
-                       VerticalAlignment="Stretch"/>
+                       VerticalAlignment="Stretch"
+                       Background="Transparent"/>
 
             </Border>
 
