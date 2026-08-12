@@ -4,7 +4,7 @@ from utils.dependencies import checar_membro_grupo
 
 _SELECT_EXPLORAR = """
     SELECT g.id_grupo, g.nome_grupo, g.destino_principal, g.data_inicio, g.data_fim,
-           u.nome AS criador, g.limite_participantes,
+           g.criado_por AS id_criador, u.nome AS criador, g.limite_participantes,
            (SELECT COUNT(*) FROM grupo_membros gm WHERE gm.id_grupo = g.id_grupo) AS vagas_ocupadas
     FROM grupos_viagem g
     JOIN usuarios u ON g.criado_por = u.id_usuario

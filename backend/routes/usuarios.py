@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Response, UploadFile, File
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from schemas import (
     UsuarioPublico, UsuarioMe, UsuarioCriado, UsuarioSimples,
@@ -6,6 +6,8 @@ from schemas import (
 )
 from utils.auth import get_usuario_logado
 from utils.rate_limiter import verificar_rate_limit
+from utils.security import revogar_token, revogar_refresh_token
+from routes.login import _set_auth_cookies
 from services import usuario_service
 
 router = APIRouter(tags=["Usuários"])
@@ -17,6 +19,16 @@ _SENHAS_PROIBIDAS = {
 }
 
 
+def _validar_senha_forte(v: str) -> str:
+    if v.lower() in _SENHAS_PROIBIDAS:
+        raise ValueError("Senha muito comum. Escolha uma mais segura.")
+    if not any(c.isupper() for c in v):
+        raise ValueError("A senha deve conter ao menos uma letra maiúscula.")
+    if not any(c.isdigit() for c in v):
+        raise ValueError("A senha deve conter ao menos um número.")
+    return v
+
+
 class UsuarioInput(BaseModel):
     nome: str = Field(..., max_length=100)
     email: EmailStr = Field(..., max_length=150)
@@ -25,19 +37,23 @@ class UsuarioInput(BaseModel):
     @field_validator("senha")
     @classmethod
     def senha_forte(cls, v: str) -> str:
-        if v.lower() in _SENHAS_PROIBIDAS:
-            raise ValueError("Senha muito comum. Escolha uma mais segura.")
-        if not any(c.isupper() for c in v):
-            raise ValueError("A senha deve conter ao menos uma letra maiúscula.")
-        if not any(c.isdigit() for c in v):
-            raise ValueError("A senha deve conter ao menos um número.")
-        return v
+        return _validar_senha_forte(v)
 
 
 class UsuarioUpdate(BaseModel):
     nome: str = Field(..., max_length=100)
     email: EmailStr = Field(..., max_length=150)
     bio: str | None = Field(None, max_length=500)
+
+
+class TrocarSenhaInput(BaseModel):
+    senha_atual: str = Field(..., min_length=1, max_length=100)
+    nova_senha: str = Field(..., min_length=8, max_length=100)
+
+    @field_validator("nova_senha")
+    @classmethod
+    def nova_senha_forte(cls, v: str) -> str:
+        return _validar_senha_forte(v)
 
 
 @router.get("/usuarios/", response_model=list[UsuarioPublico])
@@ -92,6 +108,33 @@ def atualizar_usuario(
     if usuario_logado != id_usuario:
         raise HTTPException(status_code=403, detail="Sem permissão")
     return usuario_service.atualizar(id_usuario, dados.nome, dados.email, dados.bio)
+
+
+@router.put("/usuarios/{id_usuario}/senha", response_model=MensagemResponse)
+def trocar_senha(
+    id_usuario: int,
+    dados: TrocarSenhaInput,
+    response: Response,
+    usuario_logado: int = Depends(get_usuario_logado),
+    access_token: str | None = Cookie(default=None),
+    refresh_token: str | None = Cookie(default=None),
+):
+    if usuario_logado != id_usuario:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    verificar_rate_limit(f"trocar_senha:{usuario_logado}", limite=5)
+
+    resultado = usuario_service.trocar_senha(id_usuario, dados.senha_atual, dados.nova_senha)
+
+    # Revoga a sessão atual e emite tokens novos — mesma sessão continua
+    # válida (o usuário não precisa logar de novo), mas qualquer access
+    # token antigo copiado/vazado deixa de funcionar imediatamente.
+    if access_token:
+        revogar_token(access_token)
+    if refresh_token:
+        revogar_refresh_token(refresh_token)
+    _set_auth_cookies(response, id_usuario)
+
+    return resultado
 
 
 @router.delete("/usuarios/{id_usuario}", response_model=MensagemResponse)

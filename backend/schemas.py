@@ -273,6 +273,7 @@ class ExplorarViagemResponse(BaseModel):
     destino_principal: Optional[str] = None
     data_inicio: Optional[date] = None
     data_fim: Optional[date] = None
+    id_criador: int
     criador: str
     limite_participantes: int
     vagas_ocupadas: int = 0

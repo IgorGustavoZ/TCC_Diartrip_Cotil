@@ -61,7 +61,7 @@ class TestListarExplorar:
     def test_lista_viagens_publicas(self, client_usuario):
         viagem = {
             "id_grupo": 10, "nome_grupo": "Paris em Setembro", "destino_principal": "Paris",
-            "data_inicio": "2026-09-10", "data_fim": "2026-09-20", "criador": "Igor",
+            "data_inicio": "2026-09-10", "data_fim": "2026-09-20", "id_criador": 7, "criador": "Igor",
             "limite_participantes": 5, "vagas_ocupadas": 3,
         }
         cur = _cur(fetchones=[(1,)], fetchalls=[[viagem]])
@@ -89,7 +89,7 @@ class TestDetalharExplorar:
     def test_detalhe_encontrado(self, client_usuario):
         viagem = {
             "id_grupo": 10, "nome_grupo": "Paris em Setembro", "destino_principal": "Paris",
-            "data_inicio": "2026-09-10", "data_fim": "2026-09-20", "criador": "Igor",
+            "data_inicio": "2026-09-10", "data_fim": "2026-09-20", "id_criador": 7, "criador": "Igor",
             "limite_participantes": 5, "vagas_ocupadas": 3,
         }
         cur = _cur(fetchones=[(1,), viagem])

@@ -97,6 +97,29 @@
 .delete-outline:hover { background: var(--danger-soft) !important; }
 
 button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none; }
+
+/* Password section */
+.password-input-wrap { position: relative; display: flex; }
+.password-input-wrap input { width: 100%; padding-right: 44px; }
+.toggle-pass {
+    position: absolute;
+    right: 4px; top: 50%; transform: translateY(-50%);
+    width: 36px; height: 36px !important;
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+.toggle-pass:hover { color: var(--text); }
+.field-error {
+    display: none;
+    font-size: 12px;
+    color: var(--danger);
+    font-weight: 600;
+}
+.field-error.show { display: block; }
 </style>
 </head>
 <body>
@@ -126,6 +149,9 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
     <!-- <a href="#">
         <div class="menu-item" data-i18n="nav.settings">⚙ Settings</div>
     </a> -->
+    <a href="perfil.html">
+        <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
+    </a>
     <a href="chat-viagem.html">
         <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
     </a>
@@ -153,7 +179,18 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
                 </button>
             </div>
 
-            <section style="padding:0; max-width:1200px; margin:auto; position: relative; display:flex; flex-direction:column; gap:15px; display: none;" id="alterarConta">
+            <div class="settings-menu" style="margin-top:12px;">
+                <button id="btnAlterarSenha" class="settings-row" type="button">
+                    <span class="settings-row-icon">🔒</span>
+                    <span class="settings-row-text">
+                        <span class="settings-row-title" data-i18n="config.changePassword">Change password</span>
+                        <span class="settings-row-desc" data-i18n="config.changePasswordDesc">Update the password used to sign in</span>
+                    </span>
+                    <span class="settings-row-chevron">›</span>
+                </button>
+            </div>
+
+            <section style="padding:0; max-width:1200px; margin:50px auto; position: relative; display:flex; flex-direction:column; gap:15px; display: none;" id="alterarConta">
                     <div class="back back-row" aria-label="Voltar" title="Voltar">
                         <span class="material-symbols-outlined">
                         arrow_back
@@ -185,6 +222,53 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
                         </div>
                     </div>
             </section>
+
+            <section style="padding:0; max-width:1200px; margin:50px auto; position: relative; display:flex; flex-direction:column; gap:15px; display: none;" id="alterarSenha">
+                    <div id="btnVoltarSenha" class="back back-row" aria-label="Voltar" title="Voltar" role="button">
+                        <span class="material-symbols-outlined">
+                        arrow_back
+                        </span>
+                        <span class="back-label" data-i18n="common.back">Back</span>
+                    </div>
+
+                    <h2 data-i18n="config.changePasswordTitle">Change password</h2>
+
+                    <div class="field">
+                        <label for="senhaAtual" data-i18n="config.currentPassword">Senha atual</label>
+                        <div class="password-input-wrap">
+                            <input id="senhaAtual" type="password" autocomplete="current-password" data-i18n-placeholder="config.currentPasswordPlaceholder" placeholder="Sua senha atual">
+                            <button type="button" class="toggle-pass" data-target="senhaAtual" aria-label="Mostrar senha">👁</button>
+                        </div>
+                        <span class="field-error" id="erroSenhaAtual"></span>
+                    </div>
+
+                    <div class="fields-grid">
+                        <div class="field">
+                            <label for="novaSenha" data-i18n="config.newPassword">Nova senha</label>
+                            <div class="password-input-wrap">
+                                <input id="novaSenha" type="password" autocomplete="new-password" data-i18n-placeholder="config.newPasswordPlaceholder" placeholder="Mínimo 8 caracteres">
+                                <button type="button" class="toggle-pass" data-target="novaSenha" aria-label="Mostrar senha">👁</button>
+                            </div>
+                            <span class="field-error" id="erroNovaSenha"></span>
+                        </div>
+
+                        <div class="field">
+                            <label for="confirmarNovaSenha" data-i18n="config.confirmNewPassword">Confirmar nova senha</label>
+                            <div class="password-input-wrap">
+                                <input id="confirmarNovaSenha" type="password" autocomplete="new-password" data-i18n-placeholder="config.confirmNewPasswordPlaceholder" placeholder="Repita a nova senha">
+                                <button type="button" class="toggle-pass" data-target="confirmarNovaSenha" aria-label="Mostrar senha">👁</button>
+                            </div>
+                            <span class="field-error" id="erroConfirmarNovaSenha"></span>
+                        </div>
+                    </div>
+
+                    <div class="error" id="erroGeralSenha" style="display: none;"></div>
+                    <div class="sucess" id="sucessoSenha" style="display: none;"></div>
+
+                    <div class="actions-row" style="justify-content:flex-start;">
+                        <button id="btnSalvarSenha" class="save" type="submit" data-i18n="config.savePassword">Salvar nova senha</button>
+                    </div>
+            </section>
         </div>
     </div>
 
@@ -211,7 +295,7 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
         })
 
         const colocarDados = async ()=>{
-           const respGetUsuario = await fetch(`/usuarios/${sessionStorage.getItem("id")}`, {
+           const respGetUsuario = await fetch(`/usuarios/me`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
@@ -219,6 +303,7 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
             if(respGetUsuario.ok){
                 const dados = await respGetUsuario.text()
                 const respJson = JSON.parse(dados)
+                console.log(dados)
                 nomeInput.value = respJson.nome
                 emailInput.value = respJson.email
             }
@@ -303,6 +388,158 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
             nomeInput.value = ""
             emailInput.value = ""
         }
+
+        // ===================== Alterar senha (seção independente) =====================
+        const btnAlterarSenha = document.querySelector("#btnAlterarSenha")
+        const divAlterarSenha = document.querySelector("#alterarSenha")
+        const btnVoltarSenha = document.querySelector("#btnVoltarSenha")
+
+        const senhaAtualInput = document.querySelector("#senhaAtual")
+        const novaSenhaInput = document.querySelector("#novaSenha")
+        const confirmarNovaSenhaInput = document.querySelector("#confirmarNovaSenha")
+
+        const erroSenhaAtualEl = document.querySelector("#erroSenhaAtual")
+        const erroNovaSenhaEl = document.querySelector("#erroNovaSenha")
+        const erroConfirmarNovaSenhaEl = document.querySelector("#erroConfirmarNovaSenha")
+        const erroGeralSenhaEl = document.querySelector("#erroGeralSenha")
+        const sucessoSenhaEl = document.querySelector("#sucessoSenha")
+        const btnSalvarSenha = document.querySelector("#btnSalvarSenha")
+
+        btnAlterarSenha.addEventListener("click", ()=>{
+            btnVoltarSenha.addEventListener("click", ()=>{
+                btnAlterarSenha.parentElement.style.display = "block"
+                divAlterarSenha.style.display = "none"
+            })
+            btnAlterarSenha.parentElement.style.display = "none"
+            divAlterarSenha.style.display = "flex"
+        })
+
+        document.querySelectorAll("#alterarSenha .toggle-pass").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const alvo = document.getElementById(btn.dataset.target)
+                if (!alvo) return
+                const vaiMostrar = alvo.type === "password"
+                alvo.type = vaiMostrar ? "text" : "password"
+                btn.textContent = vaiMostrar ? "🙈" : "👁"
+                btn.setAttribute("aria-label", t(vaiMostrar ? 'config.hidePassword' : 'config.showPassword'))
+            })
+        })
+
+        function esconderErrosSenha() {
+            [erroSenhaAtualEl, erroNovaSenhaEl, erroConfirmarNovaSenhaEl].forEach(el => {
+                el.textContent = ""
+                el.classList.remove("show")
+            })
+            erroGeralSenhaEl.style.display = "none"
+            sucessoSenhaEl.style.display = "none"
+        }
+
+        function mostrarErroCampoSenha(el, msg) {
+            el.textContent = msg
+            el.classList.add("show")
+        }
+
+        // Normaliza tanto {"detail": "mensagem"} quanto o formato de erro de
+        // validação do FastAPI/Pydantic {"detail": [{"msg": "..."}]}.
+        function extrairMensagemErro(corpoResposta, fallback) {
+            const detail = corpoResposta && corpoResposta.detail
+            if (!detail) return fallback
+            if (Array.isArray(detail)) return detail[0]?.msg || fallback
+            return detail
+        }
+
+        function validarCamposSenha() {
+            const senhaAtual = senhaAtualInput.value
+            const novaSenha = novaSenhaInput.value
+            const confirmarNovaSenha = confirmarNovaSenhaInput.value
+            let valido = true
+
+            if (!senhaAtual.trim()) {
+                mostrarErroCampoSenha(erroSenhaAtualEl, t('config.currentPasswordRequired'))
+                valido = false
+            }
+
+            if (!novaSenha.trim()) {
+                mostrarErroCampoSenha(erroNovaSenhaEl, t('config.newPasswordRequired'))
+                valido = false
+            } else if (novaSenha.length < 8) {
+                mostrarErroCampoSenha(erroNovaSenhaEl, t('config.newPasswordTooShort'))
+                valido = false
+            } else if (!/[A-Z]/.test(novaSenha) || !/[0-9]/.test(novaSenha)) {
+                mostrarErroCampoSenha(erroNovaSenhaEl, t('config.newPasswordWeak'))
+                valido = false
+            } else if (senhaAtual && novaSenha === senhaAtual) {
+                mostrarErroCampoSenha(erroNovaSenhaEl, t('config.newPasswordSameAsCurrent'))
+                valido = false
+            }
+
+            if (!confirmarNovaSenha.trim()) {
+                mostrarErroCampoSenha(erroConfirmarNovaSenhaEl, t('config.confirmPasswordRequired'))
+                valido = false
+            } else if (novaSenha && confirmarNovaSenha !== novaSenha) {
+                mostrarErroCampoSenha(erroConfirmarNovaSenhaEl, t('config.passwordsDontMatch'))
+                valido = false
+            }
+
+            return valido
+        }
+
+        const limparCamposSenha = ()=>{
+            senhaAtualInput.value = ""
+            novaSenhaInput.value = ""
+            confirmarNovaSenhaInput.value = ""
+            document.querySelectorAll("#alterarSenha .toggle-pass").forEach(btn => {
+                const alvo = document.getElementById(btn.dataset.target)
+                if (alvo) alvo.type = "password"
+                btn.textContent = "👁"
+            })
+        }
+
+        btnSalvarSenha.addEventListener("click", async ()=>{
+            esconderErrosSenha()
+            if (!validarCamposSenha()) return
+
+            btnSalvarSenha.disabled = true
+            btnSalvarSenha.classList.add("is-loading")
+            const textoOriginalSalvarSenha = btnSalvarSenha.textContent
+            btnSalvarSenha.textContent = t('config.saving')
+
+            try {
+                const resp = await fetch(`/usuarios/${sessionStorage.getItem("id")}/senha`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        senha_atual: senhaAtualInput.value,
+                        nova_senha: novaSenhaInput.value
+                    })
+                })
+
+                if (resp.ok) {
+                    limparCamposSenha()
+                    sucessoSenhaEl.style.display = "block"
+                    sucessoSenhaEl.innerHTML = t('config.passwordUpdateSuccess')
+                } else {
+                    const corpo = await resp.json().catch(() => ({}))
+                    if (resp.status === 401) {
+                        mostrarErroCampoSenha(
+                            erroSenhaAtualEl,
+                            extrairMensagemErro(corpo, t('config.currentPasswordIncorrect'))
+                        )
+                    } else {
+                        erroGeralSenhaEl.style.display = "block"
+                        erroGeralSenhaEl.innerHTML = extrairMensagemErro(corpo, t('config.passwordUpdateError'))
+                    }
+                }
+            } catch (e) {
+                erroGeralSenhaEl.style.display = "block"
+                erroGeralSenhaEl.innerHTML = t('lobby.chat.noServer')
+            } finally {
+                btnSalvarSenha.disabled = false
+                btnSalvarSenha.classList.remove("is-loading")
+                btnSalvarSenha.textContent = textoOriginalSalvarSenha
+            }
+        })
     </script>
 </body>
 </html>

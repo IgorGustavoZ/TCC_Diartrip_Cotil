@@ -1,7 +1,7 @@
 from mysql.connector import Error
 from fastapi import HTTPException
 from database import get_db
-from utils.security import gerar_hash
+from utils.security import gerar_hash, verificar_senha
 from utils.cloudinary_upload import upload_imagem
 from utils.imagem_utils import validar_imagem, strip_exif
 
@@ -103,6 +103,35 @@ def atualizar(usuario_id: int, nome: str, email: str, bio: str | None = None) ->
                     status_code=409, detail="Este e-mail já está em uso por outro usuário"
                 )
             raise
+        finally:
+            cursor.close()
+
+
+def trocar_senha(usuario_id: int, senha_atual: str, nova_senha: str) -> dict:
+    with get_db() as conexao:
+        cursor = conexao.cursor(dictionary=True)
+        try:
+            cursor.execute(
+                "SELECT senha_hash FROM usuarios WHERE id_usuario=%s", (usuario_id,)
+            )
+            usuario = cursor.fetchone()
+            if not usuario:
+                raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+            if not verificar_senha(senha_atual, usuario["senha_hash"]):
+                raise HTTPException(status_code=401, detail="Senha atual incorreta")
+
+            if verificar_senha(nova_senha, usuario["senha_hash"]):
+                raise HTTPException(
+                    status_code=400, detail="A nova senha deve ser diferente da senha atual"
+                )
+
+            novo_hash = gerar_hash(nova_senha)
+            cursor.execute(
+                "UPDATE usuarios SET senha_hash=%s WHERE id_usuario=%s",
+                (novo_hash, usuario_id),
+            )
+            return {"mensagem": "Senha alterada com sucesso"}
         finally:
             cursor.close()
 

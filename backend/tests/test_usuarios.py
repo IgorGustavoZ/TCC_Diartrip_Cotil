@@ -219,6 +219,92 @@ class TestAtualizarUsuario:
 
 
 
+class TestTrocarSenha:
+    def test_trocar_senha_com_sucesso(self, client_usuario):
+        from utils.security import gerar_hash
+        hash_atual = gerar_hash("SenhaAtual1")
+        cur = MagicMock()
+        cur.fetchone.side_effect = [(1,), {"senha_hash": hash_atual}]
+        cur.rowcount = 1
+        conn = make_connection(cur)
+
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.put("/usuarios/1/senha", json={
+                "senha_atual": "SenhaAtual1",
+                "nova_senha": "SenhaNova2"
+            })
+
+        assert resp.status_code == 200
+        assert "access_token" in resp.cookies
+        assert "refresh_token" in resp.cookies
+
+    def test_senha_atual_incorreta_retorna_401(self, client_usuario):
+        from utils.security import gerar_hash
+        hash_atual = gerar_hash("SenhaAtual1")
+        cur = MagicMock()
+        cur.fetchone.side_effect = [(1,), {"senha_hash": hash_atual}]
+        conn = make_connection(cur)
+
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.put("/usuarios/1/senha", json={
+                "senha_atual": "SenhaErrada1",
+                "nova_senha": "SenhaNova2"
+            })
+
+        assert resp.status_code == 401
+
+    def test_nova_senha_igual_a_atual_retorna_400(self, client_usuario):
+        from utils.security import gerar_hash
+        hash_atual = gerar_hash("SenhaAtual1")
+        cur = MagicMock()
+        cur.fetchone.side_effect = [(1,), {"senha_hash": hash_atual}]
+        conn = make_connection(cur)
+
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.put("/usuarios/1/senha", json={
+                "senha_atual": "SenhaAtual1",
+                "nova_senha": "SenhaAtual1"
+            })
+
+        assert resp.status_code == 400
+
+    def test_nova_senha_fraca_retorna_422(self, client_usuario):
+        resp = client_usuario.put("/usuarios/1/senha", json={
+            "senha_atual": "SenhaAtual1",
+            "nova_senha": "semmaiuscula1"
+        })
+        assert resp.status_code == 422
+
+    def test_nova_senha_curta_retorna_422(self, client_usuario):
+        resp = client_usuario.put("/usuarios/1/senha", json={
+            "senha_atual": "SenhaAtual1",
+            "nova_senha": "Ab1"
+        })
+        assert resp.status_code == 422
+
+    def test_senha_atual_vazia_retorna_422(self, client_usuario):
+        resp = client_usuario.put("/usuarios/1/senha", json={
+            "senha_atual": "",
+            "nova_senha": "SenhaNova2"
+        })
+        assert resp.status_code == 422
+
+    def test_trocar_senha_sem_autenticacao_retorna_401(self, client):
+        resp = client.put("/usuarios/1/senha", json={
+            "senha_atual": "SenhaAtual1",
+            "nova_senha": "SenhaNova2"
+        })
+        assert resp.status_code == 401
+
+    def test_nao_pode_trocar_senha_de_outro_retorna_403(self, client_usuario):
+        resp = client_usuario.put("/usuarios/2/senha", json={
+            "senha_atual": "SenhaAtual1",
+            "nova_senha": "SenhaNova2"
+        })
+        assert resp.status_code == 403
+
+
+
 class TestDeletarUsuario:
     def test_deletar_proprio_usuario(self, client_usuario):
         """DELETE /usuarios/1 com token id=1 deve funcionar."""
