@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diartrip - Explore Trips</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../static/style.css?v=3">
+<link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
+<script src="../static/i18n.js"></script>
+<style>
+.explorar-wrap { max-width: 720px; margin: 0 auto; padding: 0 16px 40px; }
+.busca-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(14px);
+}
+.busca-row { display: flex; gap: 10px; }
+.busca-row input {
+    flex: 1;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 15px;
+    outline: none;
+}
+.busca-row input:focus { border-color: var(--primary); background: var(--surface); }
+.btn-buscar {
+    background: var(--gradient);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.btn-buscar:hover { opacity: 0.9; }
+
+.explorar-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(14px);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.explorar-card:hover { border-color: var(--primary); box-shadow: var(--shadow-md); }
+.explorar-nome { font-size: 16px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+.explorar-criador { font-size: 12px; color: var(--text-muted); margin: 0 0 10px; }
+.explorar-meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; }
+.explorar-vagas { font-weight: 600; }
+.explorar-vagas.cheia { color: var(--danger); }
+.explorar-acoes { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.btn-ver-viagem {
+    background: var(--gradient); color: #fff; border: none; border-radius: 8px;
+    padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.btn-ver-viagem:hover { opacity: 0.9; }
+.btn-ver-viagem:disabled { background: var(--surface-2); color: var(--text-muted); cursor: not-allowed; opacity: 1; }
+.explorar-solicitar-form { margin-top: 14px; display: none; }
+.explorar-solicitar-form textarea {
+    width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 13px; resize: vertical;
+    min-height: 54px; outline: none; margin-bottom: 8px; font-family: inherit;
+}
+.explorar-solicitar-form .msg { font-size: 12px; margin-top: 6px; }
+.explorar-solicitar-form .msg.ok { color: var(--success); }
+.explorar-solicitar-form .msg.err { color: var(--danger); }
+.explorar-vazio { color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 0; }
+</style>
+</head>
+<body>
+<div class="app">
+
+    <div class="sidebar">
+        <a href="../lobby.html">
+            <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
+        </a>
+        <a href="../lobby.html"><div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div></a>
+        <a href="grupos.html"><div class="menu-item" data-i18n="nav.groups">🌍 Groups</div></a>
+        <a href="explorar-viagens.html"><div class="menu-item" data-i18n="nav.explore">✈️ Explore Trips</div></a>
+        <a href="feed.html"><div class="menu-item" data-i18n="nav.community">🌎 Feed</div></a>
+        <a href="perfil.html"><div class="menu-item" data-i18n="nav.profile">👤 Profile</div></a>
+        <a href="chat-viagem.html">
+            <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
+        </a>
+        <div class="sidebar-spacer"></div>
+        <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Sair</div>
+    </div>
+
+    <div class="main">
+        <div class="header"><h2 data-i18n="explorar.header">Explore Trips</h2></div>
+
+        <div class="explorar-wrap">
+
+            <div class="busca-card">
+                <div class="busca-row">
+                    <input id="destinoInput" data-i18n-placeholder="explorar.searchPlaceholder" placeholder="🔎 Search destination...">
+                    <button class="btn-buscar" onclick="carregarExplorar()" data-i18n="explorar.searchBtn">Search</button>
+                </div>
+            </div>
+
+            <div id="explorarLista"><p class="explorar-vazio" data-i18n="common.loading">Carregando...</p></div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+if (!sessionStorage.getItem("logado")) window.location.href = "../login.html"
+
+document.addEventListener('languageChanged', () => {
+    applyTranslations()
+    carregarExplorar()
+})
+
+document.getElementById("destinoInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") carregarExplorar()
+})
+
+async function carregarExplorar() {
+    const destino = document.getElementById("destinoInput").value.trim()
+    const url = destino ? `/explorar?destino=${encodeURIComponent(destino)}` : "/explorar"
+    const resp = await fetch(url, { credentials: "include" })
+    if (!resp.ok) return
+
+    const viagens = await resp.json()
+    const lista = document.getElementById("explorarLista")
+
+    if (viagens.length === 0) {
+        lista.innerHTML = `<p class="explorar-vazio">${t('explorar.empty')}</p>`
+        return
+    }
+
+    lista.innerHTML = viagens.map(v => {
+        const periodo = (v.data_inicio && v.data_fim) ? `📅 ${v.data_inicio} → ${v.data_fim}` : ""
+        const cheia = v.vagas_ocupadas >= v.limite_participantes
+        const btnLabel = cheia ? t('explorar.full') : t('explorar.viewTrip')
+
+        return `
+        <div class="explorar-card" id="explorar-${v.id_grupo}">
+            <p class="explorar-nome">✈️ ${escapeHtml(v.nome_grupo)}</p>
+            <p class="explorar-criador">${t('explorar.createdBy')} ${escapeHtml(v.criador)}</p>
+            <div class="explorar-meta">
+                ${v.destino_principal ? `<span>📍 ${escapeHtml(v.destino_principal)}</span>` : ""}
+                ${periodo ? `<span>${periodo}</span>` : ""}
+                <span class="explorar-vagas${cheia ? " cheia" : ""}">👥 ${v.vagas_ocupadas}/${v.limite_participantes} ${t('explorar.participants')}</span>
+            </div>
+            <div class="explorar-acoes">
+                <button class="btn-ver-viagem" ${cheia ? "disabled" : ""} onclick="toggleSolicitar(${v.id_grupo})">${btnLabel}</button>
+            </div>
+            <div class="explorar-solicitar-form" id="solicitarForm-${v.id_grupo}">
+                <textarea id="solicitarMsg-${v.id_grupo}" data-i18n-placeholder="explorar.requestMessagePlaceholder" placeholder="Say why you want to join (optional)..."></textarea>
+                <button class="btn-buscar" onclick="enviarSolicitacao(${v.id_grupo})">${t('explorar.requestSend')}</button>
+                <div class="msg" id="solicitarMsgFeedback-${v.id_grupo}"></div>
+            </div>
+        </div>`
+    }).join("")
+}
+
+function toggleSolicitar(idGrupo) {
+    const el = document.getElementById(`solicitarForm-${idGrupo}`)
+    if (!el) return
+    const aberto = el.style.display !== "none"
+    el.style.display = aberto ? "none" : "block"
+    if (!aberto) document.getElementById(`solicitarMsg-${idGrupo}`)?.focus()
+}
+
+async function enviarSolicitacao(idGrupo) {
+    const input = document.getElementById(`solicitarMsg-${idGrupo}`)
+    const mensagem = input?.value.trim() || null
+    const feedback = document.getElementById(`solicitarMsgFeedback-${idGrupo}`)
+    const btn = document.querySelector(`#explorar-${idGrupo} .btn-ver-viagem`)
+
+    feedback.textContent = ""
+    feedback.className = "msg"
+
+    try {
+        const resp = await fetch(`/explorar/${idGrupo}/solicitar`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mensagem })
+        })
+        const data = await resp.json()
+        if (!resp.ok) {
+            feedback.textContent = data.detail || t('explorar.requestError')
+            feedback.className = "msg err"
+            return
+        }
+        feedback.textContent = t('explorar.requestSent')
+        feedback.className = "msg ok"
+        input.disabled = true
+        if (btn) { btn.disabled = true; btn.textContent = t('explorar.requestSent') }
+    } catch (e) {
+        feedback.textContent = t('explorar.requestError')
+        feedback.className = "msg err"
+    }
+}
+
+function escapeHtml(txt) {
+    return String(txt).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+}
+
+carregarExplorar()
+</script>
+</body>
+</html>

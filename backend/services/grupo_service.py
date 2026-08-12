@@ -65,7 +65,9 @@ def buscar_por_id(id_grupo: int, usuario_id: int) -> dict:
                 """
                 SELECT g.id_grupo, g.nome_grupo, g.destino_principal, g.data_inicio,
                        g.data_fim, g.orcamento, g.tipo_viagem, g.preferencias,
-                       g.criado_por AS criador_id, u.nome AS criador
+                       g.criado_por AS criador_id, u.nome AS criador,
+                       g.publica, g.limite_participantes,
+                       (SELECT COUNT(*) FROM grupo_membros gm WHERE gm.id_grupo = g.id_grupo) AS vagas_ocupadas
                 FROM grupos_viagem g
                 JOIN usuarios u ON g.criado_por = u.id_usuario
                 WHERE g.id_grupo = %s
@@ -77,6 +79,7 @@ def buscar_por_id(id_grupo: int, usuario_id: int) -> dict:
                 raise HTTPException(status_code=404, detail="Grupo não encontrado")
             if grupo.get("orcamento") is not None:
                 grupo["orcamento"] = float(grupo["orcamento"])
+            grupo["publica"] = bool(grupo.get("publica"))
             if cargo == "admin":
                 cursor.execute(
                     "SELECT codigo_convite FROM grupos_viagem WHERE id_grupo=%s", (id_grupo,)

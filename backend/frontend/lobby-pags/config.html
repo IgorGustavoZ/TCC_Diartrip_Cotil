@@ -9,6 +9,95 @@
 <link rel="stylesheet" href="../static/style.css?v=3">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="../static/i18n.js"></script>
+<style>
+.config-wrap { max-width: 640px; margin: 0 auto; }
+.config-subtitle { color: var(--text-muted); font-size: 14px; margin: -18px 0 26px; }
+
+/* Settings menu row (replaces the old bare button) */
+.settings-menu { width: 100%; }
+.settings-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    height: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(14px);
+    text-align: left;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.settings-row:hover, .settings-row:focus-visible {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+.settings-row-icon {
+    width: 42px; height: 42px; flex-shrink: 0;
+    border-radius: var(--radius-md);
+    background: var(--gradient);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px;
+}
+.settings-row-text { flex: 1; min-width: 0; }
+.settings-row-title { display: block; font-size: 15px; font-weight: 600; color: var(--text); }
+.settings-row-desc { display: block; font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.settings-row-chevron { color: var(--text-muted); font-size: 22px; flex-shrink: 0; transition: transform .2s ease, color .2s ease; }
+.settings-row:hover .settings-row-chevron { transform: translateX(3px); color: var(--primary); }
+
+/* Edit panel */
+#alterarConta { animation: fadeSlideIn .25s ease; }
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.back-row { display: flex; align-items: center; gap: 10px; }
+.back-label { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+
+.fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 620px) {
+    .fields-grid { grid-template-columns: 1fr; }
+}
+
+/* Alert banners — display toggling stays untouched (still driven by JS via .style.display) */
+.error, .sucess {
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 13px;
+}
+.error { background: var(--danger-soft); border: 1px solid rgba(248,113,113,0.3); }
+.sucess { background: var(--success-soft); border: 1px solid rgba(74,222,128,0.3); }
+.error::before { content: "⚠️  "; }
+.sucess::before { content: "✅  "; }
+
+.actions-row {
+    margin: 22px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+}
+.delete-outline {
+    background: transparent !important;
+    color: var(--danger) !important;
+    border: 1px solid rgba(248,113,113,0.35) !important;
+    font-weight: 600;
+    padding: 10px 18px;
+}
+.delete-outline:hover { background: var(--danger-soft) !important; }
+
+button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none; }
+</style>
 </head>
 <body>
     <div class="app">
@@ -25,14 +114,19 @@
     <a href="grupos.html">
         <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
     </a>
-    <a href="chat-viagem.html">
+    <a href="explorar-viagens.html">
+        <div class="menu-item" data-i18n="nav.explore">✈️ Explore Trips</div>
+    </a>
+    <a href="feed.html">
+        <div class="menu-item" data-i18n="nav.community">🌎 Feed</div>
+    </a>
+    <!-- <a href="chat-viagem.html">
         <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
-    </a>
-    <a href="#">
+    </a> -->
+    <!-- <a href="#">
         <div class="menu-item" data-i18n="nav.settings">⚙ Settings</div>
-    </a>
-
-    <a href="form-viagem.html">
+    </a> -->
+    <a href="chat-viagem.html">
         <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
     </a>
 
@@ -40,42 +134,55 @@
     <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Sair</div>
 
     </div>
-        
-    <div class="main">
-        <h1 data-i18n="config.header">⚙ Settings</h1>
 
-        <div class="container">
-            <div>
-                <div class="action">
-                    <button id="btnAlterarConta" data-i18n="config.changeAccount">Change account information</button>
-                </div>
+    <div class="main">
+        <div class="header">
+            <h1 data-i18n="config.header">⚙ Settings</h1>
+        </div>
+        <p class="config-subtitle" data-i18n="config.subtitle">Manage your account information.</p>
+
+        <div class="config-wrap">
+            <div class="settings-menu">
+                <button id="btnAlterarConta" class="settings-row" type="button">
+                    <span class="settings-row-icon">👤</span>
+                    <span class="settings-row-text">
+                        <span class="settings-row-title" data-i18n="config.changeAccount">Change account information</span>
+                        <span class="settings-row-desc" data-i18n="config.changeAccountDesc">Update your name, email or delete your account</span>
+                    </span>
+                    <span class="settings-row-chevron">›</span>
+                </button>
             </div>
 
             <section style="padding:0; max-width:1200px; margin:auto; position: relative; display:flex; flex-direction:column; gap:15px; display: none;" id="alterarConta">
-                    <div class="back">
+                    <div class="back back-row" aria-label="Voltar" title="Voltar">
                         <span class="material-symbols-outlined">
                         arrow_back
                         </span>
+                        <span class="back-label" data-i18n="common.back">Back</span>
                     </div>
 
                     <h2 data-i18n="config.alterTitle">Change account information</h2>
 
-                    <div class="field">
-                        <label for="nome" data-i18n="config.newName">Novo nome</label>
-                        <input id="nome" type="text" data-i18n-placeholder="config.namePlaceholder" placeholder="Seu nome">
-                    </div>
+                    <div class="fields-grid">
+                        <div class="field">
+                            <label for="nome" data-i18n="config.newName">Novo nome</label>
+                            <input id="nome" type="text" data-i18n-placeholder="config.namePlaceholder" placeholder="Seu nome">
+                        </div>
 
-                    <div class="field">
-                        <label for="email" data-i18n="config.newEmail">Novo email</label>
-                        <input id="email" type="email" data-i18n-placeholder="config.emailPlaceholder" placeholder="seu@email.com">
+                        <div class="field">
+                            <label for="email" data-i18n="config.newEmail">Novo email</label>
+                            <input id="email" type="email" data-i18n-placeholder="config.emailPlaceholder" placeholder="seu@email.com">
+                        </div>
                     </div>
 
                     <div class="error" style="display: none;"></div>
                     <div class="sucess" style="display: none;"></div>
-                
-                    <div class="actions" style="margin: 20px; display: flex; justify-content: space-between;">
+
+                    <div class="actions-row">
                         <button class="save" type="submit" data-i18n="config.saveChanges">Salvar alterações</button>
-                        <button class="delete" data-i18n="config.deleteAccount">Excluir conta</button>
+                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                            <button class="delete delete-outline" data-i18n="config.deleteAccount">Excluir conta</button>
+                        </div>
                     </div>
             </section>
         </div>
@@ -114,8 +221,8 @@
                 const respJson = JSON.parse(dados)
                 nomeInput.value = respJson.nome
                 emailInput.value = respJson.email
-            } 
-        } 
+            }
+        }
 
         colocarDados()
 
@@ -132,6 +239,10 @@
                 msgError.innerHTML = t('config.emailInvalid')
                 return
             }
+            btnSave.disabled = true
+            btnSave.classList.add("is-loading")
+            const textoOriginalSave = btnSave.textContent
+            btnSave.textContent = t('config.saving')
             const respPutUsuario = await fetch(`/usuarios/${sessionStorage.getItem("id")}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -141,6 +252,9 @@
                     email: emailInput.value
                 })
             })
+            btnSave.disabled = false
+            btnSave.classList.remove("is-loading")
+            btnSave.textContent = textoOriginalSave
             if(respPutUsuario.ok){
                 esconderAvisos()
                 msgSucess.style.display = "block"
@@ -156,6 +270,10 @@
 
         btnDelete.addEventListener("click", async ()=>{
             if (!confirm(t('common.confirmDelete'))) return
+            btnDelete.disabled = true
+            btnDelete.classList.add("is-loading")
+            const textoOriginalDelete = btnDelete.textContent
+            btnDelete.textContent = t('config.deleting')
             const respDeleteUsuario = await fetch(`/usuarios/${sessionStorage.getItem("id")}`, {
                 method: 'DELETE',
                 credentials: 'include'
@@ -167,6 +285,9 @@
                 await fetch('/logout', { method: 'POST', credentials: 'include' })
                 setTimeout(()=>{ window.location.href = "../index.html" }, 2000)
             } else {
+                btnDelete.disabled = false
+                btnDelete.classList.remove("is-loading")
+                btnDelete.textContent = textoOriginalDelete
                 esconderAvisos()
                 msgError.style.display = "block"
                 msgError.innerHTML = t('config.deleteError')

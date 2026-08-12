@@ -82,6 +82,9 @@ class GrupoDetalhe(BaseModel):
     criador_id: int
     criador: str
     codigo_convite: Optional[str] = None
+    publica: bool = False
+    limite_participantes: Optional[int] = None
+    vagas_ocupadas: int = 0
 
 
 class GrupoCriado(BaseModel):
@@ -260,3 +263,33 @@ class DashboardCompleto(BaseModel):
     geral: DashboardGeral
     pessoal: DashboardPessoal
     admin: Optional[DashboardAdmin] = None
+
+
+# --- Explorar Viagens (catálogo de viagens públicas) ----------------------
+
+class ExplorarViagemResponse(BaseModel):
+    id_grupo: int
+    nome_grupo: str
+    destino_principal: Optional[str] = None
+    data_inicio: Optional[date] = None
+    data_fim: Optional[date] = None
+    criador: str
+    limite_participantes: int
+    vagas_ocupadas: int = 0
+
+
+class SolicitacaoResponse(BaseModel):
+    id_solicitacao: int
+    id_grupo: int
+    nome_grupo: str
+    id_usuario_solicitante: int
+    nome: str
+    foto_perfil: Optional[str] = None
+    mensagem: Optional[str] = None
+    status: str
+    data_solicitacao: datetime
+
+
+class SolicitacaoCriada(BaseModel):
+    mensagem: str
+    id_solicitacao: int

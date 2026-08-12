@@ -23,17 +23,17 @@
             <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
         </a>
         <a href="grupos.html">
-            <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
+            <div class="menu-item" data-i18n="nav.groups">🌍 Feed</div>
         </a>
-        <a href="feed.html">
-            <div class="menu-item" data-i18n="nav.feed">📰 Feed</div>
+        <a href="explorar-viagens.html">
+            <div class="menu-item" data-i18n="nav.explore">✈️ Explore Trips</div>
         </a>
         <a href="perfil.html">
             <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
         </a>
-        <a href="chat-viagem.html">
+        <!-- <a href="chat-viagem.html">
             <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
-        </a>
+        </a> -->
         <div class="sidebar-spacer"></div>
         <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Sair</div>
     </div>
@@ -156,6 +156,27 @@
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.manageMembers">👥 Gerenciar Membros</h2>
                     <div id="adminMembroLista" style="display:flex;flex-direction:column;gap:10px;"></div>
+                </div>
+
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.explore.panel">✈️ Explorar Viagens</h2>
+                    <p style="color:var(--text-muted); font-size:14px; margin:0 0 12px;" id="explorarStatusTexto" data-i18n="viagem.explore.notPublished">Esta viagem ainda não está pública em Explorar Viagens.</p>
+                    <div style="display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+                        <div>
+                            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;" data-i18n="viagem.explore.limitLabel">Limite de participantes</label>
+                            <input id="explorarLimite" type="number" min="1" step="1" style="width:140px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; outline:none;">
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button id="btnPublicarExplorar" onclick="publicarViagem()" style="background:var(--gradient); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.explore.publish">📢 Tornar viagem pública</button>
+                        <button id="btnDespublicarExplorar" onclick="despublicarViagem()" style="display:none; background:var(--danger-soft); color:var(--danger); border:1px solid rgba(var(--danger-rgb),0.25); border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.explore.unpublish">Tornar privada</button>
+                    </div>
+                    <span class="msg-erro-gasto" id="explorarErro" style="display:block; margin-top:8px;"></span>
+                </div>
+
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.explore.requests">📥 Solicitações de participação</h2>
+                    <div id="listaSolicitacoes"><p style="color:var(--text-muted); font-size:14px; text-align:center;" data-i18n="viagem.explore.noRequests">Nenhuma solicitação pendente.</p></div>
                 </div>
             </div>
 
@@ -384,6 +405,7 @@ async function carregarDashboard() {
         document.getElementById("adminTabBtn").style.display = "block"
         document.getElementById("roteiroFormAdd").style.display = "block"
         carregarMembrosAdmin()
+        carregarExplorarAdmin()
         const a = data.admin
         document.getElementById("totalMembros").innerText = a.estatisticas.membros_ativos
         document.getElementById("totalFotos").innerText = a.estatisticas.total_fotos_subidas
@@ -733,6 +755,9 @@ async function carregarMembrosAdmin() {
             ? `<button onclick="rebaixarMembro(${m.id_usuario})" style="background:var(--danger-soft);color:var(--danger);border:1px solid rgba(var(--danger-rgb),0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.action.demote')}</button>`
             : `<button onclick="promoverMembro(${m.id_usuario})" style="background:var(--warning-soft);color:var(--warning);border:1px solid rgba(var(--warning-rgb),0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.action.promote')}</button>`
 
+        const btnRemover = (isMe || isCriador) ? "" :
+            `<button onclick="removerMembro(${m.id_usuario})" title="${escapeAtr(t('viagem.action.remove'))}" style="background:var(--danger-soft);color:var(--danger);border:1px solid rgba(var(--danger-rgb),0.25);border-radius:7px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;">🗑</button>`
+
         return `
         <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;">
             <div style="width:36px;height:36px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${iniciais}</div>
@@ -741,6 +766,7 @@ async function carregarMembrosAdmin() {
             </div>
             <span style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;${badgeStyle}">${badgeLabel}</span>
             ${btnAcao}
+            ${btnRemover}
         </div>`
     }).join("")
 }
@@ -763,6 +789,132 @@ async function rebaixarMembro(idUsuario) {
     })
     if (resp.ok) carregarMembrosAdmin()
     else { const e = await resp.json(); alert(e.detail || t('viagem.errorDemote')) }
+}
+
+async function removerMembro(idUsuario) {
+    if (!confirm(t('viagem.confirmRemove'))) return
+    try {
+        const resp = await fetch(`/grupos/${idGrupo}/membros/${idUsuario}`, {
+            method: "DELETE",
+            credentials: "include"
+        })
+        if (resp.ok) {
+            carregarMembrosAdmin()
+        } else {
+            const e = await resp.json()
+            alert(e.detail || t('viagem.errorRemove'))
+        }
+    } catch (err) {
+        alert(t('lobby.chat.noServer'))
+    }
+}
+
+async function carregarExplorarAdmin() {
+    atualizarStatusExplorar()
+    carregarSolicitacoes()
+}
+
+function atualizarStatusExplorar() {
+    const textoEl = document.getElementById("explorarStatusTexto")
+    const btnPub = document.getElementById("btnPublicarExplorar")
+    const btnDesp = document.getElementById("btnDespublicarExplorar")
+    const limiteEl = document.getElementById("explorarLimite")
+    if (!grupoAtual) return
+    if (grupoAtual.publica) {
+        textoEl.textContent = `${t('viagem.explore.published')} (${grupoAtual.vagas_ocupadas}/${grupoAtual.limite_participantes})`
+        btnPub.innerHTML = "🔄 " + t('viagem.explore.update')
+        btnDesp.style.display = ""
+        limiteEl.value = grupoAtual.limite_participantes || ""
+    } else {
+        textoEl.textContent = t('viagem.explore.notPublished')
+        btnPub.innerHTML = "📢 " + t('viagem.explore.publish')
+        btnDesp.style.display = "none"
+        if (!limiteEl.value) limiteEl.value = grupoAtual.limite_participantes || ""
+    }
+}
+
+async function publicarViagem() {
+    const limite = parseInt(document.getElementById("explorarLimite").value)
+    const erroEl = document.getElementById("explorarErro")
+    const btn = document.getElementById("btnPublicarExplorar")
+    erroEl.style.display = "none"
+    if (isNaN(limite) || limite < 1) {
+        erroEl.textContent = t('viagem.explore.limitError')
+        erroEl.style.display = "block"
+        return
+    }
+    btn.disabled = true
+    try {
+        const resp = await fetch(`/grupos/${idGrupo}/publicar`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ publica: true, limite_participantes: limite })
+        })
+        if (resp.ok) {
+            await carregarGrupo()
+        } else {
+            const e = await resp.json()
+            erroEl.textContent = e.detail || t('viagem.explore.errorPublish')
+            erroEl.style.display = "block"
+        }
+    } finally {
+        btn.disabled = false
+    }
+}
+
+async function despublicarViagem() {
+    if (!confirm(t('viagem.explore.confirmUnpublish'))) return
+    const resp = await fetch(`/grupos/${idGrupo}/publicar`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ publica: false })
+    })
+    if (resp.ok) {
+        await carregarGrupo()
+    } else {
+        const e = await resp.json()
+        alert(e.detail || t('viagem.explore.errorUnpublish'))
+    }
+}
+
+async function carregarSolicitacoes() {
+    const resp = await fetch(`/grupos/${idGrupo}/solicitacoes`, { credentials: "include" })
+    if (!resp.ok) return
+    const lista = await resp.json()
+    const container = document.getElementById("listaSolicitacoes")
+
+    if (!lista.length) {
+        container.innerHTML = `<p style="color:var(--text-muted); font-size:14px; text-align:center;">${t('viagem.explore.noRequests')}</p>`
+        return
+    }
+
+    container.innerHTML = lista.map(s => {
+        const iniciais = s.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+        return `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${iniciais}</div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:var(--text);">${escapeHtml(s.nome)}</div>
+                ${s.mensagem ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${escapeHtml(s.mensagem)}</div>` : ""}
+            </div>
+            <button onclick="aceitarSolicitacao(${s.id_solicitacao})" style="background:var(--gradient);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.explore.accept')}</button>
+            <button onclick="recusarSolicitacao(${s.id_solicitacao})" style="background:var(--danger-soft);color:var(--danger);border:1px solid rgba(var(--danger-rgb),0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.explore.reject')}</button>
+        </div>`
+    }).join("")
+}
+
+async function aceitarSolicitacao(id) {
+    const resp = await fetch(`/solicitacoes/${id}/aceitar`, { method: "PUT", credentials: "include" })
+    if (resp.ok) carregarSolicitacoes()
+    else { const e = await resp.json(); alert(e.detail || t('viagem.explore.errorRespond')) }
+}
+
+async function recusarSolicitacao(id) {
+    const resp = await fetch(`/solicitacoes/${id}/recusar`, { method: "PUT", credentials: "include" })
+    if (resp.ok) carregarSolicitacoes()
+    else { const e = await resp.json(); alert(e.detail || t('viagem.explore.errorRespond')) }
 }
 
 function escapeHtml(txt) {

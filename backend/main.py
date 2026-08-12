@@ -9,7 +9,7 @@ from database import get_db
 from utils.logger import configurar_logging, get_logger
 from utils.csrf import checar_csrf
 
-from routes import usuarios, login, grupos_viagem, roteiros, grupos_membros, gastos, chat_ia, fotos, dashboard, posts, chat_grupo
+from routes import usuarios, login, grupos_viagem, roteiros, grupos_membros, gastos, chat_ia, fotos, dashboard, posts, chat_grupo, explorar_viagens
 
 load_dotenv()
 configurar_logging()
@@ -114,6 +114,7 @@ app.include_router(fotos.router)
 app.include_router(dashboard.router)
 app.include_router(posts.router)
 app.include_router(chat_grupo.router)
+app.include_router(explorar_viagens.router)
 
 if os.path.isdir("frontend/static"):
     app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
