@@ -17,6 +17,7 @@ class PublicarInput(BaseModel):
 
 class SolicitarInput(BaseModel):
     mensagem: Optional[str] = Field(None, max_length=500)
+    orcamento: Optional[float] = Field(None, ge=0)
 
 
 @router.put(
@@ -51,7 +52,7 @@ def solicitar_participacao(
     usuario_id: int = Depends(get_usuario_logado),
 ):
     verificar_rate_limit(f"explorar_solicitar:{usuario_id}", limite=10)
-    return explorar_viagens_service.solicitar(id_grupo, usuario_id, dados.mensagem)
+    return explorar_viagens_service.solicitar(id_grupo, usuario_id, dados.mensagem, dados.orcamento)
 
 
 @router.get(

@@ -184,17 +184,41 @@ def atualizar(id_grupo: int, dados) -> dict:
             cursor.close()
 
 
-def deletar(id_grupo: int) -> dict:
+def deletar(id_grupo: int, usuario_id: int) -> dict:
     with get_db() as conexao:
         cursor = conexao.cursor()
         try:
-            cursor.execute("SELECT 1 FROM grupos_viagem WHERE id_grupo=%s", (id_grupo,))
-            if not cursor.fetchone():
+            cursor.execute("SELECT criado_por FROM grupos_viagem WHERE id_grupo=%s", (id_grupo,))
+            row = cursor.fetchone()
+            if not row:
                 raise HTTPException(status_code=404, detail="Grupo não encontrado")
+            if row[0] != usuario_id:
+                raise HTTPException(
+                    status_code=403, detail="Apenas o criador da viagem pode excluí-la"
+                )
 
             cursor.execute("SELECT caminho_arquivo FROM fotos WHERE id_grupo=%s", (id_grupo,))
-            fotos = [row[0] for row in cursor.fetchall()]
+            fotos = [r[0] for r in cursor.fetchall()]
 
+            # Apaga explicitamente os registros dependentes antes do grupo.
+            # Não confiar apenas em ON DELETE CASCADE: o banco real tem ao
+            # menos uma FK (gastos -> grupos_viagem) configurada como
+            # ON DELETE RESTRICT, divergindo do que a migration 001 assume.
+            cursor.execute(
+                """
+                DELETE dg FROM divisao_gastos dg
+                JOIN gastos g ON dg.id_gasto = g.id_gasto
+                WHERE g.id_grupo = %s
+                """,
+                (id_grupo,),
+            )
+            cursor.execute("DELETE FROM gastos WHERE id_grupo=%s", (id_grupo,))
+            cursor.execute("DELETE FROM roteiros WHERE id_grupo=%s", (id_grupo,))
+            cursor.execute("DELETE FROM fotos WHERE id_grupo=%s", (id_grupo,))
+            cursor.execute("DELETE FROM chat_ia WHERE id_grupo=%s", (id_grupo,))
+            cursor.execute("DELETE FROM mensagens_grupo WHERE id_grupo=%s", (id_grupo,))
+            cursor.execute("DELETE FROM viagem_solicitacoes WHERE id_grupo=%s", (id_grupo,))
+            cursor.execute("DELETE FROM grupo_membros WHERE id_grupo=%s", (id_grupo,))
             cursor.execute("DELETE FROM grupos_viagem WHERE id_grupo=%s", (id_grupo,))
 
             for url in fotos:

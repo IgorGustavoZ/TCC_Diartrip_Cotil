@@ -205,7 +205,7 @@ class TestEscaladaPrivilegio:
         assert resp.status_code == 403
 
     def test_membro_nao_pode_deletar_grupo(self, client_usuario):
-        """Membro simples (cargo=membro) nao pode deletar grupo."""
+        """Quem nao e' o criador do grupo (mesmo sendo membro) nao pode deletar."""
         call_count = [0]
 
         def cursor_factory(**kw):
@@ -214,7 +214,7 @@ class TestEscaladaPrivilegio:
             if call_count[0] == 1:
                 c.fetchone.return_value = (1,)
             else:
-                c.fetchone.return_value = {"cargo": "membro"}
+                c.fetchone.return_value = (2,)  # criado_por = 2, cliente e' o usuario 1
             c.rowcount = 1
             return c
 

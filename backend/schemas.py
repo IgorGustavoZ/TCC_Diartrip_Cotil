@@ -277,6 +277,7 @@ class ExplorarViagemResponse(BaseModel):
     criador: str
     limite_participantes: int
     vagas_ocupadas: int = 0
+    orcamento_total: Optional[float] = None
 
 
 class SolicitacaoResponse(BaseModel):
@@ -287,6 +288,7 @@ class SolicitacaoResponse(BaseModel):
     nome: str
     foto_perfil: Optional[str] = None
     mensagem: Optional[str] = None
+    orcamento: Optional[float] = None
     status: str
     data_solicitacao: datetime
 

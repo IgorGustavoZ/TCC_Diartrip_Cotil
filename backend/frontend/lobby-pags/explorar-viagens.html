@@ -76,6 +76,15 @@
 .explorar-solicitar-form .msg { font-size: 12px; margin-top: 6px; }
 .explorar-solicitar-form .msg.ok { color: var(--success); }
 .explorar-solicitar-form .msg.err { color: var(--danger); }
+.explorar-solicitar-form label {
+    display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;
+}
+.explorar-solicitar-form input[type="number"] {
+    width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 13px;
+    outline: none; margin-bottom: 8px; font-family: inherit;
+}
+.explorar-solicitar-form input[type="number"]:focus { border-color: var(--primary); background: var(--surface); }
 .explorar-vazio { color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 0; }
 .explorar-own-badge {
     display: inline-block; background: var(--surface-2); color: var(--text-secondary);
@@ -167,6 +176,7 @@ async function carregarExplorar() {
                 ${v.destino_principal ? `<span>📍 ${escapeHtml(v.destino_principal)}</span>` : ""}
                 ${periodo ? `<span>${periodo}</span>` : ""}
                 <span class="explorar-vagas${cheia ? " cheia" : ""}">👥 ${v.vagas_ocupadas}/${v.limite_participantes} ${t('explorar.participants')}</span>
+                ${v.orcamento_total != null ? `<span>💰 ${t('explorar.budgetTotal')}: R$ ${v.orcamento_total.toLocaleString(getLang(), {minimumFractionDigits:2})}</span>` : ""}
             </div>
             <div class="explorar-acoes">
                 ${acoes}
@@ -174,6 +184,8 @@ async function carregarExplorar() {
             ${minhaViagem ? "" : `
             <div class="explorar-solicitar-form" id="solicitarForm-${v.id_grupo}">
                 <textarea id="solicitarMsg-${v.id_grupo}" data-i18n-placeholder="explorar.requestMessagePlaceholder" placeholder="Say why you want to join (optional)..."></textarea>
+                <label for="solicitarOrcamento-${v.id_grupo}" data-i18n="explorar.myBudget">💰 My budget</label>
+                <input type="number" min="0" step="0.01" id="solicitarOrcamento-${v.id_grupo}" data-i18n-placeholder="explorar.myBudgetPlaceholder" placeholder="R$ 0,00">
                 <button class="btn-buscar" onclick="enviarSolicitacao(${v.id_grupo})">${t('explorar.requestSend')}</button>
                 <div class="msg" id="solicitarMsgFeedback-${v.id_grupo}"></div>
             </div>`}
@@ -192,18 +204,27 @@ function toggleSolicitar(idGrupo) {
 async function enviarSolicitacao(idGrupo) {
     const input = document.getElementById(`solicitarMsg-${idGrupo}`)
     const mensagem = input?.value.trim() || null
+    const orcamentoInput = document.getElementById(`solicitarOrcamento-${idGrupo}`)
+    const orcamentoValor = orcamentoInput?.value.trim() || ""
     const feedback = document.getElementById(`solicitarMsgFeedback-${idGrupo}`)
     const btn = document.querySelector(`#explorar-${idGrupo} .btn-ver-viagem`)
 
     feedback.textContent = ""
     feedback.className = "msg"
 
+    if (orcamentoValor !== "" && (isNaN(orcamentoValor) || parseFloat(orcamentoValor) < 0)) {
+        feedback.textContent = t('explorar.invalidBudget')
+        feedback.className = "msg err"
+        return
+    }
+    const orcamento = orcamentoValor === "" ? null : parseFloat(orcamentoValor)
+
     try {
         const resp = await fetch(`/explorar/${idGrupo}/solicitar`, {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ mensagem })
+            body: JSON.stringify({ mensagem, orcamento })
         })
         const data = await resp.json()
         if (!resp.ok) {
@@ -214,6 +235,7 @@ async function enviarSolicitacao(idGrupo) {
         feedback.textContent = t('explorar.requestSent')
         feedback.className = "msg ok"
         input.disabled = true
+        if (orcamentoInput) orcamentoInput.disabled = true
         if (btn) { btn.disabled = true; btn.textContent = t('explorar.requestSent') }
     } catch (e) {
         feedback.textContent = t('explorar.requestError')

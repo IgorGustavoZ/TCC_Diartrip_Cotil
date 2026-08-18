@@ -5,11 +5,18 @@ from utils.dependencies import checar_membro_grupo
 _SELECT_EXPLORAR = """
     SELECT g.id_grupo, g.nome_grupo, g.destino_principal, g.data_inicio, g.data_fim,
            g.criado_por AS id_criador, u.nome AS criador, g.limite_participantes,
+           g.orcamento AS orcamento_total,
            (SELECT COUNT(*) FROM grupo_membros gm WHERE gm.id_grupo = g.id_grupo) AS vagas_ocupadas
     FROM grupos_viagem g
     JOIN usuarios u ON g.criado_por = u.id_usuario
     WHERE g.publica = 1
 """
+
+
+def _com_orcamento_float(grupo: dict) -> dict:
+    if grupo.get("orcamento_total") is not None:
+        grupo["orcamento_total"] = float(grupo["orcamento_total"])
+    return grupo
 
 
 def publicar(id_grupo: int, publica: bool, limite_participantes: int | None) -> dict:
@@ -67,7 +74,7 @@ def listar_publicas(destino: str | None, limite: int = 20, offset: int = 0) -> l
             sql += " ORDER BY g.data_criacao DESC LIMIT %s OFFSET %s"
             params.extend([limite, offset])
             cursor.execute(sql, tuple(params))
-            return cursor.fetchall()
+            return [_com_orcamento_float(g) for g in cursor.fetchall()]
         finally:
             cursor.close()
 
@@ -80,12 +87,12 @@ def detalhar_publica(id_grupo: int) -> dict:
             grupo = cursor.fetchone()
             if not grupo:
                 raise HTTPException(status_code=404, detail="Viagem pública não encontrada")
-            return grupo
+            return _com_orcamento_float(grupo)
         finally:
             cursor.close()
 
 
-def solicitar(id_grupo: int, usuario_id: int, mensagem: str | None) -> dict:
+def solicitar(id_grupo: int, usuario_id: int, mensagem: str | None, orcamento: float | None = None) -> dict:
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:
@@ -123,8 +130,11 @@ def solicitar(id_grupo: int, usuario_id: int, mensagem: str | None) -> dict:
 
             mensagem_limpa = (mensagem or "").strip() or None
             cursor.execute(
-                "INSERT INTO viagem_solicitacoes (id_grupo, id_usuario_solicitante, mensagem) VALUES (%s, %s, %s)",
-                (id_grupo, usuario_id, mensagem_limpa),
+                """
+                INSERT INTO viagem_solicitacoes (id_grupo, id_usuario_solicitante, mensagem, orcamento)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (id_grupo, usuario_id, mensagem_limpa, orcamento),
             )
             return {"mensagem": "Solicitação de participação enviada", "id_solicitacao": cursor.lastrowid}
         finally:
@@ -139,7 +149,7 @@ def listar_solicitacoes(id_grupo: int) -> list:
                 """
                 SELECT s.id_solicitacao, s.id_grupo, g.nome_grupo,
                        s.id_usuario_solicitante, u.nome, u.foto_perfil,
-                       s.mensagem, s.status, s.data_solicitacao
+                       s.mensagem, s.orcamento, s.status, s.data_solicitacao
                 FROM viagem_solicitacoes s
                 JOIN grupos_viagem g ON s.id_grupo = g.id_grupo
                 JOIN usuarios u ON s.id_usuario_solicitante = u.id_usuario
@@ -148,7 +158,11 @@ def listar_solicitacoes(id_grupo: int) -> list:
                 """,
                 (id_grupo,),
             )
-            return cursor.fetchall()
+            solicitacoes = cursor.fetchall()
+            for s in solicitacoes:
+                if s.get("orcamento") is not None:
+                    s["orcamento"] = float(s["orcamento"])
+            return solicitacoes
         finally:
             cursor.close()
 
@@ -156,7 +170,7 @@ def listar_solicitacoes(id_grupo: int) -> list:
 def _checar_admin_da_solicitacao(cursor, id_solicitacao: int, usuario_id: int) -> dict:
     cursor.execute(
         """
-        SELECT id_grupo, id_usuario_solicitante, status
+        SELECT id_grupo, id_usuario_solicitante, status, orcamento
         FROM viagem_solicitacoes WHERE id_solicitacao=%s FOR UPDATE
         """,
         (id_solicitacao,),
@@ -180,6 +194,7 @@ def aceitar_solicitacao(id_solicitacao: int, usuario_id: int) -> dict:
             solicitacao = _checar_admin_da_solicitacao(cursor, id_solicitacao, usuario_id)
             id_grupo = solicitacao["id_grupo"]
             id_solicitante = solicitacao["id_usuario_solicitante"]
+            orcamento_solicitado = solicitacao.get("orcamento")
 
             cursor.execute(
                 "SELECT limite_participantes FROM grupos_viagem WHERE id_grupo=%s FOR UPDATE",
@@ -207,9 +222,14 @@ def aceitar_solicitacao(id_solicitacao: int, usuario_id: int) -> dict:
                             detail="Viagem lotada — não é possível aceitar mais participantes",
                         )
                 cursor.execute(
-                    "INSERT INTO grupo_membros (id_grupo, id_usuario) VALUES (%s, %s)",
-                    (id_grupo, id_solicitante),
+                    "INSERT INTO grupo_membros (id_grupo, id_usuario, orcamento) VALUES (%s, %s, %s)",
+                    (id_grupo, id_solicitante, orcamento_solicitado),
                 )
+                if orcamento_solicitado is not None:
+                    cursor.execute(
+                        "UPDATE grupos_viagem SET orcamento = COALESCE(orcamento, 0) + %s WHERE id_grupo=%s",
+                        (orcamento_solicitado, id_grupo),
+                    )
 
             cursor.execute(
                 """

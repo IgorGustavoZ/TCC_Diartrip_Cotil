@@ -62,7 +62,7 @@ class TestListarExplorar:
         viagem = {
             "id_grupo": 10, "nome_grupo": "Paris em Setembro", "destino_principal": "Paris",
             "data_inicio": "2026-09-10", "data_fim": "2026-09-20", "id_criador": 7, "criador": "Igor",
-            "limite_participantes": 5, "vagas_ocupadas": 3,
+            "limite_participantes": 5, "vagas_ocupadas": 3, "orcamento_total": 5500,
         }
         cur = _cur(fetchones=[(1,)], fetchalls=[[viagem]])
         conn = make_connection(cur)
@@ -72,6 +72,7 @@ class TestListarExplorar:
         data = resp.json()
         assert len(data) == 1
         assert data[0]["id_grupo"] == 10
+        assert data[0]["orcamento_total"] == 5500
 
     def test_busca_por_destino(self, client_usuario):
         cur = _cur(fetchones=[(1,)], fetchalls=[[]])
@@ -148,6 +149,24 @@ class TestSolicitarParticipacao:
         resp = client.post("/explorar/10/solicitar", json={})
         assert resp.status_code == 401
 
+    def test_solicitar_com_orcamento_e_gravado_na_solicitacao(self, client_usuario):
+        cur = _cur(fetchones=[(1,), {"limite_participantes": 5}, None, None, {"total": 2}], lastrowid=42)
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.post(
+                "/explorar/10/solicitar",
+                json={"mensagem": "Quero ir!", "orcamento": 2000},
+            )
+        assert resp.status_code == 200
+        insert_call = next(
+            c for c in cur.execute.call_args_list if "INSERT INTO viagem_solicitacoes" in c.args[0]
+        )
+        assert insert_call.args[1] == (10, 1, "Quero ir!", 2000)
+
+    def test_solicitar_orcamento_negativo_retorna_422(self, client_usuario):
+        resp = client_usuario.post("/explorar/10/solicitar", json={"orcamento": -100})
+        assert resp.status_code == 422
+
 
 class TestListarSolicitacoes:
     def test_admin_lista_solicitacoes_pendentes(self, client_admin):
@@ -169,6 +188,20 @@ class TestListarSolicitacoes:
         with patch("database.get_db", fake_get_db(conn)):
             resp = client_usuario.get("/grupos/10/solicitacoes")
         assert resp.status_code == 403
+
+    def test_listar_solicitacoes_retorna_orcamento_informado(self, client_admin):
+        solicitacao = {
+            "id_solicitacao": 1, "id_grupo": 10, "nome_grupo": "Grupo Teste",
+            "id_usuario_solicitante": 2, "nome": "Outro Usuario", "foto_perfil": None,
+            "mensagem": "Quero ir!", "orcamento": 2000, "status": "pendente",
+            "data_solicitacao": "2026-06-01T10:00:00",
+        }
+        cur = _cur(fetchones=[(1,), {"cargo": "admin"}], fetchalls=[[solicitacao]])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.get("/grupos/10/solicitacoes")
+        assert resp.status_code == 200
+        assert resp.json()[0]["orcamento"] == 2000
 
 
 class TestAceitarSolicitacao:
@@ -230,6 +263,46 @@ class TestAceitarSolicitacao:
         with patch("database.get_db", fake_get_db(conn)):
             resp = client_admin.put("/solicitacoes/999/aceitar")
         assert resp.status_code == 404
+
+    def test_aceitar_com_orcamento_soma_no_orcamento_total_da_viagem(self, client_admin):
+        cur = _cur(fetchones=[
+            (1,),
+            {"id_grupo": 10, "id_usuario_solicitante": 2, "status": "pendente", "orcamento": 2000},
+            {"cargo": "admin"},
+            {"limite_participantes": None},
+            None,
+        ])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.put("/solicitacoes/1/aceitar")
+        assert resp.status_code == 200
+
+        insert_call = next(
+            c for c in cur.execute.call_args_list if "INSERT INTO grupo_membros" in c.args[0]
+        )
+        assert insert_call.args[1] == (10, 2, 2000)
+
+        update_call = next(
+            c for c in cur.execute.call_args_list
+            if "UPDATE grupos_viagem SET orcamento" in c.args[0]
+        )
+        assert update_call.args[1] == (2000, 10)
+
+    def test_aceitar_sem_orcamento_nao_altera_orcamento_da_viagem(self, client_admin):
+        cur = _cur(fetchones=[
+            (1,),
+            {"id_grupo": 10, "id_usuario_solicitante": 2, "status": "pendente", "orcamento": None},
+            {"cargo": "admin"},
+            {"limite_participantes": None},
+            None,
+        ])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.put("/solicitacoes/1/aceitar")
+        assert resp.status_code == 200
+        assert not any(
+            "UPDATE grupos_viagem SET orcamento" in c.args[0] for c in cur.execute.call_args_list
+        )
 
     def test_solicitacao_ja_respondida_retorna_409(self, client_admin):
         cur = _cur(fetchones=[

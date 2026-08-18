@@ -165,22 +165,23 @@ def sair(id_grupo: int, usuario_id: int) -> dict:
             checar_membro_grupo(cursor, id_grupo, usuario_id)
 
             cursor.execute(
-                """
-                SELECT COALESCE(SUM(dg.valor_dividido), 0) AS divida
-                FROM divisao_gastos dg
-                JOIN gastos g ON dg.id_gasto = g.id_gasto
-                WHERE g.id_grupo = %s AND dg.id_usuario = %s AND g.id_usuario != %s
-                """,
-                (id_grupo, usuario_id, usuario_id),
+                "SELECT criado_por FROM grupos_viagem WHERE id_grupo=%s", (id_grupo,)
             )
-            row = cursor.fetchone()
-            if row and float(row["divida"]) > 0:
+            grupo = cursor.fetchone()
+            if grupo and grupo["criado_por"] == usuario_id:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Você possui dívidas pendentes de R$ {float(row['divida']):.2f}. Quite antes de sair.",
+                    detail="Você é o criador desta viagem. Exclua a viagem em vez de sair.",
                 )
 
             _checar_ultimo_admin(cursor, id_grupo, usuario_id)
+
+            cursor.execute(
+                "SELECT orcamento FROM grupo_membros WHERE id_grupo=%s AND id_usuario=%s",
+                (id_grupo, usuario_id),
+            )
+            membro = cursor.fetchone()
+            orcamento_membro = membro["orcamento"] if membro else None
 
             cursor.execute(
                 "DELETE FROM grupo_membros WHERE id_grupo=%s AND id_usuario=%s",
@@ -188,6 +189,13 @@ def sair(id_grupo: int, usuario_id: int) -> dict:
             )
             if cursor.rowcount == 0:
                 raise HTTPException(status_code=404, detail="Você não está no grupo")
+
+            if orcamento_membro is not None:
+                cursor.execute(
+                    "UPDATE grupos_viagem SET orcamento = GREATEST(COALESCE(orcamento, 0) - %s, 0) WHERE id_grupo=%s",
+                    (orcamento_membro, id_grupo),
+                )
+
             return {"mensagem": "Saiu do grupo"}
         finally:
             cursor.close()

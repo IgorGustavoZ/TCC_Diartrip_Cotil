@@ -297,6 +297,13 @@
                         <li data-i18n="viagem.aiFeature5">Clima e organization</li>
                     </ul>
                 </div>
+
+                <div class="trip-card-expanded" style="border:1px solid rgba(var(--danger-rgb),0.3);">
+                    <h2 style="color:var(--danger);" data-i18n="viagem.dangerZone">⚠️ Zona de perigo</h2>
+                    <p style="color:var(--text-muted); font-size:14px; margin:0 0 14px;" id="dangerZoneDesc"></p>
+                    <button id="btnSairViagem" onclick="sairDaViagem()" style="display:none; background:transparent; color:var(--danger); border:1px solid rgba(var(--danger-rgb),0.35); border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.leaveTrip">🚪 Sair da viagem</button>
+                    <button id="btnExcluirViagem" onclick="excluirViagem()" style="display:none; background:var(--danger); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.deleteTrip">🗑 Excluir viagem</button>
+                </div>
             </div>
 
         </div>
@@ -353,8 +360,55 @@ async function carregarGrupo() {
         document.getElementById("inviteInput").closest('.trip-card-expanded').style.display = "none"
     }
 
+    atualizarZonaPerigo()
     carregarDashboard()
     carregarGastos()
+}
+
+function atualizarZonaPerigo() {
+    const souCriador = grupoAtual.criador_id === meuId
+    const btnSair = document.getElementById("btnSairViagem")
+    const btnExcluir = document.getElementById("btnExcluirViagem")
+    const desc = document.getElementById("dangerZoneDesc")
+    if (souCriador) {
+        btnSair.style.display = "none"
+        btnExcluir.style.display = ""
+        desc.textContent = t('viagem.dangerZone.ownerDesc')
+    } else {
+        btnSair.style.display = ""
+        btnExcluir.style.display = "none"
+        desc.textContent = t('viagem.dangerZone.memberDesc')
+    }
+}
+
+async function sairDaViagem() {
+    if (!confirm(t('viagem.leaveConfirm'))) return
+    try {
+        const resp = await fetch(`/grupos/${idGrupo}/sair`, { method: "DELETE", credentials: "include" })
+        if (resp.ok) {
+            window.location.href = "../lobby.html"
+        } else {
+            const e = await resp.json()
+            alert(e.detail || t('viagem.leaveError'))
+        }
+    } catch (e) {
+        alert(t('viagem.leaveError'))
+    }
+}
+
+async function excluirViagem() {
+    if (!confirm(t('viagem.deleteConfirm'))) return
+    try {
+        const resp = await fetch(`/grupos/${idGrupo}`, { method: "DELETE", credentials: "include" })
+        if (resp.ok) {
+            window.location.href = "../lobby.html"
+        } else {
+            const e = await resp.json()
+            alert(e.detail || t('viagem.deleteError'))
+        }
+    } catch (e) {
+        alert(t('viagem.deleteError'))
+    }
 }
 
 async function carregarDashboard() {
@@ -898,12 +952,20 @@ async function carregarSolicitacoes() {
 
     container.innerHTML = lista.map(s => {
         const iniciais = s.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+        const dataFormatada = s.data_solicitacao ? new Date(s.data_solicitacao).toLocaleDateString(getLang()) : ""
+        const orcamentoFormatado = s.orcamento != null
+            ? `R$ ${s.orcamento.toLocaleString(getLang(), {minimumFractionDigits:2})}`
+            : null
         return `
         <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;">
             <div style="width:36px;height:36px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${iniciais}</div>
             <div style="flex:1;min-width:0;">
                 <div style="font-size:14px;font-weight:600;color:var(--text);">${escapeHtml(s.nome)}</div>
                 ${s.mensagem ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${escapeHtml(s.mensagem)}</div>` : ""}
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap;">
+                    ${orcamentoFormatado ? `<span>💰 ${orcamentoFormatado}</span>` : ""}
+                    ${dataFormatada ? `<span>📅 ${dataFormatada}</span>` : ""}
+                </div>
             </div>
             <button onclick="aceitarSolicitacao(${s.id_solicitacao})" style="background:var(--gradient);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.explore.accept')}</button>
             <button onclick="recusarSolicitacao(${s.id_solicitacao})" style="background:var(--danger-soft);color:var(--danger);border:1px solid rgba(var(--danger-rgb),0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.explore.reject')}</button>

@@ -101,7 +101,6 @@ def atualizar_grupo(id_grupo: int, dados: GrupoInput):
     return grupo_service.atualizar(id_grupo, dados)
 
 
-@router.delete("/grupos/{id_grupo}", response_model=MensagemResponse,
-               dependencies=[Depends(verificar_admin_do_grupo)])
-def deletar_grupo(id_grupo: int):
-    return grupo_service.deletar(id_grupo)
+@router.delete("/grupos/{id_grupo}", response_model=MensagemResponse)
+def deletar_grupo(id_grupo: int, usuario_id: int = Depends(get_usuario_logado)):
+    return grupo_service.deletar(id_grupo, usuario_id)
