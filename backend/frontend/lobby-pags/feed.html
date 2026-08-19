@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diartrip - Feed</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../static/style.css?v=3">
+<link rel="stylesheet" href="../static/style.css?v=4">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="../static/i18n.js"></script>
+<script src="../static/confirm-modal.js"></script>
 <style>
 .post-acoes {
     display: flex; gap: 8px; margin-top: 10px;
@@ -273,13 +274,20 @@ async function carregarFeed() {
     }).join("")
 }
 
-async function deletarPost(id) {
-    if (!confirm(t('feed.confirmDelete'))) return
-    const resp = await fetch(`/posts/${id}`, {
-        method: "DELETE",
-        credentials: "include"
+function deletarPost(id) {
+    abrirModalConfirmacao({
+        titulo: t('feed.confirmDelete'),
+        mensagem: t('feed.confirmDeleteBody'),
+        textoConfirmar: t('common.delete'),
+        tipo: 'perigo',
+        onConfirmar: async () => {
+            const resp = await fetch(`/posts/${id}`, {
+                method: "DELETE",
+                credentials: "include"
+            })
+            if (resp.ok) document.getElementById(`post-${id}`)?.remove()
+        }
     })
-    if (resp.ok) document.getElementById(`post-${id}`)?.remove()
 }
 
 async function curtir(idPost, btn) {

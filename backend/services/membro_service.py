@@ -10,7 +10,7 @@ def listar(id_grupo: int, usuario_id: int, limite: int = 100, offset: int = 0) -
             checar_membro_grupo(cursor, id_grupo, usuario_id)
             cursor.execute(
                 """
-                SELECT u.id_usuario, u.nome, gm.cargo
+                SELECT u.id_usuario, u.nome, u.foto_perfil, gm.cargo
                 FROM grupo_membros gm
                 JOIN usuarios u ON gm.id_usuario = u.id_usuario
                 WHERE gm.id_grupo = %s

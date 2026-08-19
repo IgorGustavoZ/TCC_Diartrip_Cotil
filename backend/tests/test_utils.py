@@ -260,3 +260,109 @@ class TestCloudinaryUpload:
                 assert exc.value.status_code == 502
             finally:
                 cu._configurado = False
+
+
+class TestGeoapifyClient:
+    def test_geocodificar_sem_key_retorna_none(self):
+        import utils.geoapify_client as geo
+        with patch.object(geo, "_API_KEY", None):
+            assert geo.geocodificar("Paris") is None
+
+    def test_geocodificar_sem_destino_retorna_none(self):
+        import utils.geoapify_client as geo
+        with patch.object(geo, "_API_KEY", "fake-key"):
+            assert geo.geocodificar("") is None
+
+    def test_geocodificar_sucesso(self):
+        import utils.geoapify_client as geo
+        resp = MagicMock()
+        resp.json.return_value = {"features": [{"geometry": {"coordinates": [2.35, 48.85]}}]}
+        with patch.object(geo, "_API_KEY", "fake-key"), \
+             patch("utils.geoapify_client.httpx.get", return_value=resp):
+            assert geo.geocodificar("Paris") == (48.85, 2.35)
+
+    def test_geocodificar_sem_resultado_retorna_none(self):
+        import utils.geoapify_client as geo
+        resp = MagicMock()
+        resp.json.return_value = {"features": []}
+        with patch.object(geo, "_API_KEY", "fake-key"), \
+             patch("utils.geoapify_client.httpx.get", return_value=resp):
+            assert geo.geocodificar("Lugar Inexistente") is None
+
+    def test_geocodificar_erro_de_rede_retorna_none(self):
+        import utils.geoapify_client as geo
+        with patch.object(geo, "_API_KEY", "fake-key"), \
+             patch("utils.geoapify_client.httpx.get", side_effect=Exception("timeout")):
+            assert geo.geocodificar("Paris") is None
+
+    def test_buscar_pontos_interesse_sem_key_retorna_vazio(self):
+        import utils.geoapify_client as geo
+        with patch.object(geo, "_API_KEY", None):
+            assert geo.buscar_pontos_interesse(48.85, 2.35) == []
+
+    def test_buscar_pontos_interesse_filtra_campos(self):
+        import utils.geoapify_client as geo
+        resp = MagicMock()
+        resp.json.return_value = {"features": [{
+            "properties": {"name": "Museu do Louvre", "categories": ["tourism.sights"], "formatted": "Paris, França"},
+            "geometry": {"coordinates": [2.33, 48.86]},
+        }]}
+        with patch.object(geo, "_API_KEY", "fake-key"), \
+             patch("utils.geoapify_client.httpx.get", return_value=resp):
+            pois = geo.buscar_pontos_interesse(48.85, 2.35)
+        assert pois == [{
+            "nome": "Museu do Louvre",
+            "categoria": "tourism.sights",
+            "endereco": "Paris, França",
+            "coordenadas": {"lat": 48.86, "lon": 2.33},
+        }]
+
+    def test_buscar_pontos_interesse_erro_retorna_vazio(self):
+        import utils.geoapify_client as geo
+        with patch.object(geo, "_API_KEY", "fake-key"), \
+             patch("utils.geoapify_client.httpx.get", side_effect=Exception("timeout")):
+            assert geo.buscar_pontos_interesse(48.85, 2.35) == []
+
+    def test_autocomplete_sem_key_lanca_erro(self):
+        import utils.geoapify_client as geo
+        with patch.object(geo, "_API_KEY", None):
+            with pytest.raises(RuntimeError):
+                geo.autocomplete("Par")
+
+    def test_autocomplete_retorna_features(self):
+        import utils.geoapify_client as geo
+        resp = MagicMock()
+        resp.json.return_value = {"features": [{"properties": {"city": "Paris", "formatted": "Paris, França"}}]}
+        with patch.object(geo, "_API_KEY", "fake-key"), \
+             patch("utils.geoapify_client.httpx.get", return_value=resp):
+            features = geo.autocomplete("Par")
+        assert features[0]["properties"]["city"] == "Paris"
+
+
+class TestOpenWeatherClient:
+    def test_previsao_sem_key_retorna_vazio(self):
+        import utils.openweather_client as ow
+        with patch.object(ow, "_API_KEY", None):
+            assert ow.previsao_por_dia(48.85, 2.35) == {}
+
+    def test_previsao_agrupa_por_dia_e_detecta_chuva(self):
+        import utils.openweather_client as ow
+        resp = MagicMock()
+        resp.json.return_value = {"list": [
+            {"dt_txt": "2026-09-10 09:00:00", "main": {"temp": 14}, "weather": [{"main": "Rain", "description": "chuva leve"}]},
+            {"dt_txt": "2026-09-10 12:00:00", "main": {"temp": 16}, "weather": [{"main": "Rain", "description": "chuva leve"}]},
+            {"dt_txt": "2026-09-11 09:00:00", "main": {"temp": 22}, "weather": [{"main": "Clear", "description": "céu limpo"}]},
+        ]}
+        with patch.object(ow, "_API_KEY", "fake-key"), \
+             patch("utils.openweather_client.httpx.get", return_value=resp):
+            previsao = ow.previsao_por_dia(48.85, 2.35)
+
+        assert previsao["2026-09-10"]["chuva"] is True
+        assert "15" in previsao["2026-09-10"]["resumo"]
+        assert previsao["2026-09-11"]["chuva"] is False
+
+    def test_previsao_erro_de_rede_retorna_vazio(self):
+        import utils.openweather_client as ow
+        with patch.object(ow, "_API_KEY", "fake-key"), \
+             patch("utils.openweather_client.httpx.get", side_effect=Exception("timeout")):
+            assert ow.previsao_por_dia(48.85, 2.35) == {}

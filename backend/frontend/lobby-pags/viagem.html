@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diartrip - Trip</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../static/style.css?v=3">
+<link rel="stylesheet" href="../static/style.css?v=4">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="../static/i18n.js"></script>
+<script src="../static/confirm-modal.js"></script>
 </head>
 <body>
 
@@ -237,6 +238,11 @@
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.itineraryTitle">📋 Roteiro da Viagem</h2>
 
+                    <div id="roteiroIaBox" style="display:none; margin-bottom:16px; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <button id="btnGerarRoteiroIA" onclick="gerarRoteiroComIA()" style="background:linear-gradient(135deg,#8b5cf6,#6366f1); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.itinerary.ia.createBtn">✨ Criar roteiro com IA</button>
+                        <span id="roteiroIaStatus" style="display:none; font-size:13px; color:var(--text-muted);"></span>
+                    </div>
+
                     <div id="roteiroFormAdd" style="display:none; margin-bottom:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:18px;">
                         <p style="margin:0 0 12px; font-size:14px; color:var(--text-muted);" data-i18n="viagem.addItem">Adicionar item ao roteiro</p>
                         <input id="roteiroTitulo" type="text" data-i18n-placeholder="viagem.itemTitle" placeholder="Título (ex: Visita ao Coliseu)" style="width:100%; box-sizing:border-box; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text); font-size:14px; margin-bottom:10px; outline:none;">
@@ -381,34 +387,48 @@ function atualizarZonaPerigo() {
     }
 }
 
-async function sairDaViagem() {
-    if (!confirm(t('viagem.leaveConfirm'))) return
-    try {
-        const resp = await fetch(`/grupos/${idGrupo}/sair`, { method: "DELETE", credentials: "include" })
-        if (resp.ok) {
-            window.location.href = "../lobby.html"
-        } else {
-            const e = await resp.json()
-            alert(e.detail || t('viagem.leaveError'))
+function sairDaViagem() {
+    abrirModalConfirmacao({
+        titulo: t('viagem.leaveConfirmTitle'),
+        mensagem: t('viagem.leaveConfirmBody'),
+        textoConfirmar: t('viagem.leaveTrip'),
+        tipo: 'perigo',
+        onConfirmar: async () => {
+            try {
+                const resp = await fetch(`/grupos/${idGrupo}/sair`, { method: "DELETE", credentials: "include" })
+                if (resp.ok) {
+                    window.location.href = "../lobby.html"
+                } else {
+                    const e = await resp.json()
+                    alert(e.detail || t('viagem.leaveError'))
+                }
+            } catch (e) {
+                alert(t('viagem.leaveError'))
+            }
         }
-    } catch (e) {
-        alert(t('viagem.leaveError'))
-    }
+    })
 }
 
-async function excluirViagem() {
-    if (!confirm(t('viagem.deleteConfirm'))) return
-    try {
-        const resp = await fetch(`/grupos/${idGrupo}`, { method: "DELETE", credentials: "include" })
-        if (resp.ok) {
-            window.location.href = "../lobby.html"
-        } else {
-            const e = await resp.json()
-            alert(e.detail || t('viagem.deleteError'))
+function excluirViagem() {
+    abrirModalConfirmacao({
+        titulo: t('viagem.deleteConfirmTitle'),
+        mensagem: t('viagem.deleteConfirmBody'),
+        textoConfirmar: t('viagem.deleteTrip'),
+        tipo: 'perigo',
+        onConfirmar: async () => {
+            try {
+                const resp = await fetch(`/grupos/${idGrupo}`, { method: "DELETE", credentials: "include" })
+                if (resp.ok) {
+                    window.location.href = "../lobby.html"
+                } else {
+                    const e = await resp.json()
+                    alert(e.detail || t('viagem.deleteError'))
+                }
+            } catch (e) {
+                alert(t('viagem.deleteError'))
+            }
         }
-    } catch (e) {
-        alert(t('viagem.deleteError'))
-    }
+    })
 }
 
 async function carregarDashboard() {
@@ -464,6 +484,7 @@ async function carregarDashboard() {
         isAdmin = true
         document.getElementById("adminTabBtn").style.display = "block"
         document.getElementById("roteiroFormAdd").style.display = "block"
+        document.getElementById("roteiroIaBox").style.display = "flex"
         carregarMembrosAdmin()
         carregarExplorarAdmin()
         const a = data.admin
@@ -563,18 +584,24 @@ async function registrarGasto() {
     }
 }
 
-async function deletarGasto(idGasto) {
-    if (!confirm(t('viagem.confirmDeleteExpense'))) return
+function deletarGasto(idGasto) {
+    abrirModalConfirmacao({
+        titulo: t('viagem.confirmDeleteExpense'),
+        mensagem: t('viagem.confirmDeleteExpenseBody'),
+        textoConfirmar: t('common.delete'),
+        tipo: 'perigo',
+        onConfirmar: async () => {
+            const resp = await fetch(`/gastos/${idGasto}`, {
+                method: "DELETE",
+                credentials: "include"
+            })
 
-    const resp = await fetch(`/gastos/${idGasto}`, {
-        method: "DELETE",
-        credentials: "include"
+            if (resp.ok) {
+                carregarGastos()
+                carregarDashboard()
+            }
+        }
     })
-
-    if (resp.ok) {
-        carregarGastos()
-        carregarDashboard()
-    }
 }
 
 function copiarCodigo() {
@@ -704,6 +731,7 @@ async function carregarRoteiro() {
     if (!resp.ok) return
     const itens = await resp.json()
     const lista = document.getElementById("roteiroLista")
+    atualizarBotaoRoteiroIA(itens.length > 0)
 
     if (!itens.length) {
         lista.innerHTML = `<p style="color:var(--text-muted);font-size:14px;text-align:center;padding:30px 0;">${t('viagem.emptyItinerary')}</p>`
@@ -715,7 +743,10 @@ async function carregarRoteiro() {
             <div style="display:flex;align-items:flex-start;gap:12px;">
                 <div style="width:28px;height:28px;border-radius:8px;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${i + 1}</div>
                 <div style="flex:1;min-width:0;" id="rview-${r.id_roteiro}">
-                    <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;">${escapeHtml(r.titulo)}</div>
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+                        <div style="font-size:15px;font-weight:600;color:var(--text);">${escapeHtml(r.titulo)}</div>
+                        ${r.origem_ia ? `<span style="font-size:11px;font-weight:600;color:#8b5cf6;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:2px 8px;white-space:nowrap;">${t('viagem.itinerary.ia.badge')}</span>` : ""}
+                    </div>
                     <div style="font-size:13px;color:var(--text-muted);white-space:pre-wrap;">${escapeHtml(r.descricao)}</div>
                 </div>
                 ${isAdmin ? `
@@ -734,6 +765,51 @@ async function carregarRoteiro() {
             </div>
         </div>
     `).join("")
+}
+
+function atualizarBotaoRoteiroIA(temItens) {
+    const btn = document.getElementById("btnGerarRoteiroIA")
+    if (!btn) return
+    btn.textContent = temItens ? t('viagem.itinerary.ia.regenerateBtn') : t('viagem.itinerary.ia.createBtn')
+}
+
+async function gerarRoteiroComIA() {
+    const btn = document.getElementById("btnGerarRoteiroIA")
+    const status = document.getElementById("roteiroIaStatus")
+    const mensagens = [
+        t('viagem.itinerary.ia.step1'),
+        t('viagem.itinerary.ia.step2'),
+        t('viagem.itinerary.ia.step3'),
+        t('viagem.itinerary.ia.step4'),
+    ]
+
+    btn.disabled = true
+    status.style.display = "inline"
+    let i = 0
+    status.textContent = mensagens[0]
+    const timer = setInterval(() => {
+        i = (i + 1) % mensagens.length
+        status.textContent = mensagens[i]
+    }, 1800)
+
+    try {
+        const resp = await fetch(`/grupos/${idGrupo}/roteiros/gerar-ia`, {
+            method: "POST",
+            credentials: "include"
+        })
+        if (resp.ok) {
+            await carregarRoteiro()
+        } else {
+            const e = await resp.json().catch(() => ({}))
+            alert(e.detail || t('viagem.itinerary.ia.error'))
+        }
+    } catch (e) {
+        alert(t('viagem.itinerary.ia.error'))
+    } finally {
+        clearInterval(timer)
+        status.style.display = "none"
+        btn.disabled = false
+    }
 }
 
 function iniciarEdicaoRoteiro(id, titulo, desc) {
@@ -780,13 +856,20 @@ async function criarRoteiroItem() {
     }
 }
 
-async function deletarRoteiroItem(id) {
-    if (!confirm(t('viagem.confirmDeleteRoteiro'))) return
-    const resp = await fetch(`/roteiros/${id}`, {
-        method: "DELETE",
-        credentials: "include"
+function deletarRoteiroItem(id) {
+    abrirModalConfirmacao({
+        titulo: t('viagem.itinerary.deleteConfirmTitle'),
+        mensagem: t('viagem.itinerary.deleteConfirmBody'),
+        textoConfirmar: t('viagem.itinerary.deleteConfirmBtn'),
+        tipo: 'perigo',
+        onConfirmar: async () => {
+            const resp = await fetch(`/roteiros/${id}`, {
+                method: "DELETE",
+                credentials: "include"
+            })
+            if (resp.ok) carregarRoteiro()
+        }
     })
-    if (resp.ok) carregarRoteiro()
 }
 
 async function carregarMembrosAdmin() {
@@ -818,9 +901,13 @@ async function carregarMembrosAdmin() {
         const btnRemover = (isMe || isCriador) ? "" :
             `<button onclick="removerMembro(${m.id_usuario})" title="${escapeAtr(t('viagem.action.remove'))}" style="background:var(--danger-soft);color:var(--danger);border:1px solid rgba(var(--danger-rgb),0.25);border-radius:7px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;">🗑</button>`
 
+        const avatarHtml = m.foto_perfil
+            ? `<img src="${escapeAtr(m.foto_perfil)}" alt="" onerror="this.replaceWith(document.createTextNode('${iniciais}'))">`
+            : iniciais
+
         return `
         <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;">
-            <div style="width:36px;height:36px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${iniciais}</div>
+            <div class="av" style="width:36px;height:36px;font-size:13px;">${avatarHtml}</div>
             <div style="flex:1;min-width:0;">
                 <div style="font-size:14px;font-weight:600;color:var(--text);">${escapeHtml(m.nome)}${isMe ? " <span style='color:var(--text-muted);font-weight:400;font-size:12px;'>(você)</span>" : ""}</div>
             </div>
@@ -831,42 +918,63 @@ async function carregarMembrosAdmin() {
     }).join("")
 }
 
-async function promoverMembro(idUsuario) {
-    if (!confirm(t('viagem.confirmPromote'))) return
-    const resp = await fetch(`/grupos/${idGrupo}/membros/${idUsuario}/promover`, {
-        method: "PUT",
-        credentials: "include"
-    })
-    if (resp.ok) carregarMembrosAdmin()
-    else { const e = await resp.json(); alert(e.detail || t('viagem.errorPromote')) }
-}
-
-async function rebaixarMembro(idUsuario) {
-    if (!confirm(t('viagem.confirmDemote'))) return
-    const resp = await fetch(`/grupos/${idGrupo}/membros/${idUsuario}/rebaixar`, {
-        method: "PUT",
-        credentials: "include"
-    })
-    if (resp.ok) carregarMembrosAdmin()
-    else { const e = await resp.json(); alert(e.detail || t('viagem.errorDemote')) }
-}
-
-async function removerMembro(idUsuario) {
-    if (!confirm(t('viagem.confirmRemove'))) return
-    try {
-        const resp = await fetch(`/grupos/${idGrupo}/membros/${idUsuario}`, {
-            method: "DELETE",
-            credentials: "include"
-        })
-        if (resp.ok) {
-            carregarMembrosAdmin()
-        } else {
-            const e = await resp.json()
-            alert(e.detail || t('viagem.errorRemove'))
+function promoverMembro(idUsuario) {
+    abrirModalConfirmacao({
+        titulo: t('viagem.confirmPromote'),
+        mensagem: t('viagem.confirmPromoteBody'),
+        textoConfirmar: t('viagem.action.promote'),
+        tipo: 'padrao',
+        onConfirmar: async () => {
+            const resp = await fetch(`/grupos/${idGrupo}/membros/${idUsuario}/promover`, {
+                method: "PUT",
+                credentials: "include"
+            })
+            if (resp.ok) carregarMembrosAdmin()
+            else { const e = await resp.json(); alert(e.detail || t('viagem.errorPromote')) }
         }
-    } catch (err) {
-        alert(t('lobby.chat.noServer'))
-    }
+    })
+}
+
+function rebaixarMembro(idUsuario) {
+    abrirModalConfirmacao({
+        titulo: t('viagem.confirmDemote'),
+        mensagem: t('viagem.confirmDemoteBody'),
+        textoConfirmar: t('viagem.action.demote'),
+        tipo: 'perigo',
+        onConfirmar: async () => {
+            const resp = await fetch(`/grupos/${idGrupo}/membros/${idUsuario}/rebaixar`, {
+                method: "PUT",
+                credentials: "include"
+            })
+            if (resp.ok) carregarMembrosAdmin()
+            else { const e = await resp.json(); alert(e.detail || t('viagem.errorDemote')) }
+        }
+    })
+}
+
+function removerMembro(idUsuario) {
+    abrirModalConfirmacao({
+        titulo: t('viagem.confirmRemove'),
+        mensagem: t('viagem.confirmRemoveBody'),
+        textoConfirmar: t('viagem.action.remove'),
+        tipo: 'perigo',
+        onConfirmar: async () => {
+            try {
+                const resp = await fetch(`/grupos/${idGrupo}/membros/${idUsuario}`, {
+                    method: "DELETE",
+                    credentials: "include"
+                })
+                if (resp.ok) {
+                    carregarMembrosAdmin()
+                } else {
+                    const e = await resp.json()
+                    alert(e.detail || t('viagem.errorRemove'))
+                }
+            } catch (err) {
+                alert(t('lobby.chat.noServer'))
+            }
+        }
+    })
 }
 
 async function carregarExplorarAdmin() {
@@ -923,20 +1031,27 @@ async function publicarViagem() {
     }
 }
 
-async function despublicarViagem() {
-    if (!confirm(t('viagem.explore.confirmUnpublish'))) return
-    const resp = await fetch(`/grupos/${idGrupo}/publicar`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ publica: false })
+function despublicarViagem() {
+    abrirModalConfirmacao({
+        titulo: t('viagem.explore.confirmUnpublish'),
+        mensagem: t('viagem.explore.confirmUnpublishBody'),
+        textoConfirmar: t('viagem.explore.unpublish'),
+        tipo: 'perigo',
+        onConfirmar: async () => {
+            const resp = await fetch(`/grupos/${idGrupo}/publicar`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ publica: false })
+            })
+            if (resp.ok) {
+                await carregarGrupo()
+            } else {
+                const e = await resp.json()
+                alert(e.detail || t('viagem.explore.errorUnpublish'))
+            }
+        }
     })
-    if (resp.ok) {
-        await carregarGrupo()
-    } else {
-        const e = await resp.json()
-        alert(e.detail || t('viagem.explore.errorUnpublish'))
-    }
 }
 
 async function carregarSolicitacoes() {

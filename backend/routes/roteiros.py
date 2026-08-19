@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from schemas import RoteiroResponse, RoteiroCriado, MensagemResponse
 from utils.auth import get_usuario_logado
-from services import roteiro_service
+from services import roteiro_service, roteiro_ia_service
 
 router = APIRouter(tags=["Roteiros"])
 
@@ -21,6 +21,11 @@ class RoteiroUpdate(BaseModel):
 @router.get("/grupos/{id_grupo}/roteiros", response_model=list[RoteiroResponse])
 def listar_roteiros_grupo(id_grupo: int, usuario_id: int = Depends(get_usuario_logado)):
     return roteiro_service.listar_por_grupo(id_grupo, usuario_id)
+
+
+@router.post("/grupos/{id_grupo}/roteiros/gerar-ia", response_model=list[RoteiroResponse])
+def gerar_roteiro_ia(id_grupo: int, usuario_id: int = Depends(get_usuario_logado)):
+    return roteiro_ia_service.gerar_com_ia(id_grupo, usuario_id)
 
 
 @router.get("/roteiros", response_model=list[RoteiroResponse])

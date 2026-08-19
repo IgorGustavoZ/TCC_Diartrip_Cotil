@@ -6,8 +6,7 @@ from fastapi import HTTPException
 from database import get_db
 from utils.dependencies import checar_membro_grupo
 from utils.rate_limiter import verificar_rate_limit
-from openai import OpenAI
-import os
+from utils.ia_client import client as _client, IA_MODEL
 
 logger = logging.getLogger("diartrip.chat")
 
@@ -81,13 +80,6 @@ def _detectar_prompt_injection(texto: str) -> bool:
         if padrao.search(texto):
             return True
     return False
-
-
-_client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-)
-IA_MODEL = os.getenv("IA_MODEL", "mistralai/mistral-7b-instruct:free")
 
 
 def listar_tudo(usuario_id: int, limite: int = 50, offset: int = 0) -> list:

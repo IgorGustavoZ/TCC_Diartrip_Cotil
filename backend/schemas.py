@@ -105,6 +105,7 @@ class EntrarGrupoResponse(BaseModel):
 class MembroResponse(BaseModel):
     id_usuario: int
     nome: str
+    foto_perfil: Optional[str] = None
     cargo: str
 
 
@@ -136,6 +137,7 @@ class RoteiroResponse(BaseModel):
     id_grupo: int
     titulo: str
     descricao: Optional[str] = None
+    origem_ia: bool = False
     data_criacao: datetime
 
 

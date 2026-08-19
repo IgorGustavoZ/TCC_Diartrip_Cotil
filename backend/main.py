@@ -9,7 +9,7 @@ from database import get_db
 from utils.logger import configurar_logging, get_logger
 from utils.csrf import checar_csrf
 
-from routes import usuarios, login, grupos_viagem, roteiros, grupos_membros, gastos, chat_ia, fotos, dashboard, posts, chat_grupo, explorar_viagens
+from routes import usuarios, login, grupos_viagem, roteiros, grupos_membros, gastos, chat_ia, fotos, dashboard, posts, chat_grupo, explorar_viagens, geocode
 
 load_dotenv()
 configurar_logging()
@@ -56,7 +56,7 @@ _SECURITY_HEADERS = {
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
         "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
         "img-src 'self' data: https:; "
-        "connect-src 'self' https://api.geoapify.com https://nominatim.openstreetmap.org; "
+        "connect-src 'self'; "
         "base-uri 'self'; "
         "object-src 'none'; "
         "form-action 'self'; "
@@ -115,6 +115,7 @@ app.include_router(dashboard.router)
 app.include_router(posts.router)
 app.include_router(chat_grupo.router)
 app.include_router(explorar_viagens.router)
+app.include_router(geocode.router)
 
 if os.path.isdir("frontend/static"):
     app.mount("/static", StaticFiles(directory="frontend/static"), name="static")

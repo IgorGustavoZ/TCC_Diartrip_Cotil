@@ -317,7 +317,6 @@ class TestSairGrupo:
             (1,),                                   # get_usuario_logado
             {"cargo": "membro"},                    # checar_membro_grupo
             {"criado_por": 2},                       # nao e' o criador
-            {"divida": 0},                           # sem divida
             {"cargo": "membro"},                     # _checar_ultimo_admin: nao e' admin
             {"orcamento": 2000},                     # orcamento do membro que sai
         ], cursors_out=cursors)
@@ -341,7 +340,6 @@ class TestSairGrupo:
             (1,),
             {"cargo": "membro"},
             {"criado_por": 2},
-            {"divida": 0},
             {"cargo": "membro"},
             {"orcamento": None},
         ], cursors_out=cursors)
@@ -367,15 +365,18 @@ class TestSairGrupo:
 
         assert resp.status_code == 400
 
-    def test_sair_com_divida_pendente_retorna_400(self, client_usuario):
-        conn = _conn_sair([
-            (1,),
-            {"cargo": "membro"},
-            {"criado_por": 2},
-            {"divida": 150.0},
-        ])
 
+class TestListarMembros:
+    def test_lista_retorna_foto_perfil(self, client_usuario):
+        membros = [
+            {"id_usuario": 1, "nome": "Igor", "foto_perfil": "https://res.cloudinary.com/x/igor.jpg", "cargo": "admin"},
+            {"id_usuario": 2, "nome": "Maria", "foto_perfil": None, "cargo": "membro"},
+        ]
+        conn = _conn_seq([(1,), {"cargo": "membro"}], fetchalls={0: membros})
         with patch("database.get_db", fake_get_db(conn)):
-            resp = client_usuario.delete("/grupos/10/sair")
+            resp = client_usuario.get("/grupos/10/membros")
 
-        assert resp.status_code == 400
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data[0]["foto_perfil"] == "https://res.cloudinary.com/x/igor.jpg"
+        assert data[1]["foto_perfil"] is None

@@ -1095,6 +1095,48 @@ option{
 }
 .av img { width: 100%; height: 100%; object-fit: cover; }
 
+/* ── Modal de confirmação genérico (static/confirm-modal.js) ────────────── */
+.confirm-modal-ov {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.78); z-index: 1000;
+    align-items: center; justify-content: center; padding: 16px;
+}
+.confirm-modal-ov.ativo { display: flex; animation: fadeIn 0.2s ease; }
+.confirm-modal-ov.fechando { animation: confirmOvOut 0.15s ease forwards; }
+.confirm-modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; max-width: 420px; width: 100%;
+    padding: 28px 24px 24px; text-align: center;
+    box-shadow: var(--shadow-lg); backdrop-filter: blur(18px);
+    animation: fadeIn 0.2s ease;
+}
+.confirm-modal-ov.fechando .confirm-modal { animation: confirmCardOut 0.15s ease forwards; }
+@keyframes confirmOvOut { to { opacity: 0; } }
+@keyframes confirmCardOut { to { opacity: 0; transform: translateY(6px) scale(0.98); } }
+.confirm-modal-icon {
+    width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 16px;
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+    background: var(--warning-soft); color: var(--warning);
+}
+.confirm-modal-icon.perigo { background: var(--danger-soft); color: var(--danger); }
+.confirm-modal-titulo { font-size: 18px; font-weight: 700; color: var(--text); margin: 0 0 10px; }
+.confirm-modal-msg { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 24px; white-space: pre-line; }
+.confirm-modal-acoes { display: flex; gap: 10px; }
+.confirm-modal-btn {
+    flex: 1; height: 44px; border-radius: 10px; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit; border: 1px solid var(--border);
+}
+.confirm-modal-cancelar { background: var(--surface-2); color: var(--text); }
+.confirm-modal-cancelar:hover { background: var(--surface); }
+.confirm-modal-confirmar { background: var(--gradient); color: #fff; border: none; }
+.confirm-modal-confirmar:hover { opacity: 0.9; }
+.confirm-modal-confirmar.perigo { background: var(--danger); }
+.confirm-modal-confirmar:disabled { opacity: 0.6; cursor: wait; }
+@media (max-width: 480px) {
+    .confirm-modal { padding: 22px 18px 18px; }
+    .confirm-modal-acoes { flex-direction: column-reverse; }
+}
+
 .create-card {
     background: var(--surface);
     border: 1px solid var(--border);

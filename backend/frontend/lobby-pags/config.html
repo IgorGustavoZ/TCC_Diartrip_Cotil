@@ -6,9 +6,10 @@
 <title>Diartrip</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=arrow_back" />
-<link rel="stylesheet" href="../static/style.css?v=3">
+<link rel="stylesheet" href="../static/style.css?v=4">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="../static/i18n.js"></script>
+<script src="../static/confirm-modal.js"></script>
 <style>
 .config-wrap { max-width: 640px; margin: 0 auto; }
 .config-subtitle { color: var(--text-muted); font-size: 14px; margin: -18px 0 26px; }
@@ -353,30 +354,37 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
             }
         })
 
-        btnDelete.addEventListener("click", async ()=>{
-            if (!confirm(t('common.confirmDelete'))) return
-            btnDelete.disabled = true
-            btnDelete.classList.add("is-loading")
-            const textoOriginalDelete = btnDelete.textContent
-            btnDelete.textContent = t('config.deleting')
-            const respDeleteUsuario = await fetch(`/usuarios/${sessionStorage.getItem("id")}`, {
-                method: 'DELETE',
-                credentials: 'include'
+        btnDelete.addEventListener("click", ()=>{
+            abrirModalConfirmacao({
+                titulo: t('common.confirmDelete'),
+                mensagem: t('config.deleteAccountConfirmBody'),
+                textoConfirmar: t('config.deleteAccount'),
+                tipo: 'perigo',
+                onConfirmar: async () => {
+                    btnDelete.disabled = true
+                    btnDelete.classList.add("is-loading")
+                    const textoOriginalDelete = btnDelete.textContent
+                    btnDelete.textContent = t('config.deleting')
+                    const respDeleteUsuario = await fetch(`/usuarios/${sessionStorage.getItem("id")}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    })
+                    if(respDeleteUsuario.ok){
+                        esconderAvisos()
+                        msgSucess.style.display = "block"
+                        msgSucess.innerHTML = t('config.deleteSuccess')
+                        await fetch('/logout', { method: 'POST', credentials: 'include' })
+                        setTimeout(()=>{ window.location.href = "../index.html" }, 2000)
+                    } else {
+                        btnDelete.disabled = false
+                        btnDelete.classList.remove("is-loading")
+                        btnDelete.textContent = textoOriginalDelete
+                        esconderAvisos()
+                        msgError.style.display = "block"
+                        msgError.innerHTML = t('config.deleteError')
+                    }
+                }
             })
-            if(respDeleteUsuario.ok){
-                esconderAvisos()
-                msgSucess.style.display = "block"
-                msgSucess.innerHTML = t('config.deleteSuccess')
-                await fetch('/logout', { method: 'POST', credentials: 'include' })
-                setTimeout(()=>{ window.location.href = "../index.html" }, 2000)
-            } else {
-                btnDelete.disabled = false
-                btnDelete.classList.remove("is-loading")
-                btnDelete.textContent = textoOriginalDelete
-                esconderAvisos()
-                msgError.style.display = "block"
-                msgError.innerHTML = t('config.deleteError')
-            }
         })
 
         const esconderAvisos = ()=>{

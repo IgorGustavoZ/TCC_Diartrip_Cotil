@@ -9,11 +9,11 @@ def listar_por_grupo(id_grupo: int, usuario_id: int) -> list:
         try:
             checar_membro_grupo(cursor, id_grupo, usuario_id)
             cursor.execute(
-                "SELECT id_roteiro, id_grupo, titulo, descricao, data_criacao "
+                "SELECT id_roteiro, id_grupo, titulo, descricao, origem_ia, data_criacao "
                 "FROM roteiros WHERE id_grupo=%s ORDER BY data_criacao ASC",
                 (id_grupo,),
             )
-            return cursor.fetchall()
+            return [_com_origem_ia_bool(r) for r in cursor.fetchall()]
         finally:
             cursor.close()
 
@@ -24,14 +24,14 @@ def listar_por_usuario(usuario_id: int) -> list:
         try:
             cursor.execute(
                 """
-                SELECT r.id_roteiro, r.id_grupo, r.titulo, r.descricao, r.data_criacao
+                SELECT r.id_roteiro, r.id_grupo, r.titulo, r.descricao, r.origem_ia, r.data_criacao
                 FROM roteiros r
                 JOIN grupo_membros gm ON r.id_grupo = gm.id_grupo
                 WHERE gm.id_usuario = %s
                 """,
                 (usuario_id,),
             )
-            return cursor.fetchall()
+            return [_com_origem_ia_bool(r) for r in cursor.fetchall()]
         finally:
             cursor.close()
 
@@ -41,7 +41,7 @@ def buscar_por_id(id_roteiro: int, usuario_id: int) -> dict:
         cursor = conexao.cursor(dictionary=True)
         try:
             cursor.execute(
-                "SELECT id_roteiro, id_grupo, titulo, descricao, data_criacao "
+                "SELECT id_roteiro, id_grupo, titulo, descricao, origem_ia, data_criacao "
                 "FROM roteiros WHERE id_roteiro=%s",
                 (id_roteiro,),
             )
@@ -49,19 +49,24 @@ def buscar_por_id(id_roteiro: int, usuario_id: int) -> dict:
             if not roteiro:
                 raise HTTPException(status_code=404, detail="Roteiro não encontrado")
             checar_membro_grupo(cursor, roteiro["id_grupo"], usuario_id)
-            return roteiro
+            return _com_origem_ia_bool(roteiro)
         finally:
             cursor.close()
 
 
-def criar(dados, usuario_id: int) -> dict:
+def _com_origem_ia_bool(roteiro: dict) -> dict:
+    roteiro["origem_ia"] = bool(roteiro.get("origem_ia"))
+    return roteiro
+
+
+def criar(dados, usuario_id: int, origem_ia: bool = False) -> dict:
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:
             checar_membro_grupo(cursor, dados.id_grupo, usuario_id)
             cursor.execute(
-                "INSERT INTO roteiros (id_grupo, titulo, descricao) VALUES (%s, %s, %s)",
-                (dados.id_grupo, dados.titulo, dados.descricao),
+                "INSERT INTO roteiros (id_grupo, titulo, descricao, origem_ia) VALUES (%s, %s, %s, %s)",
+                (dados.id_grupo, dados.titulo, dados.descricao, origem_ia),
             )
             return {"mensagem": "Roteiro criado com sucesso", "id": cursor.lastrowid}
         finally:

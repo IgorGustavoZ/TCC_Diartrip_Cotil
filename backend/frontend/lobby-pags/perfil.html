@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diartrip - Profile</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../static/style.css?v=3">
+<link rel="stylesheet" href="../static/style.css?v=4">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="../static/i18n.js"></script>
+<script src="../static/confirm-modal.js"></script>
 <style>
 /* ── layout fixes ────────────────────────────────────────────────────────── */
 /* .main is a flex column; align-items:center centers children horizontally */
@@ -792,12 +793,19 @@ function fecharModalPost(e) {
         document.getElementById("modalOvPost").classList.remove("ativo")
 }
 
-async function deletarPost(idPost, btn) {
-    if (!confirm(t('perfil.confirmDeletePost'))) return
-    btn.disabled = true
-    const resp = await fetch(`/posts/${idPost}`, { method: "DELETE", credentials: "include" })
-    if (resp.ok) { document.getElementById("modalOvPost").classList.remove("ativo"); carregarPosts() }
-    else btn.disabled = false
+function deletarPost(idPost, btn) {
+    abrirModalConfirmacao({
+        titulo: t('perfil.confirmDeletePost'),
+        mensagem: t('perfil.confirmDeletePostBody'),
+        textoConfirmar: t('common.delete'),
+        tipo: 'perigo',
+        onConfirmar: async () => {
+            btn.disabled = true
+            const resp = await fetch(`/posts/${idPost}`, { method: "DELETE", credentials: "include" })
+            if (resp.ok) { document.getElementById("modalOvPost").classList.remove("ativo"); carregarPosts() }
+            else btn.disabled = false
+        }
+    })
 }
 
 async function abrirLista(tipo) {
