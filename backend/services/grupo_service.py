@@ -1,6 +1,6 @@
 import secrets
 import string
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from mysql.connector import Error, IntegrityError
 from fastapi import HTTPException
 from database import get_db
@@ -64,10 +64,12 @@ def buscar_por_id(id_grupo: int, usuario_id: int) -> dict:
             cursor.execute(
                 """
                 SELECT g.id_grupo, g.nome_grupo, g.destino_principal, g.data_inicio,
-                       g.data_fim, g.orcamento, g.tipo_viagem, g.preferencias,
+                       g.data_fim, g.tipo_viagem, g.preferencias,
                        g.criado_por AS criador_id, u.nome AS criador,
                        g.publica, g.limite_participantes,
-                       (SELECT COUNT(*) FROM grupo_membros gm WHERE gm.id_grupo = g.id_grupo) AS vagas_ocupadas
+                       (SELECT COUNT(*) FROM grupo_membros gm WHERE gm.id_grupo = g.id_grupo) AS vagas_ocupadas,
+                       (SELECT COALESCE(SUM(gm.orcamento), 0) FROM grupo_membros gm
+                        WHERE gm.id_grupo = g.id_grupo) AS orcamento
                 FROM grupos_viagem g
                 JOIN usuarios u ON g.criado_por = u.id_usuario
                 WHERE g.id_grupo = %s
@@ -147,9 +149,13 @@ def criar(dados, usuario_id: int) -> dict:
                 raise HTTPException(status_code=503, detail="Não foi possível gerar código único. Tente novamente.")
 
             id_grupo = cursor.lastrowid
+            # O orçamento informado na criação vira o orçamento individual do
+            # próprio criador — o "total" da viagem é sempre a soma dos
+            # orçamentos individuais (grupo_membros.orcamento), nunca um campo
+            # único editado diretamente.
             cursor.execute(
-                "INSERT INTO grupo_membros (id_grupo, id_usuario, cargo) VALUES (%s, %s, 'admin')",
-                (id_grupo, usuario_id),
+                "INSERT INTO grupo_membros (id_grupo, id_usuario, cargo, orcamento) VALUES (%s, %s, 'admin', %s)",
+                (id_grupo, usuario_id, dados.orcamento),
             )
             return {
                 "mensagem": "Grupo criado com sucesso",
@@ -160,26 +166,67 @@ def criar(dados, usuario_id: int) -> dict:
             cursor.close()
 
 
-def atualizar(id_grupo: int, dados) -> dict:
+def _para_data(valor) -> date:
+    return date.fromisoformat(valor) if isinstance(valor, str) else valor
+
+
+def atualizar(id_grupo: int, dados, usuario_id: int) -> dict:
     with get_db() as conexao:
-        cursor = conexao.cursor()
+        cursor = conexao.cursor(dictionary=True)
         try:
+            cursor.execute(
+                "SELECT criado_por, destino_principal, data_inicio, data_fim "
+                "FROM grupos_viagem WHERE id_grupo=%s",
+                (id_grupo,),
+            )
+            atual = cursor.fetchone()
+            if not atual:
+                raise HTTPException(status_code=404, detail="Grupo não encontrado")
+            if atual["criado_por"] != usuario_id:
+                raise HTTPException(
+                    status_code=403, detail="Apenas o criador da viagem pode editá-la"
+                )
+
+            # "Não pode ser no passado" só é reforçado aqui quando a data
+            # realmente muda — uma viagem que já começou/terminou pode
+            # continuar tendo seu nome/tipo/descrição editados normalmente.
+            hoje = date.today()
+            nova_inicio = _para_data(dados.data_inicio)
+            nova_fim = _para_data(dados.data_fim)
+            if nova_inicio != _para_data(atual["data_inicio"]) and nova_inicio < hoje:
+                raise HTTPException(
+                    status_code=400, detail="A data de início não pode ser anterior a hoje"
+                )
+            if nova_fim != _para_data(atual["data_fim"]) and nova_fim < hoje:
+                raise HTTPException(
+                    status_code=400, detail="A data de término não pode ser anterior a hoje"
+                )
+
+            destino_mudou = atual["destino_principal"] != dados.destino_principal
+
             cursor.execute(
                 """
                 UPDATE grupos_viagem
                 SET nome_grupo=%s, destino_principal=%s, data_inicio=%s, data_fim=%s,
-                    orcamento=%s, tipo_viagem=%s, preferencias=%s
+                    tipo_viagem=%s, preferencias=%s
                 WHERE id_grupo=%s
                 """,
                 (
                     dados.nome_grupo, dados.destino_principal, dados.data_inicio,
-                    dados.data_fim, dados.orcamento, dados.tipo_viagem,
+                    dados.data_fim, dados.tipo_viagem,
                     dados.preferencias, id_grupo,
                 ),
             )
-            if cursor.rowcount == 0:
-                raise HTTPException(status_code=404, detail="Grupo não encontrado")
-            return {"mensagem": "Grupo atualizado"}
+
+            mensagem = "Grupo atualizado"
+            if destino_mudou:
+                # Mesma transação do UPDATE acima (get_db só dá commit no fim
+                # do "with" sem exceção) — destino e roteiros mudam juntos ou
+                # nenhum dos dois muda.
+                cursor.execute("DELETE FROM roteiros WHERE id_grupo=%s", (id_grupo,))
+                mensagem = "Grupo atualizado. Os roteiros anteriores foram removidos porque o destino mudou."
+
+            return {"mensagem": mensagem}
         finally:
             cursor.close()
 

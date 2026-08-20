@@ -176,13 +176,9 @@ def sair(id_grupo: int, usuario_id: int) -> dict:
 
             _checar_ultimo_admin(cursor, id_grupo, usuario_id)
 
-            cursor.execute(
-                "SELECT orcamento FROM grupo_membros WHERE id_grupo=%s AND id_usuario=%s",
-                (id_grupo, usuario_id),
-            )
-            membro = cursor.fetchone()
-            orcamento_membro = membro["orcamento"] if membro else None
-
+            # Não precisa sincronizar nenhum "total": o orçamento da viagem é
+            # sempre a soma ao vivo de grupo_membros.orcamento, então a linha
+            # deste membro deixar de existir já reflete no total sozinha.
             cursor.execute(
                 "DELETE FROM grupo_membros WHERE id_grupo=%s AND id_usuario=%s",
                 (id_grupo, usuario_id),
@@ -190,12 +186,23 @@ def sair(id_grupo: int, usuario_id: int) -> dict:
             if cursor.rowcount == 0:
                 raise HTTPException(status_code=404, detail="Você não está no grupo")
 
-            if orcamento_membro is not None:
-                cursor.execute(
-                    "UPDATE grupos_viagem SET orcamento = GREATEST(COALESCE(orcamento, 0) - %s, 0) WHERE id_grupo=%s",
-                    (orcamento_membro, id_grupo),
-                )
-
             return {"mensagem": "Saiu do grupo"}
+        finally:
+            cursor.close()
+
+
+def alterar_meu_orcamento(id_grupo: int, usuario_id: int, novo_orcamento: float) -> dict:
+    """Cada participante só pode alterar o PRÓPRIO orçamento — o usuário é
+    identificado via autenticação (usuario_id vem de get_usuario_logado no
+    endpoint), nunca de um id enviado pelo cliente."""
+    with get_db() as conexao:
+        cursor = conexao.cursor(dictionary=True)
+        try:
+            checar_membro_grupo(cursor, id_grupo, usuario_id)
+            cursor.execute(
+                "UPDATE grupo_membros SET orcamento=%s WHERE id_grupo=%s AND id_usuario=%s",
+                (novo_orcamento, id_grupo, usuario_id),
+            )
+            return {"mensagem": "Orçamento atualizado"}
         finally:
             cursor.close()

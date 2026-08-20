@@ -130,6 +130,27 @@
                                 <p style="color:var(--text-muted); font-size:14px; text-align:center;" data-i18n="viagem.tab.personal.noRecent">Sem gastos recentes</p>
                             </div>
                         </div>
+
+                        <div class="dashboard-card">
+                            <h3 data-i18n="viagem.tab.personal.myBudget">💰 Meu Orçamento</h3>
+                            <div class="stat-row">
+                                <span class="stat-label" data-i18n="viagem.tab.personal.myBudgetLabel">Orçamento definido</span>
+                                <span class="stat-value" id="meuOrcamentoValor">—</span>
+                            </div>
+                            <div class="stat-row" id="rowDisponivel" style="display:none;">
+                                <span class="stat-label" data-i18n="viagem.tab.personal.available">Disponível</span>
+                                <span class="stat-value" id="meuDisponivel">R$ 0,00</span>
+                            </div>
+                            <div id="formEditarOrcamento" style="display:none; margin-top:14px;">
+                                <input type="number" id="inputMeuOrcamento" min="0" step="0.01" data-i18n-placeholder="viagem.tab.personal.budgetPlaceholder" placeholder="R$ 0,00" style="width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; margin-bottom:8px; outline:none;">
+                                <div style="display:flex; gap:8px;">
+                                    <button onclick="salvarMeuOrcamento()" style="background:var(--gradient); color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer;" data-i18n="common.save">Salvar</button>
+                                    <button onclick="cancelarEdicaoOrcamento()" style="background:var(--surface); color:var(--text-muted); border:1px solid var(--border); border-radius:8px; padding:8px 16px; font-size:13px; cursor:pointer;" data-i18n="common.cancel">Cancelar</button>
+                                </div>
+                                <span id="erroMeuOrcamento" style="display:none; color:var(--danger); font-size:12px; margin-top:6px;"></span>
+                            </div>
+                            <button id="btnEditarOrcamento" onclick="iniciarEdicaoOrcamento()" style="margin-top:14px; background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer;" data-i18n="viagem.tab.personal.editBudget">Alterar orçamento</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -147,10 +168,6 @@
                             <div class="stat-row">
                                 <span class="stat-label" data-i18n="viagem.tab.admin.activeMembers">Membros Ativos</span>
                                 <span class="stat-value" id="totalMembros">0</span>
-                            </div>
-                            <div class="stat-row">
-                                <span class="stat-label" data-i18n="viagem.tab.admin.photos">Fotos no Grupo</span>
-                                <span class="stat-value" id="totalFotos">0</span>
                             </div>
                             <div class="stat-row">
                                 <span class="stat-label" data-i18n="viagem.tab.admin.itineraryItems">Itens no Roteiro</span>
@@ -304,6 +321,42 @@
                     </ul>
                 </div>
 
+                <div class="trip-card-expanded" id="cardConfigViagem" style="display:none;">
+                    <h2 data-i18n="viagem.settings.title">⚙️ Configurações da viagem</h2>
+                    <div style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+                        <div>
+                            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;" data-i18n="viagem.settings.name">Nome</label>
+                            <input id="configNome" type="text" maxlength="100" style="width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; outline:none;">
+                        </div>
+                        <div style="position:relative;">
+                            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;" data-i18n="viagem.settings.destination">Destino</label>
+                            <input id="configDestino" type="text" maxlength="150" autocomplete="off" style="width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; outline:none;">
+                            <div class="sugestoes" id="configSugCidade"></div>
+                        </div>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:160px;">
+                                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;" data-i18n="viagem.settings.startDate">Data de início</label>
+                                <input id="configDataInicio" type="date" style="width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; outline:none;">
+                            </div>
+                            <div style="flex:1; min-width:160px;">
+                                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;" data-i18n="viagem.settings.endDate">Data de término</label>
+                                <input id="configDataFim" type="date" style="width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; outline:none;">
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;" data-i18n="viagem.settings.type">Tipo de viagem</label>
+                            <input id="configTipo" type="text" maxlength="100" style="width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; outline:none;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;" data-i18n="viagem.settings.preferences">Descrição / preferências</label>
+                            <textarea id="configPreferencias" maxlength="1000" style="width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; resize:vertical; min-height:70px; outline:none;"></textarea>
+                        </div>
+                    </div>
+                    <button onclick="salvarConfigViagem()" style="margin-top:14px; background:var(--gradient); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.settings.save">Salvar alterações</button>
+                    <span id="erroConfigViagem" style="display:none; color:var(--danger); font-size:12px; margin-top:8px;"></span>
+                    <span id="sucessoConfigViagem" style="display:none; color:var(--success); font-size:12px; margin-top:8px;"></span>
+                </div>
+
                 <div class="trip-card-expanded" style="border:1px solid rgba(var(--danger-rgb),0.3);">
                     <h2 style="color:var(--danger);" data-i18n="viagem.dangerZone">⚠️ Zona de perigo</h2>
                     <p style="color:var(--text-muted); font-size:14px; margin:0 0 14px;" id="dangerZoneDesc"></p>
@@ -384,6 +437,147 @@ function atualizarZonaPerigo() {
         btnSair.style.display = ""
         btnExcluir.style.display = "none"
         desc.textContent = t('viagem.dangerZone.memberDesc')
+    }
+
+    const cardConfig = document.getElementById("cardConfigViagem")
+    if (souCriador) {
+        cardConfig.style.display = ""
+        document.getElementById("configNome").value = grupoAtual.nome_grupo || ""
+        document.getElementById("configDestino").value = grupoAtual.destino_principal || ""
+        document.getElementById("configDataInicio").value = grupoAtual.data_inicio || ""
+        document.getElementById("configDataFim").value = grupoAtual.data_fim || ""
+        document.getElementById("configTipo").value = grupoAtual.tipo_viagem || ""
+        document.getElementById("configPreferencias").value = grupoAtual.preferencias || ""
+    } else {
+        cardConfig.style.display = "none"
+    }
+}
+
+// ── Autocomplete de destino — mesma implementação/endpoint de form-viagem.html ──
+document.getElementById("configDestino").addEventListener("input", () => {
+    setTimeout(async () => {
+        const input = document.getElementById("configDestino")
+        const sugestoes = document.getElementById("configSugCidade")
+        if (input.value.trim() === "") {
+            sugestoes.innerHTML = ""
+            return
+        }
+        const resp = await fetch(`/geocode/autocomplete?text=${encodeURIComponent(input.value)}`, {
+            method: "GET",
+            credentials: "include",
+        })
+        if (!resp.ok) return
+        const dados = await resp.json()
+        mostrarCidadesConfig(dados["features"])
+    }, 300)
+})
+
+function mostrarCidadesConfig(array) {
+    const input = document.getElementById("configDestino")
+    const sugestoes = document.getElementById("configSugCidade")
+    sugestoes.innerHTML = ""
+    array.forEach(item => {
+        const props = item.properties
+        const cidade = props.city || props.town || props.village || props.name || ""
+        if (cidade === "") return
+        const div = document.createElement("div")
+        div.textContent = props.formatted
+        div.classList.add("item-sugest")
+        div.addEventListener("click", () => {
+            input.value = props.formatted
+            sugestoes.innerHTML = ""
+        })
+        sugestoes.append(div)
+    })
+}
+
+document.addEventListener("click", (e) => {
+    if (!e.target.closest("#configDestino")) {
+        const sugestoes = document.getElementById("configSugCidade")
+        const primeiras = [...sugestoes.childNodes]
+        if (primeiras.length > 0) primeiras[0].click()
+        sugestoes.innerHTML = ""
+    }
+})
+
+function validarDatasConfig(dataInicio, dataFim, dataMudou) {
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0)
+    const dtInicio = new Date(dataInicio + "T00:00:00")
+    const dtFim = new Date(dataFim + "T00:00:00")
+
+    // fim <= inicio e' sempre invalido, mudando a data ou nao (mesma regra
+    // estrutural que o backend aplica em qualquer PUT). "nao pode ser no
+    // passado" so' vale quando a data realmente muda — viagem que ja
+    // comecou/terminou pode continuar tendo outros campos editados.
+    if (dtFim <= dtInicio) return t('viagem.settings.datesOrder')
+    if (dataMudou && (dtInicio < hoje || dtFim < hoje)) return t('viagem.settings.datesPast')
+    return null
+}
+
+async function salvarConfigViagem() {
+    const erro = document.getElementById("erroConfigViagem")
+    const sucesso = document.getElementById("sucessoConfigViagem")
+    erro.style.display = "none"
+    sucesso.style.display = "none"
+
+    const dados = {
+        nome_grupo: document.getElementById("configNome").value.trim(),
+        destino_principal: document.getElementById("configDestino").value.trim(),
+        data_inicio: document.getElementById("configDataInicio").value,
+        data_fim: document.getElementById("configDataFim").value,
+        tipo_viagem: document.getElementById("configTipo").value.trim(),
+        preferencias: document.getElementById("configPreferencias").value.trim(),
+    }
+
+    if (!dados.nome_grupo || !dados.destino_principal || !dados.data_inicio || !dados.data_fim || !dados.tipo_viagem) {
+        erro.textContent = t('viagem.settings.fillRequired')
+        erro.style.display = "inline"
+        return
+    }
+
+    const dataMudou = dados.data_inicio !== grupoAtual.data_inicio || dados.data_fim !== grupoAtual.data_fim
+    const erroData = validarDatasConfig(dados.data_inicio, dados.data_fim, dataMudou)
+    if (erroData) {
+        erro.textContent = erroData
+        erro.style.display = "inline"
+        return
+    }
+
+    const executarSalvar = async () => {
+        try {
+            const resp = await fetch(`/grupos/${idGrupo}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(dados)
+            })
+            if (resp.ok) {
+                const corpo = await resp.json().catch(() => ({}))
+                sucesso.textContent = corpo.mensagem || t('viagem.settings.saved')
+                sucesso.style.display = "inline"
+                await carregarGrupo()
+            } else {
+                const e = await resp.json().catch(() => ({}))
+                erro.textContent = e.detail || t('viagem.settings.error')
+                erro.style.display = "inline"
+            }
+        } catch (e) {
+            erro.textContent = t('viagem.settings.error')
+            erro.style.display = "inline"
+        }
+    }
+
+    if (dados.destino_principal !== grupoAtual.destino_principal) {
+        abrirModalConfirmacao({
+            titulo: t('viagem.settings.destinationChangeTitle'),
+            mensagem: t('viagem.settings.destinationChangeBody'),
+            textoConfirmar: t('viagem.settings.destinationChangeConfirm'),
+            tipo: 'perigo',
+            onConfirmar: executarSalvar
+        })
+    } else {
+        await executarSalvar()
     }
 }
 
@@ -468,6 +662,15 @@ async function carregarDashboard() {
     const p = data.pessoal
     document.getElementById("meuTotalPago").innerText = `R$ ${p.total_pago_por_mim.toLocaleString(getLang(), {minimumFractionDigits:2})}`
     document.getElementById("minhaDivida").innerText = `R$ ${p.minha_divida_atual.toLocaleString(getLang(), {minimumFractionDigits:2})}`
+
+    if (p.meu_orcamento != null) {
+        document.getElementById("meuOrcamentoValor").innerText = `R$ ${p.meu_orcamento.toLocaleString(getLang(), {minimumFractionDigits:2})}`
+        document.getElementById("rowDisponivel").style.display = ""
+        document.getElementById("meuDisponivel").innerText = `R$ ${p.disponivel.toLocaleString(getLang(), {minimumFractionDigits:2})}`
+    } else {
+        document.getElementById("meuOrcamentoValor").innerText = t('viagem.tab.personal.noBudget')
+        document.getElementById("rowDisponivel").style.display = "none"
+    }
     if (p.ultimos_gastos_pessoais.length > 0) {
         document.getElementById("meusGastosRecentes").innerHTML = p.ultimos_gastos_pessoais.map(g => `
             <div class="category-item">
@@ -489,7 +692,6 @@ async function carregarDashboard() {
         carregarExplorarAdmin()
         const a = data.admin
         document.getElementById("totalMembros").innerText = a.estatisticas.membros_ativos
-        document.getElementById("totalFotos").innerText = a.estatisticas.total_fotos_subidas
         document.getElementById("totalRoteiros").innerText = a.estatisticas.itens_no_roteiro
         document.getElementById("rankingGastos").innerHTML = a.ranking_contribuicao_financeira.map((m, i) => `
             <div class="category-item">
@@ -497,6 +699,53 @@ async function carregarDashboard() {
                 <strong>R$ ${m.total.toLocaleString(getLang(), {minimumFractionDigits:2})}</strong>
             </div>
         `).join('')
+    }
+}
+
+function iniciarEdicaoOrcamento() {
+    const atual = document.getElementById("meuOrcamentoValor").innerText.replace(/[^\d.,]/g, '').replace(',', '.')
+    document.getElementById("inputMeuOrcamento").value = isNaN(parseFloat(atual)) ? "" : atual
+    document.getElementById("formEditarOrcamento").style.display = "block"
+    document.getElementById("btnEditarOrcamento").style.display = "none"
+    document.getElementById("erroMeuOrcamento").style.display = "none"
+    document.getElementById("inputMeuOrcamento").focus()
+}
+
+function cancelarEdicaoOrcamento() {
+    document.getElementById("formEditarOrcamento").style.display = "none"
+    document.getElementById("btnEditarOrcamento").style.display = ""
+}
+
+async function salvarMeuOrcamento() {
+    const input = document.getElementById("inputMeuOrcamento")
+    const erro = document.getElementById("erroMeuOrcamento")
+    erro.style.display = "none"
+
+    const valor = parseFloat(input.value)
+    if (isNaN(valor) || valor < 0) {
+        erro.textContent = t('viagem.tab.personal.budgetError')
+        erro.style.display = "inline"
+        return
+    }
+
+    try {
+        const resp = await fetch(`/grupos/${idGrupo}/meu-orcamento`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ orcamento: valor })
+        })
+        if (resp.ok) {
+            cancelarEdicaoOrcamento()
+            await carregarDashboard()
+        } else {
+            const e = await resp.json().catch(() => ({}))
+            erro.textContent = e.detail || t('viagem.tab.personal.budgetError')
+            erro.style.display = "inline"
+        }
+    } catch (e) {
+        erro.textContent = t('viagem.tab.personal.budgetError')
+        erro.style.display = "inline"
     }
 }
 
@@ -995,7 +1244,7 @@ function atualizarStatusExplorar() {
         limiteEl.value = grupoAtual.limite_participantes || ""
     } else {
         textoEl.textContent = t('viagem.explore.notPublished')
-        btnPub.innerHTML = "📢 " + t('viagem.explore.publish')
+        btnPub.innerHTML = t('viagem.explore.publish')
         btnDesp.style.display = "none"
         if (!limiteEl.value) limiteEl.value = grupoAtual.limite_participantes || ""
     }

@@ -72,7 +72,7 @@ class TestDashboardGeral:
 class TestDashboardPessoal:
     def test_membro_acessa_dashboard_pessoal(self, client_usuario):
         conn = _conn_seq(
-            [(1,), {"cargo": "membro"}, {"total": 500.0}, {"total": 100.0}],
+            [(1,), {"cargo": "membro"}, {"orcamento": 1000.0}, {"total": 500.0}, {"total": 100.0}],
             fetchalls={0: [{"valor": 100.0, "categoria": "hotel",
                            "descricao": "Hotel", "data_gasto": "2026-06-01"}]}
         )
@@ -87,13 +87,37 @@ class TestDashboardPessoal:
             resp = client_usuario.get("/grupos/10/dashboard/pessoal")
         assert resp.status_code == 403
 
+    def test_disponivel_calculado_a_partir_do_meu_orcamento(self, client_usuario):
+        conn = _conn_seq(
+            [(1,), {"cargo": "membro"}, {"orcamento": 1000.0}, {"total": 300.0}, {"total": 0.0}],
+            fetchalls={0: []}
+        )
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/grupos/10/dashboard/pessoal")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["meu_orcamento"] == 1000.0
+        assert data["disponivel"] == 700.0
+
+    def test_sem_orcamento_individual_disponivel_e_nulo(self, client_usuario):
+        conn = _conn_seq(
+            [(1,), {"cargo": "membro"}, None, {"total": 300.0}, {"total": 0.0}],
+            fetchalls={0: []}
+        )
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/grupos/10/dashboard/pessoal")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["meu_orcamento"] is None
+        assert data["disponivel"] is None
+
 
 
 class TestDashboardCompleto:
     def test_membro_acessa_dashboard_completo(self, client_usuario):
         conn = _conn_seq(
             [(1,), {"cargo": "membro"}, _GRUPO_ROW, _TOTAL_ROW,
-             _TOTAL_ROW, {"total": 50.0}],
+             {"orcamento": None}, _TOTAL_ROW, {"total": 50.0}],
             fetchalls={
                 0: _CAT_ROWS,
                 1: [{"valor": 100.0, "categoria": "hotel",
@@ -111,7 +135,7 @@ class TestDashboardCompleto:
         """Admin recebe secao 'admin' no dashboard completo."""
         conn = _conn_seq(
             [(99,), {"cargo": "admin"}, _GRUPO_ROW, _TOTAL_ROW,
-             _TOTAL_ROW, {"total": 0.0},
+             {"orcamento": None}, _TOTAL_ROW, {"total": 0.0},
              {"total": 3}, {"total": 10}, {"total": 2}],
             fetchalls={
                 0: _CAT_ROWS,

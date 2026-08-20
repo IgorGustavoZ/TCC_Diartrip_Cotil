@@ -5,7 +5,8 @@ from utils.dependencies import checar_membro_grupo
 _SELECT_EXPLORAR = """
     SELECT g.id_grupo, g.nome_grupo, g.destino_principal, g.data_inicio, g.data_fim,
            g.criado_por AS id_criador, u.nome AS criador, g.limite_participantes,
-           g.orcamento AS orcamento_total,
+           (SELECT COALESCE(SUM(gm2.orcamento), 0) FROM grupo_membros gm2
+            WHERE gm2.id_grupo = g.id_grupo) AS orcamento_total,
            (SELECT COUNT(*) FROM grupo_membros gm WHERE gm.id_grupo = g.id_grupo) AS vagas_ocupadas
     FROM grupos_viagem g
     JOIN usuarios u ON g.criado_por = u.id_usuario
@@ -221,15 +222,14 @@ def aceitar_solicitacao(id_solicitacao: int, usuario_id: int) -> dict:
                             status_code=409,
                             detail="Viagem lotada — não é possível aceitar mais participantes",
                         )
+                # O orçamento informado na solicitação vira o orçamento
+                # individual do novo membro — o "total" da viagem é sempre a
+                # soma ao vivo de grupo_membros.orcamento, não precisa de
+                # nenhuma sincronização manual aqui.
                 cursor.execute(
                     "INSERT INTO grupo_membros (id_grupo, id_usuario, orcamento) VALUES (%s, %s, %s)",
                     (id_grupo, id_solicitante, orcamento_solicitado),
                 )
-                if orcamento_solicitado is not None:
-                    cursor.execute(
-                        "UPDATE grupos_viagem SET orcamento = COALESCE(orcamento, 0) + %s WHERE id_grupo=%s",
-                        (orcamento_solicitado, id_grupo),
-                    )
 
             cursor.execute(
                 """

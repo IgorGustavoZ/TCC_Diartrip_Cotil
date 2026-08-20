@@ -229,7 +229,7 @@ class TestEscaladaPrivilegio:
         assert resp.status_code == 403
 
     def test_membro_nao_pode_atualizar_grupo(self, client_usuario):
-        """Membro nao pode PUT /grupos/{id}."""
+        """Quem nao e' o criador do grupo (mesmo sendo membro) nao pode editar."""
         call_count = [0]
 
         def cursor_factory(**kw):
@@ -238,7 +238,7 @@ class TestEscaladaPrivilegio:
             if call_count[0] == 1:
                 c.fetchone.return_value = (1,)
             else:
-                c.fetchone.return_value = {"cargo": "membro"}
+                c.fetchone.return_value = {"criado_por": 2}  # cliente e' o usuario 1
             c.rowcount = 1
             return c
 
@@ -251,7 +251,7 @@ class TestEscaladaPrivilegio:
         dados = {
             "nome_grupo": "Novo", "destino_principal": "Roma",
             "data_inicio": "2026-07-01", "data_fim": "2026-07-15",
-            "orcamento": 3000, "tipo_viagem": "aventura", "preferencias": "montanhas"
+            "tipo_viagem": "aventura", "preferencias": "montanhas"
         }
         with patch("database.get_db", fake_get_db(conn)):
             resp = client_usuario.put("/grupos/10", json=dados)

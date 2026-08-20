@@ -11,7 +11,13 @@ def geral(id_grupo: int, usuario_id: int) -> dict:
             checar_membro_grupo(cursor, id_grupo, usuario_id)
 
             cursor.execute(
-                "SELECT orcamento, nome_grupo FROM grupos_viagem WHERE id_grupo=%s", (id_grupo,)
+                """
+                SELECT g.nome_grupo,
+                       (SELECT COALESCE(SUM(gm.orcamento), 0) FROM grupo_membros gm
+                        WHERE gm.id_grupo = g.id_grupo) AS orcamento
+                FROM grupos_viagem g WHERE g.id_grupo=%s
+                """,
+                (id_grupo,),
             )
             grupo = cursor.fetchone()
             if not grupo:
@@ -55,6 +61,17 @@ def pessoal(id_grupo: int, usuario_id: int) -> dict:
             checar_membro_grupo(cursor, id_grupo, usuario_id)
 
             cursor.execute(
+                "SELECT orcamento FROM grupo_membros WHERE id_grupo=%s AND id_usuario=%s",
+                (id_grupo, usuario_id),
+            )
+            membro = cursor.fetchone()
+            meu_orcamento = (
+                float(membro["orcamento"])
+                if membro and membro.get("orcamento") is not None
+                else None
+            )
+
+            cursor.execute(
                 "SELECT SUM(valor) as total FROM gastos WHERE id_grupo=%s AND id_usuario=%s",
                 (id_grupo, usuario_id),
             )
@@ -90,6 +107,8 @@ def pessoal(id_grupo: int, usuario_id: int) -> dict:
                 "total_pago_por_mim": round(total_pago, 2),
                 "minha_divida_atual": round(total_devido, 2),
                 "ultimos_gastos_pessoais": recentes,
+                "meu_orcamento": meu_orcamento,
+                "disponivel": round(meu_orcamento - total_pago, 2) if meu_orcamento is not None else None,
             }
         finally:
             cursor.close()
@@ -102,7 +121,13 @@ def completo(id_grupo: int, usuario_id: int) -> dict:
             cargo = checar_membro_grupo(cursor, id_grupo, usuario_id)
 
             cursor.execute(
-                "SELECT orcamento, nome_grupo FROM grupos_viagem WHERE id_grupo=%s", (id_grupo,)
+                """
+                SELECT g.nome_grupo,
+                       (SELECT COALESCE(SUM(gm.orcamento), 0) FROM grupo_membros gm
+                        WHERE gm.id_grupo = g.id_grupo) AS orcamento
+                FROM grupos_viagem g WHERE g.id_grupo=%s
+                """,
+                (id_grupo,),
             )
             grupo = cursor.fetchone()
             if not grupo:
@@ -122,6 +147,17 @@ def completo(id_grupo: int, usuario_id: int) -> dict:
             categorias = cursor.fetchall()
             for cat in categorias:
                 cat["total"] = round(float(cat["total"] or 0), 2)
+
+            cursor.execute(
+                "SELECT orcamento FROM grupo_membros WHERE id_grupo=%s AND id_usuario=%s",
+                (id_grupo, usuario_id),
+            )
+            membro = cursor.fetchone()
+            meu_orcamento = (
+                float(membro["orcamento"])
+                if membro and membro.get("orcamento") is not None
+                else None
+            )
 
             cursor.execute(
                 "SELECT SUM(valor) as total FROM gastos WHERE id_grupo=%s AND id_usuario=%s",
@@ -165,6 +201,8 @@ def completo(id_grupo: int, usuario_id: int) -> dict:
                     "total_pago_por_mim": round(total_pago, 2),
                     "minha_divida_atual": round(total_devido, 2),
                     "ultimos_gastos_pessoais": recentes,
+                    "meu_orcamento": meu_orcamento,
+                    "disponivel": round(meu_orcamento - total_pago, 2) if meu_orcamento is not None else None,
                 },
                 "admin": None,
             }

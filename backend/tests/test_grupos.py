@@ -5,8 +5,8 @@ from tests.conftest import fake_get_db, fake_grupo
 GRUPO_PAYLOAD = {
     "nome_grupo": "Viagem Paris",
     "destino_principal": "Paris",
-    "data_inicio": "2026-06-01",
-    "data_fim": "2026-06-15",
+    "data_inicio": "2026-12-01",
+    "data_fim": "2026-12-15",
     "orcamento": 5000.0,
     "tipo_viagem": "lazer",
     "preferencias": "museus e gastronomia"
@@ -55,7 +55,7 @@ class TestCriarGrupo:
         assert "id_grupo" in data or "mensagem" in data
 
     def test_criar_grupo_data_fim_antes_inicio_retorna_422(self, client_usuario):
-        payload = dict(GRUPO_PAYLOAD, data_fim="2026-05-01")
+        payload = dict(GRUPO_PAYLOAD, data_fim="2026-11-01")
         resp = client_usuario.post("/grupos", json=payload)
         assert resp.status_code == 422
 
@@ -64,9 +64,44 @@ class TestCriarGrupo:
         resp = client_usuario.post("/grupos", json=payload)
         assert resp.status_code == 422
 
+    def test_criar_grupo_data_inicio_passada_retorna_422(self, client_usuario):
+        payload = dict(GRUPO_PAYLOAD, data_inicio="2020-01-01")
+        resp = client_usuario.post("/grupos", json=payload)
+        assert resp.status_code == 422
+
+    def test_criar_grupo_data_fim_passada_retorna_422(self, client_usuario):
+        payload = dict(GRUPO_PAYLOAD, data_inicio="2020-01-01", data_fim="2020-01-05")
+        resp = client_usuario.post("/grupos", json=payload)
+        assert resp.status_code == 422
+
+    def test_criar_grupo_mesmo_dia_inicio_fim_retorna_422(self, client_usuario):
+        payload = dict(GRUPO_PAYLOAD, data_fim=GRUPO_PAYLOAD["data_inicio"])
+        resp = client_usuario.post("/grupos", json=payload)
+        assert resp.status_code == 422
+
     def test_criar_grupo_sem_autenticacao_retorna_401(self, client):
         resp = client.post("/grupos", json=GRUPO_PAYLOAD)
         assert resp.status_code == 401
+
+    def test_orcamento_informado_vira_orcamento_individual_do_criador(self, client_usuario):
+        cur = MagicMock()
+        cur.rowcount = 1
+        cur.lastrowid = 10
+        cur.fetchone.side_effect = [(1,), None, None]
+        conn = MagicMock()
+        conn.cursor.return_value = cur
+        conn.commit = MagicMock()
+        conn.rollback = MagicMock()
+        conn.close = MagicMock()
+
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.post("/grupos", json=GRUPO_PAYLOAD)
+        assert resp.status_code == 201
+
+        insert_membro = next(
+            c for c in cur.execute.call_args_list if "INSERT INTO grupo_membros" in c.args[0]
+        )
+        assert insert_membro.args[1] == (10, 1, GRUPO_PAYLOAD["orcamento"])
 
 
 
@@ -152,16 +187,123 @@ class TestEntrarGrupo:
 
 
 class TestAdminGrupo:
-    def test_admin_pode_atualizar_grupo(self, client_admin):
+    def test_criador_pode_atualizar_grupo(self, client_admin):
+        # client_admin autentica como usuario_id=99, que aqui e o proprio criado_por.
+        # destino/datas iguais ao payload -> nao muda nada, so' atualiza.
         conn = _conn_seq([
             (99,),
-            {"cargo": "admin"},
-            {"cargo": "admin"},
-            None,
+            {
+                "criado_por": 99, "destino_principal": GRUPO_PAYLOAD["destino_principal"],
+                "data_inicio": GRUPO_PAYLOAD["data_inicio"], "data_fim": GRUPO_PAYLOAD["data_fim"],
+            },
         ])
         with patch("database.get_db", fake_get_db(conn)):
             resp = client_admin.put("/grupos/10", json=GRUPO_PAYLOAD)
         assert resp.status_code == 200
+
+    def test_admin_nao_criador_nao_pode_atualizar_grupo(self, client_admin):
+        conn = _conn_seq([
+            (99,),
+            {"criado_por": 1},  # criado_por = 1, cliente e' o usuario 99
+        ])
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.put("/grupos/10", json=GRUPO_PAYLOAD)
+        assert resp.status_code == 403
+
+    def test_atualizar_grupo_nao_exige_orcamento(self, client_admin):
+        # orcamento deixou de ser um campo de "informacoes gerais" editavel —
+        # PUT /grupos/{id} nem aceita mais esse campo no corpo.
+        payload = {k: v for k, v in GRUPO_PAYLOAD.items() if k != "orcamento"}
+        conn = _conn_seq([
+            (99,),
+            {
+                "criado_por": 99, "destino_principal": payload["destino_principal"],
+                "data_inicio": payload["data_inicio"], "data_fim": payload["data_fim"],
+            },
+        ])
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.put("/grupos/10", json=payload)
+        assert resp.status_code == 200
+
+    def test_atualizar_grupo_com_data_passada_diferente_retorna_400(self, client_admin):
+        conn = _conn_seq([
+            (99,),
+            {
+                "criado_por": 99, "destino_principal": GRUPO_PAYLOAD["destino_principal"],
+                "data_inicio": "2026-06-01", "data_fim": "2026-06-15",  # salvo != novo
+            },
+        ])
+        payload = dict(GRUPO_PAYLOAD, data_inicio="2026-01-01", data_fim="2026-01-15")
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.put("/grupos/10", json=payload)
+        assert resp.status_code == 400
+
+    def test_atualizar_grupo_mantendo_data_passada_e_permitido(self, client_admin):
+        # viagem que ja comecou/terminou: manter as mesmas datas ao editar
+        # outra coisa (ex: nome) nao deve ser bloqueado.
+        conn = _conn_seq([
+            (99,),
+            {
+                "criado_por": 99, "destino_principal": GRUPO_PAYLOAD["destino_principal"],
+                "data_inicio": "2026-06-01", "data_fim": "2026-06-15",
+            },
+        ])
+        payload = dict(GRUPO_PAYLOAD, data_inicio="2026-06-01", data_fim="2026-06-15")
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.put("/grupos/10", json=payload)
+        assert resp.status_code == 200
+
+    def test_atualizar_grupo_destino_mudou_exclui_roteiros(self, client_admin):
+        cur = MagicMock()
+        cur.rowcount = 1
+        cur.fetchone.side_effect = [
+            (99,),
+            {
+                "criado_por": 99, "destino_principal": "Paris",
+                "data_inicio": GRUPO_PAYLOAD["data_inicio"], "data_fim": GRUPO_PAYLOAD["data_fim"],
+            },
+        ]
+        conn = MagicMock()
+        conn.cursor.return_value = cur
+        conn.commit = MagicMock()
+        conn.rollback = MagicMock()
+        conn.close = MagicMock()
+
+        payload = dict(GRUPO_PAYLOAD, destino_principal="Roma")
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.put("/grupos/10", json=payload)
+
+        assert resp.status_code == 200
+        assert "roteiros anteriores foram removidos" in resp.json()["mensagem"]
+        delete_call = next(
+            c for c in cur.execute.call_args_list if "DELETE FROM roteiros" in c.args[0]
+        )
+        assert delete_call.args[1] == (10,)
+
+    def test_atualizar_grupo_destino_igual_nao_exclui_roteiros(self, client_admin):
+        cur = MagicMock()
+        cur.rowcount = 1
+        cur.fetchone.side_effect = [
+            (99,),
+            {
+                "criado_por": 99, "destino_principal": GRUPO_PAYLOAD["destino_principal"],
+                "data_inicio": GRUPO_PAYLOAD["data_inicio"], "data_fim": GRUPO_PAYLOAD["data_fim"],
+            },
+        ]
+        conn = MagicMock()
+        conn.cursor.return_value = cur
+        conn.commit = MagicMock()
+        conn.rollback = MagicMock()
+        conn.close = MagicMock()
+
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.put("/grupos/10", json=GRUPO_PAYLOAD)
+
+        assert resp.status_code == 200
+        assert "roteiros anteriores foram removidos" not in resp.json()["mensagem"]
+        assert not any(
+            "DELETE FROM roteiros" in c.args[0] for c in cur.execute.call_args_list
+        )
 
     def test_criador_pode_deletar_grupo(self, client_admin):
         # client_admin autentica como usuario_id=99, que aqui e o proprio criado_por.
@@ -311,47 +453,21 @@ def _conn_sair(fetchones, cursors_out=None):
 
 
 class TestSairGrupo:
-    def test_membro_comum_pode_sair_e_orcamento_e_subtraido(self, client_usuario):
-        cursors = []
+    def test_membro_comum_pode_sair(self, client_usuario):
+        # O orcamento da viagem e' sempre SUM(grupo_membros.orcamento) ao vivo,
+        # entao sair() so precisa apagar a linha do membro — nao existe mais
+        # nenhuma sincronizacao manual de "total" pra testar aqui.
         conn = _conn_sair([
-            (1,),                                   # get_usuario_logado
-            {"cargo": "membro"},                    # checar_membro_grupo
-            {"criado_por": 2},                       # nao e' o criador
-            {"cargo": "membro"},                     # _checar_ultimo_admin: nao e' admin
-            {"orcamento": 2000},                     # orcamento do membro que sai
-        ], cursors_out=cursors)
+            (1,),                       # get_usuario_logado
+            {"cargo": "membro"},        # checar_membro_grupo
+            {"criado_por": 2},          # nao e' o criador
+            {"cargo": "membro"},        # _checar_ultimo_admin: nao e' admin
+        ])
 
         with patch("database.get_db", fake_get_db(conn)):
             resp = client_usuario.delete("/grupos/10/sair")
 
         assert resp.status_code == 200
-
-        # a UPDATE de subtracao deve ter sido chamada com o orcamento do membro
-        update_calls = [
-            call for c in cursors for call in c.execute.call_args_list
-            if "UPDATE grupos_viagem SET orcamento" in call.args[0]
-        ]
-        assert len(update_calls) == 1
-        assert update_calls[0].args[1] == (2000, 10)
-
-    def test_sair_sem_orcamento_nao_altera_orcamento_da_viagem(self, client_usuario):
-        cursors = []
-        conn = _conn_sair([
-            (1,),
-            {"cargo": "membro"},
-            {"criado_por": 2},
-            {"cargo": "membro"},
-            {"orcamento": None},
-        ], cursors_out=cursors)
-
-        with patch("database.get_db", fake_get_db(conn)):
-            resp = client_usuario.delete("/grupos/10/sair")
-
-        assert resp.status_code == 200
-        assert not any(
-            "UPDATE grupos_viagem SET orcamento" in call.args[0]
-            for c in cursors for call in c.execute.call_args_list
-        )
 
     def test_criador_nao_pode_sair(self, client_usuario):
         conn = _conn_sair([
@@ -364,6 +480,53 @@ class TestSairGrupo:
             resp = client_usuario.delete("/grupos/10/sair")
 
         assert resp.status_code == 400
+
+
+class TestAlterarMeuOrcamento:
+    def test_membro_pode_alterar_o_proprio_orcamento(self, client_usuario):
+        conn = _conn_seq([(1,), {"cargo": "membro"}])
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.patch("/grupos/10/meu-orcamento", json={"orcamento": 500})
+        assert resp.status_code == 200
+
+    def test_nao_membro_nao_pode_alterar_orcamento(self, client_usuario):
+        conn = _conn_seq([(1,), None])
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.patch("/grupos/10/meu-orcamento", json={"orcamento": 500})
+        assert resp.status_code == 403
+
+    def test_orcamento_negativo_retorna_422(self, client_usuario):
+        resp = client_usuario.patch("/grupos/10/meu-orcamento", json={"orcamento": -1})
+        assert resp.status_code == 422
+
+    def test_orcamento_nao_numerico_retorna_422(self, client_usuario):
+        resp = client_usuario.patch("/grupos/10/meu-orcamento", json={"orcamento": "abc"})
+        assert resp.status_code == 422
+
+    def test_sem_autenticacao_retorna_401(self, client):
+        resp = client.patch("/grupos/10/meu-orcamento", json={"orcamento": 500})
+        assert resp.status_code == 401
+
+    def test_altera_apenas_o_proprio_orcamento_nao_o_de_outro(self, client_usuario):
+        # nao existe id_usuario em lugar nenhum da rota — so' o usuario
+        # autenticado (id=1) pode ser afetado pelo UPDATE.
+        cur = MagicMock()
+        cur.rowcount = 1
+        cur.fetchone.side_effect = [(1,), {"cargo": "membro"}]
+        conn = MagicMock()
+        conn.cursor.return_value = cur
+        conn.commit = MagicMock()
+        conn.rollback = MagicMock()
+        conn.close = MagicMock()
+
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.patch("/grupos/10/meu-orcamento", json={"orcamento": 500})
+        assert resp.status_code == 200
+
+        update_call = next(
+            c for c in cur.execute.call_args_list if "UPDATE grupo_membros SET orcamento" in c.args[0]
+        )
+        assert update_call.args[1] == (500.0, 10, 1)
 
 
 class TestListarMembros:

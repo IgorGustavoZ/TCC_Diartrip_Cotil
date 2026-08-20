@@ -70,8 +70,8 @@ def test_fluxo_completo_viagem(auth_admin, auth_member):
     grupo_payload = {
         "nome_grupo": "Viagem de Teste Automatizado",
         "destino_principal": "Gramado",
-        "data_inicio": "2026-06-01",
-        "data_fim": "2026-06-10",
+        "data_inicio": "2026-12-01",
+        "data_fim": "2026-12-10",
         "orcamento": 2000.00,
         "tipo_viagem": "Lazer",
         "preferencias": "Frio, Chocolate"
@@ -163,8 +163,8 @@ def test_rate_limit_limite():
     uid = login_resp.json()["usuario_id"]
     
     res_g = client.post("/grupos", json={
-        "nome_grupo": "Grupo Spam", "destino_principal": "X", "data_inicio": "2026-01-01",
-        "data_fim": "2026-01-02", "orcamento": 0, "tipo_viagem": "X", "preferencias": "X"
+        "nome_grupo": "Grupo Spam", "destino_principal": "X", "data_inicio": "2026-12-01",
+        "data_fim": "2026-12-02", "orcamento": 0, "tipo_viagem": "X", "preferencias": "X"
     })
     gid = res_g.json()["id_grupo"]
     

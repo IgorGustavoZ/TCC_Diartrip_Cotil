@@ -264,7 +264,10 @@ class TestAceitarSolicitacao:
             resp = client_admin.put("/solicitacoes/999/aceitar")
         assert resp.status_code == 404
 
-    def test_aceitar_com_orcamento_soma_no_orcamento_total_da_viagem(self, client_admin):
+    def test_aceitar_com_orcamento_vira_orcamento_individual_do_novo_membro(self, client_admin):
+        # O orcamento total da viagem e' sempre SUM(grupo_membros.orcamento) ao
+        # vivo — aceitar so precisa gravar o orcamento individual do novo
+        # membro, nao existe mais sincronizacao manual de "total" pra testar.
         cur = _cur(fetchones=[
             (1,),
             {"id_grupo": 10, "id_usuario_solicitante": 2, "status": "pendente", "orcamento": 2000},
@@ -281,28 +284,6 @@ class TestAceitarSolicitacao:
             c for c in cur.execute.call_args_list if "INSERT INTO grupo_membros" in c.args[0]
         )
         assert insert_call.args[1] == (10, 2, 2000)
-
-        update_call = next(
-            c for c in cur.execute.call_args_list
-            if "UPDATE grupos_viagem SET orcamento" in c.args[0]
-        )
-        assert update_call.args[1] == (2000, 10)
-
-    def test_aceitar_sem_orcamento_nao_altera_orcamento_da_viagem(self, client_admin):
-        cur = _cur(fetchones=[
-            (1,),
-            {"id_grupo": 10, "id_usuario_solicitante": 2, "status": "pendente", "orcamento": None},
-            {"cargo": "admin"},
-            {"limite_participantes": None},
-            None,
-        ])
-        conn = make_connection(cur)
-        with patch("database.get_db", fake_get_db(conn)):
-            resp = client_admin.put("/solicitacoes/1/aceitar")
-        assert resp.status_code == 200
-        assert not any(
-            "UPDATE grupos_viagem SET orcamento" in c.args[0] for c in cur.execute.call_args_list
-        )
 
     def test_solicitacao_ja_respondida_retorna_409(self, client_admin):
         cur = _cur(fetchones=[

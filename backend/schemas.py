@@ -259,6 +259,8 @@ class DashboardPessoal(BaseModel):
     total_pago_por_mim: float
     minha_divida_atual: float
     ultimos_gastos_pessoais: list[GastoRecente]
+    meu_orcamento: Optional[float] = None
+    disponivel: Optional[float] = None
 
 
 class DashboardCompleto(BaseModel):
