@@ -19,6 +19,10 @@ namespace WindowLobby.Pages
             try
             {
                 var json = await CRUD.Viagem.GetViagens();
+
+                System.Diagnostics.Debug.WriteLine($"[Viagens] RAW JSON: {json}");
+                
+                
                 if (json is null)
                 {
                     MessageBox.Show(
@@ -35,6 +39,7 @@ namespace WindowLobby.Pages
                 );
 
                 if (viagens is not null)
+                {
                     foreach (ViagemModel v in viagens)
                     {
                         var resp = await Usuario.GetUsuariosById(v.criado_por);
@@ -50,9 +55,10 @@ namespace WindowLobby.Pages
                             }
 
                         }
-                        
+
                     }
                     gridViagens.ItemsSource = viagens;
+                }
             }
             catch (Exception ex)
             {
@@ -62,6 +68,21 @@ namespace WindowLobby.Pages
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
+        }
+
+        private void BtnFiltrar_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: implement filtering logic (id, nome, destino, data início/fim, criado por)
+        }
+
+        private void BtnLimparFiltros_Click(object sender, RoutedEventArgs e)
+        {
+            txtFiltroId.Clear();
+            txtFiltroNome.Clear();
+            txtFiltroDestino.Clear();
+            txtFiltroCriadoPor.Clear();
+            dpFiltroDataInicio.SelectedDate = null;
+            dpFiltroDataFim.SelectedDate = null;
         }
     }
 }

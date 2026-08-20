@@ -89,6 +89,8 @@ namespace WindowLobby
             }
         }
 
+        
+
         // ── Navegação lateral ────────────────────────────────────────────────────
 
         private void BtnUsuarios_Click(object sender, RoutedEventArgs e)
