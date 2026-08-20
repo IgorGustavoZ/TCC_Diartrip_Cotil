@@ -10,7 +10,7 @@
                     MaxWidth="1000"
                     MinWidth="600"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Center">
+                    VerticalAlignment="Center" Width="525">
 
                 <StackPanel>
 
