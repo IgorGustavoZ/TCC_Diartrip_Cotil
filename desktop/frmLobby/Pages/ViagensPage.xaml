@@ -92,8 +92,10 @@
             </Setter>
         </Style>
 
-        <!-- DataGrid column header style -->
-        <Style x:Key="GridHeaderStyle" TargetType="{x:Type DataGridColumnHeader}">
+        <!-- Add these to Page.Resources, alongside the existing styles -->
+
+        <!-- ListView header style -->
+        <Style x:Key="ListHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
             <Setter Property="Background" Value="#243248"/>
             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
             <Setter Property="FontSize" Value="12"/>
@@ -102,28 +104,38 @@
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush" Value="{StaticResource BorderBrush2}"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Cursor" Value="Hand"/>
         </Style>
 
-        <!-- DataGrid row style -->
-        <Style x:Key="GridRowStyle" TargetType="{x:Type DataGridRow}">
+        <!-- ListView row style -->
+        <Style x:Key="ListRowStyle" TargetType="{x:Type ListViewItem}">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="Padding" Value="12,10"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush" Value="#1A2438"/>
-        </Style>
-
-        <!-- DataGrid cell style -->
-        <Style x:Key="GridCellStyle" TargetType="{x:Type DataGridCell}">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="12,10"/>
-            <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#1D3A63"/>
-                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-                </Trigger>
-            </Style.Triggers>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListViewItem}">
+                        <Border x:Name="border"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        Padding="{TemplateBinding Padding}">
+                            <GridViewRowPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1A2438"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1D3A63"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
     </Page.Resources>
@@ -194,68 +206,60 @@
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
-                       Text="Viagens"
-                       FontSize="24"
-                       FontWeight="Bold"
-                       Foreground="{StaticResource TextPrimaryBrush}"
-                       Margin="0,0,0,16"/>
+               Text="Viagens"
+               FontSize="24"
+               FontWeight="Bold"
+               Foreground="{StaticResource TextPrimaryBrush}"
+               Margin="0,0,0,16"/>
 
             <Border Grid.Row="1"
-                    Background="{StaticResource CardBrush}"
-                    BorderBrush="{StaticResource BorderBrush2}"
-                    BorderThickness="1"
-                    CornerRadius="12">
+            Background="{StaticResource CardBrush}"
+            BorderBrush="{StaticResource BorderBrush2}"
+            BorderThickness="1"
+            CornerRadius="12">
 
-                <DataGrid x:Name="gridViagens"
-                          Background="Transparent"
-                          Foreground="{StaticResource TextPrimaryBrush}"
-                          BorderThickness="0"
-                          HorizontalAlignment="Stretch"
-                          VerticalAlignment="Stretch"
+                <ListView x:Name="listViagens"
+                  Background="Transparent"
+                  Foreground="{StaticResource TextPrimaryBrush}"
+                  BorderThickness="0"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  HorizontalContentAlignment="Stretch"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                  ItemContainerStyle="{StaticResource ListRowStyle}"
+                  GridViewColumnHeader.Click="ListViewHeader_Click">
 
-                          IsReadOnly="True"
-                          CanUserAddRows="False"
-                          CanUserDeleteRows="False"
-                          CanUserResizeRows="False"
-                          AutoGenerateColumns="False"
-                          HeadersVisibility="Column"
-                          GridLinesVisibility="None"
-                          RowBackground="Transparent"
-                          AlternatingRowBackground="#1A2438"
+                    <ListView.View>
+                        <GridView ColumnHeaderContainerStyle="{StaticResource ListHeaderStyle}">
 
-                          ColumnHeaderStyle="{StaticResource GridHeaderStyle}"
-                          RowStyle="{StaticResource GridRowStyle}"
-                          CellStyle="{StaticResource GridCellStyle}">
+                            <GridViewColumn Header="Id"
+                                    DisplayMemberBinding="{Binding id_grupo}"
+                                    Width="80"/>
 
-                    <DataGrid.Columns>
+                            <GridViewColumn Header="Nome"
+                                    DisplayMemberBinding="{Binding nome_grupo}"
+                                    Width="200"/>
 
-                        <DataGridTextColumn Header="Id"
-                                            Binding="{Binding id_grupo}"
-                                            Width="80"/>
+                            <GridViewColumn Header="Destino Principal"
+                                    DisplayMemberBinding="{Binding destino_principal}"
+                                    Width="200"/>
 
-                        <DataGridTextColumn Header="Nome"
-                                            Binding="{Binding nome_grupo}"
-                                            Width="*"/>
+                            <GridViewColumn Header="Data de Início"
+                                    DisplayMemberBinding="{Binding data_inicio}"
+                                    Width="120"/>
 
-                        <DataGridTextColumn Header="Destino Principal"
-                                            Binding="{Binding destino_principal}"
-                                            Width="*"/>
+                            <GridViewColumn Header="Data de Fim"
+                                    DisplayMemberBinding="{Binding data_fim}"
+                                    Width="120"/>
 
-                        <DataGridTextColumn Header="Data de Início"
-                                            Binding="{Binding data_inicio}"
-                                            Width="130"/>
+                            <GridViewColumn Header="Criado por"
+                                    DisplayMemberBinding="{Binding criador}"
+                                    Width="160"/>
 
-                        <DataGridTextColumn Header="Data de Fim"
-                                            Binding="{Binding data_fim}"
-                                            Width="130"/>
+                        </GridView>
+                    </ListView.View>
 
-                        <DataGridTextColumn Header="Criado por"
-                                            Binding="{Binding criador}"
-                                            Width="*"/>
-
-                    </DataGrid.Columns>
-
-                </DataGrid>
+                </ListView>
 
             </Border>
 

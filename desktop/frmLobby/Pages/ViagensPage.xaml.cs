@@ -1,6 +1,8 @@
+using System.ComponentModel;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using WindowLobby.crud;
 using WindowLobby.CRUD.models;
 
@@ -8,6 +10,9 @@ namespace WindowLobby.Pages
 {
     public partial class ViagensPage : Page
     {
+
+        private GridViewColumnHeader _lastHeaderClicked;
+        private ListSortDirection _lastDirection = ListSortDirection.Ascending;
         public ViagensPage()
         {
             InitializeComponent();
@@ -57,7 +62,7 @@ namespace WindowLobby.Pages
                         }
 
                     }
-                    gridViagens.ItemsSource = viagens;
+                    listViagens.ItemsSource = viagens;
                 }
             }
             catch (Exception ex)
@@ -68,6 +73,33 @@ namespace WindowLobby.Pages
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
+        }
+
+        // ---------- SORTING ----------
+
+        private void ListViewHeader_Click(object sender, RoutedEventArgs e)
+        {
+            if (e.OriginalSource is not GridViewColumnHeader header) return;
+            if (header.Role == GridViewColumnHeaderRole.Padding) return;
+            if (header.Column?.DisplayMemberBinding is not System.Windows.Data.Binding binding) return;
+
+            string propertyName = binding.Path.Path;
+
+            ListSortDirection direction = header != _lastHeaderClicked
+                ? ListSortDirection.Descending
+                : (_lastDirection == ListSortDirection.Descending
+                    ? ListSortDirection.Ascending
+                    : ListSortDirection.Descending);
+
+            var view = CollectionViewSource.GetDefaultView(listViagens.ItemsSource);
+            if (view is null) return;
+
+            view.SortDescriptions.Clear();
+            view.SortDescriptions.Add(new SortDescription(propertyName, direction));
+            view.Refresh();
+
+            _lastHeaderClicked = header;
+            _lastDirection = direction;
         }
 
         private void BtnFiltrar_Click(object sender, RoutedEventArgs e)
