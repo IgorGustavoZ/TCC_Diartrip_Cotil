@@ -18,6 +18,7 @@ class UsuarioSimples(BaseModel):
 class UsuarioPublico(BaseModel):
     id_usuario: int
     nome: str
+    email: str
     bio: Optional[str] = None
     foto_perfil: Optional[str] = None
     data_criacao: Optional[datetime] = None
@@ -64,10 +65,11 @@ class TokenResponse(BaseModel):
 class GrupoLista(BaseModel):
     id_grupo: int
     nome_grupo: str
-    destino_principal: Optional[str] = None
-    data_inicio: Optional[date] = None
-    data_fim: Optional[date] = None
-    criador: str
+    destino_principal: str
+    data_inicio: date
+    data_fim: date
+    data_criacao: datetime
+    criado_por: int  # ao invés de "criador"
 
 
 class GrupoDetalhe(BaseModel):

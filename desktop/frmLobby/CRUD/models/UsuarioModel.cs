@@ -15,7 +15,5 @@ namespace WindowLobby.CRUD.models
         public string email { get; set; }
 
         public string? data_criacao { get; set; }
-
-        public string? foto_perfil { get; set; }
     }
 }

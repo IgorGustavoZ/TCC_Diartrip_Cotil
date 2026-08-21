@@ -225,14 +225,7 @@ namespace WindowLobby.crud
 
         //[Obsolete("Endpoint GET /usuarios não existe no backend. Use GetMe() para o usuário logado.")]
         public async static Task<string?> GetUsuarios()
-        {
-            string url =
-                "http://127.0.0.1:8000/usuarios";
-
-
-            //HttpResponseMessage resposta =
-            //    await Client.GetAsync(url);
-
+        {       
             var resp = await ExecutarComRefresh(() =>
             {
                 var req = new HttpRequestMessage(HttpMethod.Get, $"/usuarios/")
@@ -251,17 +244,13 @@ namespace WindowLobby.crud
                 await resp.Content
                 .ReadAsStringAsync();
 
+        
+
             return respostaJson;
         }
 
         public async static Task<string?> GetUsuariosById(int id)
         {
-            string url =
-                "http://127.0.0.1:8000/usuarios";
-
-
-            //HttpResponseMessage resposta =
-            //    await Client.GetAsync(url);
 
             var resp = await ExecutarComRefresh(() =>
             {

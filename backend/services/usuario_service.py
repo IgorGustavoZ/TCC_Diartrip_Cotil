@@ -5,20 +5,41 @@ from utils.security import gerar_hash, verificar_senha
 from utils.cloudinary_upload import upload_imagem
 from utils.imagem_utils import validar_imagem, strip_exif
 
-def buscar_tudo(limite: int = 20, offset: int = 0, busca: str | None = None) -> list:
+def buscar_tudo(
+    limite: int = 20,
+    offset: int = 0,
+    busca: str | None = None
+) -> list:
+
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
+
         try:
-            sql = "SELECT id_usuario, nome, bio, foto_perfil FROM usuarios"
+            sql = """
+                SELECT
+                    id_usuario,
+                    nome,
+                    email,
+                    bio,
+                    foto_perfil,
+                    data_criacao
+                FROM usuarios
+            """
+
             params: list = []
+
             if busca:
                 busca_safe = busca.strip()
                 sql += " WHERE nome LIKE %s"
                 params.append(f"%{busca_safe}%")
+
             sql += " ORDER BY id_usuario LIMIT %s OFFSET %s"
             params.extend([limite, offset])
+
             cursor.execute(sql, tuple(params))
+
             return cursor.fetchall()
+
         finally:
             cursor.close()
 

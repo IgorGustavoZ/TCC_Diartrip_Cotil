@@ -38,32 +38,35 @@ namespace WindowLobby.Pages
                     return;
                 }
 
+                MessageBox.Show(json);
+
                 var viagens = JsonSerializer.Deserialize<List<ViagemModel>>(
                     json,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                 );
 
-                if (viagens is not null)
-                {
-                    foreach (ViagemModel v in viagens)
-                    {
-                        var resp = await Usuario.GetUsuariosById(v.criado_por);
-                        if (resp is not null)
-                        {
-                            {
-                                UsuarioModel usuario = JsonSerializer.Deserialize<UsuarioModel>(
-                                    resp,
-                                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                                );
+                //if (viagens is not null)
+                //{
+                //    foreach (ViagemModel v in viagens)
+                //    {
+                //        var resp = await Usuario.GetUsuariosById(v.criado_por);
+                //        if (resp is not null)
+                //        {
+                //            {
+                //                UsuarioModel usuario = JsonSerializer.Deserialize<UsuarioModel>(
+                //                    resp,
+                //                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                //                );
 
-                                v.criador = usuario.nome;
-                            }
+                //                v.criador = usuario.nome;
+                //            }
 
-                        }
+                //        }
 
-                    }
-                    listViagens.ItemsSource = viagens;
-                }
+                //    }
+                //    listViagens.ItemsSource = viagens;
+                //}
+                listViagens.ItemsSource = viagens;
             }
             catch (Exception ex)
             {

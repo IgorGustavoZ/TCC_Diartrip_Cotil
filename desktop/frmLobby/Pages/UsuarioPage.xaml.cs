@@ -35,6 +35,7 @@ namespace WindowLobby.Pages
                 }
 
                 var jsonUsu = await Usuario.GetUsuarios();
+                
                 if (jsonUsu is not null)
                 {
                     // ---- DEBUG: inspect raw JSON before deserializing ----
