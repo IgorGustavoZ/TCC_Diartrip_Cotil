@@ -55,7 +55,6 @@ class LanguageProvider with ChangeNotifier {
       'viagem.tabs.itinerary': 'Roteiro',
       'viagem.tabs.photos': 'Fotos',
       'viagem.tabs.chat': 'Chat',
-      'config.saved': 'Alterações salvas!',
       'viagem.value.placeholder': 'Valor...',
       'expenses.edit': 'Editar Gasto',
       'expenses.value': 'Valor (R\$)',

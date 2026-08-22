@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:diartrip_flutter/screens/auth/login_screen.dart';
 import 'package:diartrip_flutter/core/theme.dart';
 import 'package:diartrip_flutter/providers/auth_provider.dart';
+import 'package:diartrip_flutter/providers/language_provider.dart';
 import 'helpers/fake_auth_provider.dart';
 
 // Define viewport 1080×1920 (tamanho comum de celular) para evitar overflow
@@ -22,8 +23,11 @@ Future<void> pumpApp(
   await tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.dark,
-      home: ChangeNotifierProvider<AuthProvider>.value(
-        value: auth,
+      home: MultiProvider(
+        providers: [
+          ChangeNotifierProvider<AuthProvider>.value(value: auth),
+          ChangeNotifierProvider<LanguageProvider>(create: (_) => LanguageProvider()),
+        ],
         child: const LoginScreen(),
       ),
       routes: {
@@ -41,9 +45,9 @@ void main() {
       expect(find.text('Diartrip'), findsOneWidget);
     });
 
-    testWidgets('exibe subtítulo AI-Powered Travel Planning', (tester) async {
+    testWidgets('exibe subtítulo Planejamento de Viagens com IA', (tester) async {
       await pumpApp(tester);
-      expect(find.text('AI-Powered Travel Planning'), findsOneWidget);
+      expect(find.text('Planejamento de Viagens com IA'), findsOneWidget);
     });
 
     testWidgets('exibe dois campos de formulário', (tester) async {
@@ -51,14 +55,14 @@ void main() {
       expect(find.byType(TextFormField), findsNWidgets(2));
     });
 
-    testWidgets('exibe botão Sign In', (tester) async {
+    testWidgets('exibe botão Entrar', (tester) async {
       await pumpApp(tester);
-      expect(find.text('Sign In'), findsWidgets);
+      expect(find.text('Entrar'), findsWidgets);
     });
 
-    testWidgets('exibe link Sign Up', (tester) async {
+    testWidgets('exibe link Cadastrar-se', (tester) async {
       await pumpApp(tester);
-      expect(find.text('Sign Up'), findsOneWidget);
+      expect(find.text('Cadastrar-se'), findsOneWidget);
     });
 
     testWidgets('ícone de avião visível', (tester) async {
@@ -71,15 +75,15 @@ void main() {
     testWidgets('exibe erro quando email inválido ao submeter', (tester) async {
       await pumpApp(tester);
       await tester.enterText(find.byType(TextFormField).first, 'emailinvalido');
-      await tester.tap(find.text('Sign In').last);
+      await tester.tap(find.text('Entrar').last);
       await tester.pump();
-      expect(find.text('Email inválido'), findsOneWidget);
+      expect(find.text('E-mail inválido'), findsOneWidget);
     });
 
     testWidgets('exibe erro quando senha vazia ao submeter', (tester) async {
       await pumpApp(tester);
       await tester.enterText(find.byType(TextFormField).first, 'a@b.com');
-      await tester.tap(find.text('Sign In').last);
+      await tester.tap(find.text('Entrar').last);
       await tester.pump();
       expect(find.text('Digite a senha'), findsOneWidget);
     });
@@ -89,9 +93,9 @@ void main() {
       await pumpApp(tester, provider: auth);
       await tester.enterText(find.byType(TextFormField).first, 'a@b.com');
       await tester.enterText(find.byType(TextFormField).last, 'SenhaQualquer');
-      await tester.tap(find.text('Sign In').last);
+      await tester.tap(find.text('Entrar').last);
       await tester.pumpAndSettle();
-      expect(find.text('Email inválido'), findsNothing);
+      expect(find.text('E-mail inválido'), findsNothing);
       expect(find.text('Digite a senha'), findsNothing);
     });
   });
@@ -114,9 +118,9 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('exibe texto Sign In quando não está carregando', (tester) async {
+    testWidgets('exibe texto Entrar quando não está carregando', (tester) async {
       await pumpApp(tester);
-      expect(find.text('Sign In'), findsWidgets);
+      expect(find.text('Entrar'), findsWidgets);
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
   });
@@ -144,7 +148,7 @@ void main() {
 
       await tester.enterText(find.byType(TextFormField).first, 'a@b.com');
       await tester.enterText(find.byType(TextFormField).last, 'Errado123');
-      await tester.tap(find.text('Sign In').last);
+      await tester.tap(find.text('Entrar').last);
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Credenciais'), findsOneWidget);
@@ -152,9 +156,9 @@ void main() {
   });
 
   group('LoginScreen — navegação', () {
-    testWidgets('toque em Sign Up navega para /register', (tester) async {
+    testWidgets('toque em Cadastrar-se navega para /register', (tester) async {
       await pumpApp(tester);
-      await tester.tap(find.text('Sign Up'));
+      await tester.tap(find.text('Cadastrar-se'));
       await tester.pumpAndSettle();
       expect(find.text('Register'), findsOneWidget);
     });

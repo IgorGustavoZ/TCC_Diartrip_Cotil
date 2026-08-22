@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:diartrip_flutter/screens/auth/register_screen.dart';
 import 'package:diartrip_flutter/core/theme.dart';
 import 'package:diartrip_flutter/providers/auth_provider.dart';
+import 'package:diartrip_flutter/providers/language_provider.dart';
 import 'helpers/fake_auth_provider.dart';
 
 Future<void> pumpApp(
@@ -20,8 +21,11 @@ Future<void> pumpApp(
   await tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.dark,
-      home: ChangeNotifierProvider<AuthProvider>.value(
-        value: auth,
+      home: MultiProvider(
+        providers: [
+          ChangeNotifierProvider<AuthProvider>.value(value: auth),
+          ChangeNotifierProvider<LanguageProvider>(create: (_) => LanguageProvider()),
+        ],
         child: const RegisterScreen(),
       ),
       routes: {
@@ -34,9 +38,9 @@ Future<void> pumpApp(
 
 void main() {
   group('RegisterScreen — renderização', () {
-    testWidgets('exibe título Create Account', (tester) async {
+    testWidgets('exibe título Criar Conta', (tester) async {
       await pumpApp(tester);
-      expect(find.text('Create Account'), findsWidgets);
+      expect(find.text('Criar Conta'), findsWidgets);
     });
 
     testWidgets('exibe três campos de formulário', (tester) async {
@@ -44,14 +48,14 @@ void main() {
       expect(find.byType(TextFormField), findsNWidgets(3));
     });
 
-    testWidgets('exibe botão Create Account', (tester) async {
+    testWidgets('exibe botão Criar Conta', (tester) async {
       await pumpApp(tester);
-      expect(find.widgetWithText(ElevatedButton, 'Create Account'), findsOneWidget);
+      expect(find.widgetWithText(ElevatedButton, 'Criar Conta'), findsOneWidget);
     });
 
-    testWidgets('exibe link Sign In', (tester) async {
+    testWidgets('exibe link Entrar', (tester) async {
       await pumpApp(tester);
-      expect(find.text('Sign In'), findsOneWidget);
+      expect(find.text('Entrar'), findsOneWidget);
     });
 
     testWidgets('ícone de avião presente', (tester) async {
@@ -64,7 +68,7 @@ void main() {
     testWidgets('erro quando nome muito curto', (tester) async {
       await pumpApp(tester);
       await tester.enterText(find.byType(TextFormField).at(0), 'ab');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar Conta'));
       await tester.pump();
       expect(find.text('Mínimo 3 caracteres'), findsOneWidget);
     });
@@ -73,9 +77,9 @@ void main() {
       await pumpApp(tester);
       await tester.enterText(find.byType(TextFormField).at(0), 'Nome Válido');
       await tester.enterText(find.byType(TextFormField).at(1), 'emailsemarroba');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar Conta'));
       await tester.pump();
-      expect(find.text('Email inválido'), findsOneWidget);
+      expect(find.text('E-mail inválido'), findsOneWidget);
     });
 
     testWidgets('erro quando senha muito curta', (tester) async {
@@ -83,7 +87,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(0), 'Nome Válido');
       await tester.enterText(find.byType(TextFormField).at(1), 'a@b.com');
       await tester.enterText(find.byType(TextFormField).at(2), '1234567');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar Conta'));
       await tester.pump();
       expect(find.text('Mínimo 8 caracteres'), findsOneWidget);
     });
@@ -93,7 +97,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(0), 'Nome Válido');
       await tester.enterText(find.byType(TextFormField).at(1), 'a@b.com');
       await tester.enterText(find.byType(TextFormField).at(2), 'semmaius1');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar Conta'));
       await tester.pump();
       expect(find.text('Precisa de uma maiúscula'), findsOneWidget);
     });
@@ -103,7 +107,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(0), 'Nome Válido');
       await tester.enterText(find.byType(TextFormField).at(1), 'a@b.com');
       await tester.enterText(find.byType(TextFormField).at(2), 'SemNumeroAqui');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar Conta'));
       await tester.pump();
       expect(find.text('Precisa de um número'), findsOneWidget);
     });
@@ -114,10 +118,10 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(0), 'Nome Completo');
       await tester.enterText(find.byType(TextFormField).at(1), 'valido@email.com');
       await tester.enterText(find.byType(TextFormField).at(2), 'Senha1234');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar Conta'));
       await tester.pump();
       expect(find.text('Mínimo 3 caracteres'), findsNothing);
-      expect(find.text('Email inválido'), findsNothing);
+      expect(find.text('E-mail inválido'), findsNothing);
       expect(find.text('Mínimo 8 caracteres'), findsNothing);
     });
   });
@@ -143,7 +147,7 @@ void main() {
     testWidgets('botão habilitado no estado inicial', (tester) async {
       await pumpApp(tester);
       final btn = tester.widget<ElevatedButton>(
-        find.widgetWithText(ElevatedButton, 'Create Account'),
+        find.widgetWithText(ElevatedButton, 'Criar Conta'),
       );
       expect(btn.onPressed, isNotNull);
     });
