@@ -19,7 +19,6 @@ def buscar_tudo(
                 SELECT
                     id_usuario,
                     nome,
-                    email,
                     bio,
                     foto_perfil,
                     data_criacao

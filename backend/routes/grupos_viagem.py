@@ -91,14 +91,9 @@ class EntrarGrupoInput(BaseModel):
     codigo_convite: str
 
 
-@router.get("/grupos/", response_model=list[GrupoLista])
+@router.get("/grupos", response_model=list[GrupoLista])
 def listar_grupos(usuario_id: int = Depends(get_usuario_logado)):
-    return grupo_service.listar_tudo()
-
-
-# @router.get("/gruposAll", response_model=list[GrupoLista])
-# def listar_grupos_all(usuario_id: int = Depends(get_usuario_logado)):
-#     return grupo_service.listar_por_usuario(usuario_id)
+    return grupo_service.listar_por_usuario(usuario_id)
 
 
 @router.get("/grupos/buscar", response_model=list[GrupoLista])
