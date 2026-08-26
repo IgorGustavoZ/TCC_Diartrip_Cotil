@@ -82,19 +82,16 @@ def _detectar_prompt_injection(texto: str) -> bool:
     return False
 
 
-def listar_tudo(usuario_id: int, limite: int = 50, offset: int = 0) -> list:
+def listar_tudo() -> list:
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:
             cursor.execute(
                 """
                 SELECT id_chat, id_grupo, pergunta, resposta, data_interacao
-                FROM chat_ia
-                WHERE id_usuario = %s
+                FROM chat_ia                
                 ORDER BY data_interacao DESC
-                LIMIT %s OFFSET %s
-                """,
-                (usuario_id, limite, offset),
+                """,         
             )
             return cursor.fetchall()
         finally:

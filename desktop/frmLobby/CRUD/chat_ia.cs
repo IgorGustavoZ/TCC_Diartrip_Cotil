@@ -60,7 +60,7 @@ namespace WindowLobby.CRUD
         {
             var resp = await ExecutarComRefresh(() =>
             {
-                var req = new HttpRequestMessage(HttpMethod.Get, $"/chatAll")
+                var req = new HttpRequestMessage(HttpMethod.Get, $"/chat/all")
                 {
                     Content = new StringContent("", Encoding.UTF8, "application/json")
                 };

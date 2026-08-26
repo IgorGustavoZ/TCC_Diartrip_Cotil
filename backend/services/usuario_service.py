@@ -6,8 +6,6 @@ from utils.cloudinary_upload import upload_imagem
 from utils.imagem_utils import validar_imagem, strip_exif
 
 def buscar_tudo(
-    limite: int = 20,
-    offset: int = 0,
     busca: str | None = None
 ) -> list:
 
@@ -31,10 +29,7 @@ def buscar_tudo(
             if busca:
                 busca_safe = busca.strip()
                 sql += " WHERE nome LIKE %s"
-                params.append(f"%{busca_safe}%")
-
-            sql += " ORDER BY id_usuario LIMIT %s OFFSET %s"
-            params.extend([limite, offset])
+                params.append(f"%{busca_safe}%")          
 
             cursor.execute(sql, tuple(params))
 

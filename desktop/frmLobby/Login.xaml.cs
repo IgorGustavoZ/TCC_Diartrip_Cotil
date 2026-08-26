@@ -33,6 +33,7 @@ namespace WindowLogin
                 if (!sucesso)
                 {
                     MessageBox.Show(erro, "Falha no login", MessageBoxButton.OK, MessageBoxImage.Error);
+                    SetLoading(false);
                     return;
                 }
 

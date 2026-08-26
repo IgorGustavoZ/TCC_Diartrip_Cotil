@@ -12,13 +12,11 @@ class ChatInput(BaseModel):
     id_grupo: int
 
 
-@router.get("/chatAll", response_model=list[ChatIAHistorico])
+@router.get("/chat/all", response_model=list[ChatIAHistorico])
 def listar_todos_os_chats(
-    limite: int = Query(50, ge=1, le=200),
-    offset: int = Query(0, ge=0),
     usuario_id: int = Depends(get_usuario_logado),
 ):
-    return chat_service.listar_tudo(usuario_id, limite, offset)
+    return chat_service.listar_tudo()
 
 
 @router.get("/chat", response_model=list[ChatIAHistorico])

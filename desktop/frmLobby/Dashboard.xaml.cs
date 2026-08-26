@@ -56,7 +56,7 @@ namespace WindowLobby
                     txtViagens.Text = viagens?.Count.ToString() ?? "0";
                 }
 
-                var jsonUsu = await Usuario.GetUsuarios();
+                var jsonUsu = await Usuario.GetUsuarios();             
                 if (jsonUsu is not null)
                 {
                     var usuarios = JsonSerializer.Deserialize<List<UsuarioModel>>(
@@ -74,6 +74,7 @@ namespace WindowLobby
                         jsonChat,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                     );
+                 
                     double totalChats = 0;
                     foreach (var c in chats)
                     {
