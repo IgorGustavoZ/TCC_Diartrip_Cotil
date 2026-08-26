@@ -14,11 +14,15 @@ class UsuarioSimples(BaseModel):
     nome: str
     foto_perfil: Optional[str] = None
 
+class UsuarioDesktop(BaseModel):
+    id_usuario: int
+    nome: str
+    email: str
+    data_criacao: Optional[datetime] = None
 
 class UsuarioPublico(BaseModel):
     id_usuario: int
     nome: str
-    email: str
     bio: Optional[str] = None
     foto_perfil: Optional[str] = None
     data_criacao: Optional[datetime] = None

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Response, UploadFile, File
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from schemas import (
-    UsuarioPublico, UsuarioMe, UsuarioCriado, UsuarioSimples,
+    UsuarioDesktop, UsuarioPublico, UsuarioMe, UsuarioCriado, UsuarioSimples,
     FotoPerfilResponse, SeguirResponse, MensagemResponse,
 )
 from utils.auth import get_usuario_logado
@@ -66,7 +66,7 @@ def obter_todos_os_perfil(
     verificar_rate_limit(f"busca_usuarios:{usuario_logado}", limite=30)
     return usuario_service.buscar_tudo(limite, offset, busca)
 
-@router.get("/usuarios/all", response_model=list[UsuarioPublico])
+@router.get("/usuarios/all", response_model=list[UsuarioDesktop])
 def obter_todos_os_perfil(
     usuario_logado: int = Depends(get_usuario_logado),
 ):
