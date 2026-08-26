@@ -189,12 +189,13 @@ class TestEntrarGrupo:
 class TestAdminGrupo:
     def test_criador_pode_atualizar_grupo(self, client_admin):
         # client_admin autentica como usuario_id=99, que aqui e o proprio criado_por.
-        # destino/datas iguais ao payload -> nao muda nada, so' atualiza.
+        # destino/datas/tipo/preferencias iguais ao payload -> nao muda nada, so' atualiza.
         conn = _conn_seq([
             (99,),
             {
                 "criado_por": 99, "destino_principal": GRUPO_PAYLOAD["destino_principal"],
                 "data_inicio": GRUPO_PAYLOAD["data_inicio"], "data_fim": GRUPO_PAYLOAD["data_fim"],
+                "tipo_viagem": GRUPO_PAYLOAD["tipo_viagem"], "preferencias": GRUPO_PAYLOAD["preferencias"],
             },
         ])
         with patch("database.get_db", fake_get_db(conn)):
@@ -219,6 +220,7 @@ class TestAdminGrupo:
             {
                 "criado_por": 99, "destino_principal": payload["destino_principal"],
                 "data_inicio": payload["data_inicio"], "data_fim": payload["data_fim"],
+                "tipo_viagem": payload["tipo_viagem"], "preferencias": payload["preferencias"],
             },
         ])
         with patch("database.get_db", fake_get_db(conn)):
@@ -246,6 +248,7 @@ class TestAdminGrupo:
             {
                 "criado_por": 99, "destino_principal": GRUPO_PAYLOAD["destino_principal"],
                 "data_inicio": "2026-06-01", "data_fim": "2026-06-15",
+                "tipo_viagem": GRUPO_PAYLOAD["tipo_viagem"], "preferencias": GRUPO_PAYLOAD["preferencias"],
             },
         ])
         payload = dict(GRUPO_PAYLOAD, data_inicio="2026-06-01", data_fim="2026-06-15")
@@ -288,6 +291,7 @@ class TestAdminGrupo:
             {
                 "criado_por": 99, "destino_principal": GRUPO_PAYLOAD["destino_principal"],
                 "data_inicio": GRUPO_PAYLOAD["data_inicio"], "data_fim": GRUPO_PAYLOAD["data_fim"],
+                "tipo_viagem": GRUPO_PAYLOAD["tipo_viagem"], "preferencias": GRUPO_PAYLOAD["preferencias"],
             },
         ]
         conn = MagicMock()
@@ -304,6 +308,84 @@ class TestAdminGrupo:
         assert not any(
             "DELETE FROM roteiros" in c.args[0] for c in cur.execute.call_args_list
         )
+
+    def test_atualizar_grupo_so_nome_mudou_nao_exclui_roteiros(self, client_admin):
+        # Excecao explicita: alterar so' o nome NUNCA exclui roteiros.
+        cur = MagicMock()
+        cur.rowcount = 1
+        cur.fetchone.side_effect = [
+            (99,),
+            {
+                "criado_por": 99, "destino_principal": GRUPO_PAYLOAD["destino_principal"],
+                "data_inicio": GRUPO_PAYLOAD["data_inicio"], "data_fim": GRUPO_PAYLOAD["data_fim"],
+                "tipo_viagem": GRUPO_PAYLOAD["tipo_viagem"], "preferencias": GRUPO_PAYLOAD["preferencias"],
+            },
+        ]
+        conn = MagicMock()
+        conn.cursor.return_value = cur
+        conn.commit = MagicMock()
+        conn.rollback = MagicMock()
+        conn.close = MagicMock()
+
+        payload = dict(GRUPO_PAYLOAD, nome_grupo="Minha viagem para Paris")
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.put("/grupos/10", json=payload)
+
+        assert resp.status_code == 200
+        assert "roteiros anteriores foram removidos" not in resp.json()["mensagem"]
+        assert not any(
+            "DELETE FROM roteiros" in c.args[0] for c in cur.execute.call_args_list
+        )
+
+    def test_atualizar_grupo_tipo_viagem_mudou_exclui_roteiros(self, client_admin):
+        cur = MagicMock()
+        cur.rowcount = 1
+        cur.fetchone.side_effect = [
+            (99,),
+            {
+                "criado_por": 99, "destino_principal": GRUPO_PAYLOAD["destino_principal"],
+                "data_inicio": GRUPO_PAYLOAD["data_inicio"], "data_fim": GRUPO_PAYLOAD["data_fim"],
+                "tipo_viagem": "lazer", "preferencias": GRUPO_PAYLOAD["preferencias"],
+            },
+        ]
+        conn = MagicMock()
+        conn.cursor.return_value = cur
+        conn.commit = MagicMock()
+        conn.rollback = MagicMock()
+        conn.close = MagicMock()
+
+        payload = dict(GRUPO_PAYLOAD, tipo_viagem="aventura")
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.put("/grupos/10", json=payload)
+
+        assert resp.status_code == 200
+        assert "roteiros anteriores foram removidos" in resp.json()["mensagem"]
+        assert any("DELETE FROM roteiros" in c.args[0] for c in cur.execute.call_args_list)
+
+    def test_atualizar_grupo_preferencias_mudou_exclui_roteiros(self, client_admin):
+        cur = MagicMock()
+        cur.rowcount = 1
+        cur.fetchone.side_effect = [
+            (99,),
+            {
+                "criado_por": 99, "destino_principal": GRUPO_PAYLOAD["destino_principal"],
+                "data_inicio": GRUPO_PAYLOAD["data_inicio"], "data_fim": GRUPO_PAYLOAD["data_fim"],
+                "tipo_viagem": GRUPO_PAYLOAD["tipo_viagem"], "preferencias": "museus e gastronomia",
+            },
+        ]
+        conn = MagicMock()
+        conn.cursor.return_value = cur
+        conn.commit = MagicMock()
+        conn.rollback = MagicMock()
+        conn.close = MagicMock()
+
+        payload = dict(GRUPO_PAYLOAD, preferencias="Participantes: 2 | Transporte: a pé | natureza")
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.put("/grupos/10", json=payload)
+
+        assert resp.status_code == 200
+        assert "roteiros anteriores foram removidos" in resp.json()["mensagem"]
+        assert any("DELETE FROM roteiros" in c.args[0] for c in cur.execute.call_args_list)
 
     def test_criador_pode_deletar_grupo(self, client_admin):
         # client_admin autentica como usuario_id=99, que aqui e o proprio criado_por.

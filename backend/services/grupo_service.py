@@ -196,8 +196,8 @@ def atualizar(id_grupo: int, dados, usuario_id: int) -> dict:
         cursor = conexao.cursor(dictionary=True)
         try:
             cursor.execute(
-                "SELECT criado_por, destino_principal, data_inicio, data_fim "
-                "FROM grupos_viagem WHERE id_grupo=%s",
+                "SELECT criado_por, destino_principal, data_inicio, data_fim, "
+                "tipo_viagem, preferencias FROM grupos_viagem WHERE id_grupo=%s",
                 (id_grupo,),
             )
             atual = cursor.fetchone()
@@ -223,7 +223,15 @@ def atualizar(id_grupo: int, dados, usuario_id: int) -> dict:
                     status_code=400, detail="A data de término não pode ser anterior a hoje"
                 )
 
-            destino_mudou = atual["destino_principal"] != dados.destino_principal
+            # O nome NÃO entra aqui de propósito — só as informações que
+            # tornariam um roteiro já existente incoerente com a viagem.
+            info_relevante_mudou = (
+                atual["destino_principal"] != dados.destino_principal
+                or nova_inicio != _para_data(atual["data_inicio"])
+                or nova_fim != _para_data(atual["data_fim"])
+                or (atual["tipo_viagem"] or None) != (dados.tipo_viagem or None)
+                or (atual["preferencias"] or None) != (dados.preferencias or None)
+            )
 
             cursor.execute(
                 """
@@ -240,12 +248,15 @@ def atualizar(id_grupo: int, dados, usuario_id: int) -> dict:
             )
 
             mensagem = "Grupo atualizado"
-            if destino_mudou:
+            if info_relevante_mudou:
                 # Mesma transação do UPDATE acima (get_db só dá commit no fim
-                # do "with" sem exceção) — destino e roteiros mudam juntos ou
+                # do "with" sem exceção) — viagem e roteiros mudam juntos ou
                 # nenhum dos dois muda.
                 cursor.execute("DELETE FROM roteiros WHERE id_grupo=%s", (id_grupo,))
-                mensagem = "Grupo atualizado. Os roteiros anteriores foram removidos porque o destino mudou."
+                mensagem = (
+                    "Grupo atualizado. Os roteiros anteriores foram removidos porque "
+                    "informações da viagem (destino, datas, tipo ou preferências) mudaram."
+                )
 
             return {"mensagem": mensagem}
         finally:

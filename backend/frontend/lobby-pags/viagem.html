@@ -544,6 +544,14 @@ async function salvarConfigViagem() {
         return
     }
 
+    // Nome NÃO entra aqui de propósito — só o que tornaria um roteiro já
+    // existente incoerente com a viagem (mesma regra do backend).
+    const infoRelevanteMudou =
+        dados.destino_principal !== (grupoAtual.destino_principal || "") ||
+        dataMudou ||
+        dados.tipo_viagem !== (grupoAtual.tipo_viagem || "") ||
+        dados.preferencias !== (grupoAtual.preferencias || "")
+
     const executarSalvar = async () => {
         try {
             const resp = await fetch(`/grupos/${idGrupo}`, {
@@ -568,7 +576,7 @@ async function salvarConfigViagem() {
         }
     }
 
-    if (dados.destino_principal !== grupoAtual.destino_principal) {
+    if (infoRelevanteMudou) {
         abrirModalConfirmacao({
             titulo: t('viagem.settings.destinationChangeTitle'),
             mensagem: t('viagem.settings.destinationChangeBody'),
