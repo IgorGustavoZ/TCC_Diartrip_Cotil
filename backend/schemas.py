@@ -18,6 +18,7 @@ class UsuarioSimples(BaseModel):
 class UsuarioPublico(BaseModel):
     id_usuario: int
     nome: str
+    email: str
     bio: Optional[str] = None
     foto_perfil: Optional[str] = None
     data_criacao: Optional[datetime] = None

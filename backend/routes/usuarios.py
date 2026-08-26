@@ -66,6 +66,16 @@ def obter_todos_os_perfil(
     verificar_rate_limit(f"busca_usuarios:{usuario_logado}", limite=30)
     return usuario_service.buscar_tudo(limite, offset, busca)
 
+@router.get("/usuarios/all", response_model=list[UsuarioPublico])
+def obter_todos_os_perfil(
+    limite: int = Query(20, ge=1, le=50),
+    offset: int = Query(0, ge=0),
+    busca: str | None = Query(None, max_length=100),
+    usuario_logado: int = Depends(get_usuario_logado),
+):
+    verificar_rate_limit(f"busca_usuarios:{usuario_logado}", limite=30)
+    return usuario_service.buscar_tudo(limite, offset, busca)
+
 
 @router.get("/usuarios/me", response_model=UsuarioMe)
 def obter_perfil_atual(usuario_id: int = Depends(get_usuario_logado)):

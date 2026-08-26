@@ -7,6 +7,27 @@ from database import get_db
 from utils.dependencies import checar_membro_grupo
 from utils.cloudinary_upload import deletar_imagem
 
+def listar_tudo(usuario_id: int) -> list:
+    with get_db() as conexao:
+        cursor = conexao.cursor(dictionary=True)
+        try:
+            cursor.execute(
+                """
+                SELECT
+                    g.id_grupo,
+                    g.nome_grupo,
+                    g.destino_principal,
+                    g.data_inicio,
+                    g.data_fim,
+                    u.nome AS criador
+                FROM grupos_viagem g
+                JOIN usuarios u ON g.criado_por = u.id_usuario
+                """
+            )
+            return cursor.fetchall()
+        finally:
+            cursor.close()
+
 def listar_por_usuario(usuario_id: int) -> list:
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)

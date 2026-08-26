@@ -95,6 +95,9 @@ class EntrarGrupoInput(BaseModel):
 def listar_grupos(usuario_id: int = Depends(get_usuario_logado)):
     return grupo_service.listar_por_usuario(usuario_id)
 
+@router.get("/grupos/all", response_model=list[GrupoLista])
+def listar_grupos(usuario_id: int = Depends(get_usuario_logado)):
+    return grupo_service.listar_tudo(usuario_id)
 
 @router.get("/grupos/buscar", response_model=list[GrupoLista])
 def buscar_grupo_por_nome(

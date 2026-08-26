@@ -228,7 +228,7 @@ namespace WindowLobby.crud
         {       
             var resp = await ExecutarComRefresh(() =>
             {
-                var req = new HttpRequestMessage(HttpMethod.Get, $"/usuarios/")
+                var req = new HttpRequestMessage(HttpMethod.Get, $"/usuarios/all")
                 {
                     Content = new StringContent("", Encoding.UTF8, "application/json")
                 };

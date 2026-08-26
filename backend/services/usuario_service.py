@@ -20,6 +20,7 @@ def buscar_tudo(
                     id_usuario,
                     nome,
                     bio,
+                    email,
                     foto_perfil,
                     data_criacao
                 FROM usuarios
