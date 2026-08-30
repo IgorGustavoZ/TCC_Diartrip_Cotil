@@ -35,6 +35,8 @@ namespace WindowLobby.Pages
             {
                 var jsonChat = await Chat_ia.BuscarMensagens();
 
+                MessageBox.Show(jsonChat);
+
                 if (jsonChat is not null)
                 {
                     var chats = JsonSerializer.Deserialize<List<ChatModel>>(

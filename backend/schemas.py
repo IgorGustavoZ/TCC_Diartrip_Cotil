@@ -206,6 +206,7 @@ class ChatIAResponse(BaseModel):
 
 class ChatIAHistorico(BaseModel):
     id_chat: int
+    id_usuario: int
     id_grupo: int
     pergunta: str
     resposta: Optional[str] = None

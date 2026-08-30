@@ -88,7 +88,7 @@ def listar_tudo() -> list:
         try:
             cursor.execute(
                 """
-                SELECT id_chat, id_grupo, pergunta, resposta, data_interacao
+                SELECT id_chat, id_usuario, id_grupo, pergunta, resposta, data_interacao
                 FROM chat_ia                
                 ORDER BY data_interacao DESC
                 """,         
