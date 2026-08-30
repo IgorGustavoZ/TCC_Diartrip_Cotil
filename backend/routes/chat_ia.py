@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
-from schemas import ChatIAResponse, ChatIAHistorico
+from schemas import ChatIAResponse, ChatIAHistorico, ChatIADesktop
 from utils.auth import get_usuario_logado
 from services import chat_service
 
@@ -12,7 +12,7 @@ class ChatInput(BaseModel):
     id_grupo: int
 
 
-@router.get("/chat/all", response_model=list[ChatIAHistorico])
+@router.get("/chat/all", response_model=list[ChatIADesktop])
 def listar_todos_os_chats(
     usuario_id: int = Depends(get_usuario_logado),
 ):

@@ -203,10 +203,16 @@ class ChatIAResponse(BaseModel):
     pergunta: str
     resposta: str
 
+class ChatIADesktop(BaseModel):
+    id_chat: int
+    id_usuario: int
+    id_grupo: int
+    pergunta: str
+    resposta: Optional[str] = None
+    data_interacao: datetime
 
 class ChatIAHistorico(BaseModel):
     id_chat: int
-    id_usuario: int
     id_grupo: int
     pergunta: str
     resposta: Optional[str] = None
