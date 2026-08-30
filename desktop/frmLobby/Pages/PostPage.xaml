@@ -1,4 +1,4 @@
-﻿<Page x:Class="WindowLobby.Pages.ChatIaPage"
+﻿<Page x:Class="WindowLobby.Pages.PostPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
@@ -41,49 +41,6 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="10,8"/>
             <Setter Property="Margin" Value="0,0,0,18"/>
-        </Style>
-
-        <!-- Checkbox filter style -->
-        <Style x:Key="FilterCheckBoxStyle" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Margin" Value="0,0,0,18"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="CheckBox">
-                        <StackPanel Orientation="Horizontal">
-                            <Border x:Name="box"
-                                    Width="18" Height="18"
-                                    CornerRadius="5"
-                                    Background="{StaticResource FieldBrush}"
-                                    BorderBrush="{StaticResource BorderBrush2}"
-                                    BorderThickness="1"
-                                    VerticalAlignment="Top">
-                                <Path x:Name="check"
-                                      Data="M2,7 L6,11 L14,2"
-                                      Stroke="White"
-                                      StrokeThickness="2"
-                                      StrokeStartLineCap="Round"
-                                      StrokeEndLineCap="Round"
-                                      StrokeLineJoin="Round"
-                                      Visibility="Collapsed"/>
-                            </Border>
-                            <ContentPresenter VerticalAlignment="Top" Margin="10,0,0,0" Content="Mostrar grupos sem repetição" />
-                        </StackPanel>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="box" Property="Background" Value="{StaticResource AccentBrush}"/>
-                                <Setter TargetName="box" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-                                <Setter TargetName="check" Property="Visibility" Value="Visible"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="box" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
         <!-- Apply filters button -->
@@ -155,7 +112,6 @@
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush" Value="#1A2438"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type ListViewItem}">
@@ -212,17 +168,11 @@
                 <TextBlock Text="ID DO USUÁRIO" Style="{StaticResource FilterLabelStyle}"/>
                 <TextBox x:Name="txtFiltroIdUsuario" Style="{StaticResource FilterTextBoxStyle}"/>
 
-                <TextBlock Text="ID DO GRUPO" Style="{StaticResource FilterLabelStyle}"/>
-                <TextBox x:Name="txtFiltroIdGrupo" Style="{StaticResource FilterTextBoxStyle}"/>
+                <TextBlock Text="CONTEÚDO" Style="{StaticResource FilterLabelStyle}"/>
+                <TextBox x:Name="txtFiltroConteudo" Style="{StaticResource FilterTextBoxStyle}"/>
 
-                <TextBlock Text="DATA DA INTERAÇÃO" Style="{StaticResource FilterLabelStyle}"/>
+                <TextBlock Text="DATA DE CRIAÇÃO" Style="{StaticResource FilterLabelStyle}"/>
                 <DatePicker x:Name="dpFiltroData" Style="{StaticResource FilterDatePickerStyle}"/>
-
-                <CheckBox x:Name="chkOcultarDuplicados"
-                          Content="ALo"
-                          Style="{StaticResource FilterCheckBoxStyle}"
-                          Checked="ChkOcultarDuplicados_Changed"
-                          Unchecked="ChkOcultarDuplicados_Changed"/>
 
                 <Button x:Name="BtnFiltrar" Content="Filtrar"
                         Style="{StaticResource FilterButtonStyle}"
@@ -243,30 +193,23 @@
 
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
-                       Text="Chat IA"
+                       Text="Posts"
                        FontSize="24"
                        FontWeight="Bold"
                        Foreground="{StaticResource TextPrimaryBrush}"
-                       Margin="0,0,0,4"/>
-
-            <TextBlock Grid.Row="1"
-                       Text="Clique duas vezes em uma linha para ver toda a conversa do grupo."
-                       Foreground="{StaticResource TextMutedBrush}"
-                       FontSize="13"
                        Margin="0,0,0,16"/>
 
-            <Border Grid.Row="2"
+            <Border Grid.Row="1"
                     Background="{StaticResource CardBrush}"
                     BorderBrush="{StaticResource BorderBrush2}"
                     BorderThickness="1"
                     CornerRadius="12">
 
-                <ListView x:Name="listChats"
+                <ListView x:Name="listPosts"
           Background="Transparent"
           Foreground="{StaticResource TextPrimaryBrush}"
           BorderThickness="0"
@@ -276,26 +219,30 @@
           ScrollViewer.HorizontalScrollBarVisibility="Disabled"
           ItemContainerStyle="{StaticResource ListRowStyle}"
           GridViewColumnHeader.Click="ListViewHeader_Click"
-          MouseDoubleClick="ListChats_MouseDoubleClick">
+          MouseDoubleClick="ListPosts_MouseDoubleClick">
 
                     <ListView.View>
                         <GridView ColumnHeaderContainerStyle="{StaticResource ListHeaderStyle}">
 
                             <GridViewColumn Header="Id"
-                            DisplayMemberBinding="{Binding id_chat}"
+                            DisplayMemberBinding="{Binding id_post}"
+                            Width="60"/>
+
+                            <GridViewColumn Header="Id Usuário"
+                            DisplayMemberBinding="{Binding id_usuario}"
+                            Width="100"/>
+
+                            <GridViewColumn Header="Conteúdo"
+                            DisplayMemberBinding="{Binding conteudo}"
+                            Width="320"/>
+
+                            <GridViewColumn Header="Curtidas"
+                            DisplayMemberBinding="{Binding curtidas}"
                             Width="90"/>
 
-                            <GridViewColumn Header="Grupo"
-                            DisplayMemberBinding="{Binding id_grupo}"
-                            Width="110"/>
-
-                            <GridViewColumn Header="Usuário"
-                            DisplayMemberBinding="{Binding id_usuario}"
-                            Width="130"/>
-
-                            <GridViewColumn Header="Data da interação"
-                            DisplayMemberBinding="{Binding data_interacao}"
-                            Width="260"/>
+                            <GridViewColumn Header="Data de criação"
+                            DisplayMemberBinding="{Binding data_criacao}"
+                            Width="180"/>
 
                         </GridView>
                     </ListView.View>

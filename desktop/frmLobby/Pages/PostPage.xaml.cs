@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.ComponentModel;
@@ -10,18 +10,18 @@ using WindowLobby.CRUD.models;
 
 namespace WindowLobby.Pages
 {
-    public partial class UsuarioPage : Page
+    public partial class PostPage : Page
     {
         private GridViewColumnHeader _lastHeaderClicked;
         private ListSortDirection _lastDirection = ListSortDirection.Ascending;
 
-        public UsuarioPage()
+        public PostPage()
         {
             InitializeComponent();
-            Loaded += async (_, _) => await CarregarPerfil();
+            Loaded += async (_, _) => await CarregarPosts();
         }
 
-        private async Task CarregarPerfil()
+        private async Task CarregarPosts()
         {
             try
             {
@@ -36,28 +36,27 @@ namespace WindowLobby.Pages
                     return;
                 }
 
-                var jsonUsu = await Usuario.GetUsuarios();
+                var jsonPosts = await Post.GetPosts();
 
-                if (jsonUsu is not null)
+                if (jsonPosts is not null)
                 {
                     // ---- DEBUG: inspect raw JSON before deserializing ----
-                    //System.Diagnostics.Debug.WriteLine("===== RAW /usuarios/ JSON =====");
-                    //System.Diagnostics.Debug.WriteLine(jsonUsu);
-                    //System.Diagnostics.Debug.WriteLine("================================");
-                    // --------------------------------------------------------
+                    //System.Diagnostics.Debug.WriteLine("===== RAW /posts JSON =====");
+                    //System.Diagnostics.Debug.WriteLine(jsonPosts);
+                    //================================
 
-                    var usuarios = JsonSerializer.Deserialize<List<UsuarioModel>>(
-                        jsonUsu,
+                    var posts = JsonSerializer.Deserialize<List<PostModel>>(
+                        jsonPosts,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                     );
 
-                    listUsuarios.ItemsSource = usuarios;
+                    listPosts.ItemsSource = posts;
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Erro ao carregar perfil: {ex.Message}",
+                    $"Erro ao carregar posts: {ex.Message}",
                     "Erro",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -80,7 +79,7 @@ namespace WindowLobby.Pages
                     ? ListSortDirection.Ascending
                     : ListSortDirection.Descending);
 
-            var view = CollectionViewSource.GetDefaultView(listUsuarios.ItemsSource);
+            var view = CollectionViewSource.GetDefaultView(listPosts.ItemsSource);
             if (view is null) return;
 
             view.SortDescriptions.Clear();
@@ -91,9 +90,9 @@ namespace WindowLobby.Pages
             _lastDirection = direction;
         }
 
-        // ---------- Detalhe do usuário ----------
+        // ---------- Detalhe do post ----------
 
-        private void ListUsuarios_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void ListPosts_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             // Sobe a árvore visual a partir do ponto clicado até achar o
             // ListViewItem — evita abrir o detalhe ao dar duplo clique no
@@ -104,45 +103,45 @@ namespace WindowLobby.Pages
                 dep = VisualTreeHelper.GetParent(dep);
             }
 
-            if (dep is not ListViewItem item || item.DataContext is not UsuarioModel usuario)
+            if (dep is not ListViewItem item || item.DataContext is not PostModel post)
                 return;
 
-            // Passa a própria página (this) como "página anterior": o botão
-            // Voltar da UsuarioDetalhePage navega direto de volta pra essa
-            // mesma instância, preservando filtros/ordenação/rolagem, sem
-            // depender do back stack do Frame (ver nota no PostDetalhePage).
-            NavigationService?.Navigate(new UsuarioDetalhePage(usuario, this));
+            // Navega dentro do mesmo Frame sem fechar a PostPage — ela continua
+            // viva (filtros/ordenação/rolagem intactos) e é passada como
+            // "página anterior" para o botão Voltar da PostDetalhePage voltar
+            // direto pra essa mesma instância.
+            NavigationService?.Navigate(new PostDetalhePage(post, this));
         }
 
         // ---------- Filtros!! ----------
 
         private void BtnFiltrar_Click(object sender, RoutedEventArgs e)
         {
-            var view = CollectionViewSource.GetDefaultView(listUsuarios.ItemsSource);
+            var view = CollectionViewSource.GetDefaultView(listPosts.ItemsSource);
             if (view is null) return;
 
             view.Filter = obj =>
             {
-                if (obj is not UsuarioModel usuario) return false;
+                if (obj is not PostModel post) return false;
 
                 if (!string.IsNullOrWhiteSpace(txtFiltroId.Text) &&
-                    !usuario.id_usuario.ToString()
+                    !post.id_post.ToString()
                         .Contains(txtFiltroId.Text.Trim(), StringComparison.OrdinalIgnoreCase))
                     return false;
 
-                if (!string.IsNullOrWhiteSpace(txtFiltroNome.Text) &&
-                    !(usuario.nome ?? "")
-                        .Contains(txtFiltroNome.Text.Trim(), StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrWhiteSpace(txtFiltroIdUsuario.Text) &&
+                    !post.id_usuario.ToString()
+                        .Contains(txtFiltroIdUsuario.Text.Trim(), StringComparison.OrdinalIgnoreCase))
                     return false;
 
-                if (!string.IsNullOrWhiteSpace(txtFiltroEmail.Text) &&
-                    !(usuario.email ?? "")
-                        .Contains(txtFiltroEmail.Text.Trim(), StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrWhiteSpace(txtFiltroConteudo.Text) &&
+                    !(post.conteudo ?? "")
+                        .Contains(txtFiltroConteudo.Text.Trim(), StringComparison.OrdinalIgnoreCase))
                     return false;
 
                 if (dpFiltroData.SelectedDate.HasValue)
                 {
-                    if (!DateTime.TryParse(usuario.data_criacao, out var criadoEm) ||
+                    if (!DateTime.TryParse(post.data_criacao, out var criadoEm) ||
                         criadoEm.Date != dpFiltroData.SelectedDate.Value.Date)
                         return false;
                 }
@@ -156,11 +155,11 @@ namespace WindowLobby.Pages
         private void BtnLimparFiltros_Click(object sender, RoutedEventArgs e)
         {
             txtFiltroId.Clear();
-            txtFiltroNome.Clear();
-            txtFiltroEmail.Clear();
+            txtFiltroIdUsuario.Clear();
+            txtFiltroConteudo.Clear();
             dpFiltroData.SelectedDate = null;
 
-            var view = CollectionViewSource.GetDefaultView(listUsuarios.ItemsSource);
+            var view = CollectionViewSource.GetDefaultView(listPosts.ItemsSource);
             if (view is null) return;
 
             view.Filter = null;

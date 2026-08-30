@@ -33,7 +33,7 @@
             <Setter Property="Margin" Value="0,0,0,18"/>
         </Style>
 
-       
+
 
 
         <!-- DatePicker filter style -->
@@ -221,7 +221,8 @@
           HorizontalContentAlignment="Stretch"
           ScrollViewer.HorizontalScrollBarVisibility="Disabled"
           ItemContainerStyle="{StaticResource ListRowStyle}"
-          GridViewColumnHeader.Click="ListViewHeader_Click">
+          GridViewColumnHeader.Click="ListViewHeader_Click"
+          MouseDoubleClick="ListUsuarios_MouseDoubleClick">
 
                     <ListView.View>
                         <GridView ColumnHeaderContainerStyle="{StaticResource ListHeaderStyle}">

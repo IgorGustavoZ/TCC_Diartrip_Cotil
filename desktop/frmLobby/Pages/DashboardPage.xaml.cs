@@ -29,6 +29,12 @@ namespace WindowLobby.Pages
     /// </summary>
     public partial class DashboardPage : Page
     {
+        // Paleta usada para as fatias do gráfico de destinos.
+        private static readonly string[] Paleta =
+        {
+            "#3B82F6", "#4ADE80", "#FBBF24", "#F472B6", "#A78BFA", "#38BDF8", "#FB7185"
+        };
+
         public DashboardPage()
         {
             InitializeComponent();
@@ -41,13 +47,16 @@ namespace WindowLobby.Pages
             try
             {
                 var jsonVia = await Viagem.GetViagens();
+                List<ViagemModel>? viagens = null;
                 if (jsonVia is not null)
                 {
-                    var viagens = JsonSerializer.Deserialize<List<ViagemModel>>(
+                    viagens = JsonSerializer.Deserialize<List<ViagemModel>>(
                         jsonVia,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                     );
                     txtViagens.Text = (viagens?.Count ?? 0).ToString();
+
+                    MontarGraficoDestinos(viagens);
                 }
 
                 var jsonUsu = await Usuario.GetUsuarios();
@@ -86,7 +95,7 @@ namespace WindowLobby.Pages
             }
         }
 
-        // ── Gráfico: usuários criados por mês ───────────────────────────────────
+        // ── Gráfico: usuários criados por mês (últimos 12 meses, sempre) ────────
 
         private void MontarGraficoUsuariosPorMes(List<UsuarioModel>? usuarios)
         {
@@ -96,23 +105,17 @@ namespace WindowLobby.Pages
                 .Select(data => data!.Value)
                 .ToList();
 
-            if (datasValidas.Count == 0)
-            {
-                chartUsuarios.Series = Array.Empty<ISeries>();
-                chartUsuarios.XAxes = new[] { new Axis { Labels = new List<string>() } };
-                return;
-            }
-
-            // Do mês do primeiro usuário cadastrado até o mês atual, sem pular meses
-            // vazios (contam como 0).
-            var primeiroMes = new DateTime(datasValidas.Min().Year, datasValidas.Min().Month, 1);
+            // Janela fixa: mês atual e os 11 anteriores — independe de quando o
+            // primeiro usuário foi cadastrado.
             var mesAtual = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            var primeiroMes = mesAtual.AddMonths(-11);
 
             var meses = new List<DateTime>();
             for (var mes = primeiroMes; mes <= mesAtual; mes = mes.AddMonths(1))
                 meses.Add(mes);
 
             var contagemPorMes = datasValidas
+                .Where(d => d >= primeiroMes)
                 .GroupBy(d => new DateTime(d.Year, d.Month, 1))
                 .ToDictionary(g => g.Key, g => g.Count());
 
@@ -143,8 +146,8 @@ namespace WindowLobby.Pages
                 new Axis
                 {
                     Labels = rotulos,
-                    LabelsRotation = rotulos.Count > 8 ? 45 : 0,
-                    TextSize = 12,
+                    LabelsRotation = 45,
+                    TextSize = 11,
                     LabelsPaint = new SolidColorPaint(SKColor.Parse("#94A3B8")),
                     SeparatorsPaint = null
                 }
@@ -160,6 +163,51 @@ namespace WindowLobby.Pages
                     SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#27324A")) { StrokeThickness = 1 }
                 }
             };
+        }
+
+        // ── Gráfico: top destinos das viagens (pizza) ───────────────────────────
+
+        private void MontarGraficoDestinos(List<ViagemModel>? viagens)
+        {
+            // NOTA: assume que ViagemModel tem uma propriedade "destino" (string),
+            // seguindo o mesmo padrão dos outros models (nome, email, pergunta...).
+            // Se o nome real for diferente, troque "v.destino" abaixo.
+            var destinosValidos = (viagens ?? new List<ViagemModel>())
+                .Select(v => v.destino_principal)
+                .Where(d => !string.IsNullOrWhiteSpace(d))
+                .Select(d => d!.Trim())
+                .ToList();
+
+            if (destinosValidos.Count == 0)
+            {
+                chartDestinos.Series = Array.Empty<ISeries>();
+                return;
+            }
+
+            const int maxFatias = 6;
+
+            var contagem = destinosValidos
+                .GroupBy(d => d, StringComparer.OrdinalIgnoreCase)
+                .Select(g => new { Destino = g.Key, Quantidade = g.Count() })
+                .OrderByDescending(g => g.Quantidade)
+                .ToList();
+
+            var principais = contagem.Take(maxFatias).ToList();
+            var restante = contagem.Skip(maxFatias).Sum(g => g.Quantidade);
+            if (restante > 0)
+                principais.Add(new { Destino = "Outros", Quantidade = restante });
+
+            chartDestinos.Series = principais
+                .Select((d, i) => (ISeries)new PieSeries<double>
+                {
+                    Name = d.Destino,
+                    Values = new[] { (double)d.Quantidade },
+                    Fill = new SolidColorPaint(SKColor.Parse(Paleta[i % Paleta.Length])),
+                    DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                    DataLabelsSize = 12,
+                    DataLabelsFormatter = point => $"{point.Coordinate.PrimaryValue}"
+                })
+                .ToArray();
         }
     }
 }

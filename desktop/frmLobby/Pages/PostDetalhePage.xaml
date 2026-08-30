@@ -1,0 +1,221 @@
+﻿<Page x:Class="WindowLobby.Pages.PostDetalhePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="Transparent">
+
+    <Page.Resources>
+
+        <SolidColorBrush x:Key="CardBrush" Color="#1E293B"/>
+        <SolidColorBrush x:Key="FieldBrush" Color="#0F172A"/>
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F8FAFC"/>
+        <SolidColorBrush x:Key="TextMutedBrush" Color="#94A3B8"/>
+        <SolidColorBrush x:Key="BorderBrush2" Color="#27324A"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6"/>
+        <SolidColorBrush x:Key="LikeAccentBrush" Color="#F87171"/>
+
+        <!-- Back button (top-left) -->
+        <Style x:Key="BackButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush2}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#243248"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ContentCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush2}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Padding" Value="22,18"/>
+        </Style>
+
+        <Style x:Key="ContentTitleStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <!-- Read-only TextBox styled to look like a plain wrapped label, but the
+             text can still be selected and Ctrl+C'd, unlike a TextBlock. -->
+        <Style x:Key="SelectableTextStyle" TargetType="TextBox">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="IsUndoEnabled" Value="False"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="AcceptsReturn" Value="True"/>
+            <Setter Property="Cursor" Value="IBeam"/>
+            <Setter Property="SelectionBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <ScrollViewer x:Name="PART_ContentHost" Background="Transparent"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Meta line shown under the post content -->
+        <Style x:Key="MetaLineStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <!-- Card for each comment -->
+        <Style x:Key="ComentarioCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource FieldBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush2}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="16,12"/>
+        </Style>
+
+    </Page.Resources>
+
+    <!-- Only vertical scrolling — text/comments wrap instead of running off the side -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+
+        <StackPanel Margin="0,0,4,10">
+
+            <!-- Top bar: back button + title -->
+            <Grid Margin="0,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0"
+                        Content="←   Voltar"
+                        Style="{StaticResource BackButtonStyle}"
+                        Click="BtnVoltar_Click"/>
+
+                <TextBlock x:Name="txtTitulo"
+                           Grid.Column="1"
+                           Text="Post"
+                           FontSize="22"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           VerticalAlignment="Center"
+                           Margin="16,0,0,0"/>
+            </Grid>
+
+            <TextBlock x:Name="txtSubtitulo"
+                       Text=""
+                       Foreground="{StaticResource TextMutedBrush}"
+                       FontSize="13"
+                       Margin="0,6,0,20"/>
+
+            <!-- Card do post -->
+            <Border Style="{StaticResource ContentCardStyle}" Margin="0,0,0,24">
+                <StackPanel>
+
+                    <!-- Imagem do post — fica oculta se não houver "imagem" ou se
+                         o carregamento falhar (ver CarregarImagem no code-behind) -->
+                    <Border x:Name="borderImagem"
+                            CornerRadius="10"
+                            ClipToBounds="True"
+                            Background="{StaticResource FieldBrush}"
+                            Margin="0,0,0,16"
+                            Visibility="Collapsed">
+                        <Image x:Name="imgPost"
+                               Stretch="Uniform"
+                               MaxHeight="380"/>
+                    </Border>
+
+                    <TextBlock Text="CONTEÚDO" Style="{StaticResource ContentTitleStyle}"/>
+                    <TextBox x:Name="txtConteudo" Style="{StaticResource SelectableTextStyle}"/>
+
+                    <TextBlock Style="{StaticResource MetaLineStyle}" Margin="0,18,0,0">
+                        <Run Text="Id "/><Run x:Name="runIdPost"/>
+                        <Run Text=" • Usuário "/><Run x:Name="runIdUsuario"/>
+                        <Run Text=" ("/><Run x:Name="runNomeUsuario"/><Run Text=")"/>
+                        <Run Text=" • "/><Run x:Name="runData"/>
+                    </TextBlock>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <TextBlock Text="❤" FontSize="14" Foreground="{StaticResource LikeAccentBrush}" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtCurtidas"
+                                   Text="0 curtidas"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   FontSize="13"
+                                   Margin="6,0,0,0"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                </StackPanel>
+            </Border>
+
+            <!-- Comentários -->
+            <TextBlock x:Name="txtComentariosTitulo"
+                       Text="Comentários"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       Margin="0,0,0,14"/>
+
+            <TextBlock x:Name="txtSemComentarios"
+                       Text="Nenhum comentário ainda."
+                       Foreground="{StaticResource TextMutedBrush}"
+                       FontSize="14"
+                       Margin="0,0,0,20"
+                       Visibility="Collapsed"/>
+
+            <ItemsControl x:Name="icComentarios">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource ComentarioCardStyle}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock FontWeight="SemiBold"
+                                           FontSize="13"
+                                           Foreground="{StaticResource TextPrimaryBrush}">
+                                    <Run Text="Usuário "/><Run Text="{Binding id_usuario, Mode=OneWay}"/>
+                                </TextBlock>
+                                <TextBox Text="{Binding conteudo, Mode=OneWay}"
+                                         Style="{StaticResource SelectableTextStyle}"
+                                         FontSize="14"
+                                         Margin="0,6,0,6"/>
+                                <TextBlock Text="{Binding data_criacao, Mode=OneWay}"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           FontSize="11"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+        </StackPanel>
+
+    </ScrollViewer>
+
+</Page>

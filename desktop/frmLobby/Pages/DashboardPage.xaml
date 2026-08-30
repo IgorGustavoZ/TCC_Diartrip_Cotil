@@ -29,6 +29,23 @@
             <Setter Property="BorderBrush" Value="#27324A"/>
         </Style>
 
+        <Style x:Key="ChartCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush2}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="Padding" Value="22,20"/>
+            <Setter Property="Effect" Value="{StaticResource CardShadow}"/>
+        </Style>
+
+        <Style x:Key="ChartTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+
     </Page.Resources>
 
     <Grid Margin="-10,0,-10,0">
@@ -103,7 +120,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="CHAT IA" Foreground="{StaticResource TextMutedBrush}"
+                        <TextBlock Text="TOKENS USADOS PELA IA" Foreground="{StaticResource TextMutedBrush}"
                                    FontSize="12" FontWeight="SemiBold"/>
                         <TextBlock x:Name="txtChatIA" Text="0"
                                    FontSize="36" FontWeight="Bold"
@@ -120,39 +137,57 @@
 
         </UniformGrid>
 
-        <!-- ============ USERS PER MONTH CHART ============ -->
+        <!-- ============ CHARTS (side by side) ============ -->
 
-        <Border Grid.Row="2"
-                Background="{StaticResource CardBrush}"
-                BorderBrush="{StaticResource BorderBrush2}"
-                BorderThickness="1"
-                CornerRadius="16"
-                Margin="10"
-                Padding="22,20"
-                Effect="{StaticResource CardShadow}">
+        <Grid Grid.Row="2">
 
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Row="0"
-                           Text="Novos usuários por mês"
-                           FontSize="16"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource TextPrimaryBrush}"
-                           Margin="0,0,0,14"/>
+            <!-- Usuários novos por mês (últimos 12 meses) -->
+            <Border Grid.Column="0" Style="{StaticResource ChartCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                <lvc:CartesianChart x:Name="chartUsuarios"
-                                    Grid.Row="1"
-                                    Background="Transparent"
-                                    LegendPosition="Hidden"
-                                    ZoomMode="None"/>
+                    <TextBlock Grid.Row="0"
+                               Text="Novos usuários por mês (últimos 12 meses)"
+                               Style="{StaticResource ChartTitleStyle}"/>
 
-            </Grid>
+                    <lvc:CartesianChart x:Name="chartUsuarios"
+                                        Grid.Row="1"
+                                        Background="Transparent"
+                                        LegendPosition="Hidden"
+                                        ZoomMode="None"/>
 
-        </Border>
+                </Grid>
+            </Border>
+
+            <!-- Top destinos das viagens -->
+            <Border Grid.Column="1" Style="{StaticResource ChartCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0"
+                               Text="Top destinos das viagens"
+                               Style="{StaticResource ChartTitleStyle}"/>
+
+                    <lvc:PieChart x:Name="chartDestinos"
+                                  Grid.Row="1"
+                                  Background="Transparent"
+                                  LegendPosition="Right"/>
+
+                </Grid>
+            </Border>
+
+        </Grid>
 
     </Grid>
 

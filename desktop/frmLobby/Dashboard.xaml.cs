@@ -118,6 +118,9 @@ namespace WindowLobby
         private void BtnChatIA_Click(object sender, RoutedEventArgs e)
             => MainFrame.Navigate(new Pages.ChatIaPage());
 
+        private void BtnPost_Clicl(object sender, RoutedEventArgs e)
+            => MainFrame.Navigate(new Pages.PostPage());
+
         private void BtnConfiguracoes_Click(object sender, RoutedEventArgs e)
             => MainFrame.Navigate(new Pages.ConfigPage());
 

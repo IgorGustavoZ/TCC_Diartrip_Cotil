@@ -186,9 +186,13 @@
                             Style="{StaticResource NavButtonStyle}"
                             Click="BtnViagens_Click"/>
 
-                    <Button Content="Chat IA"
+                    <Button Content="✨   Conversas IA"
                             Style="{StaticResource NavButtonStyle}"
                             Click="BtnChatIA_Click"/>
+
+                    <Button Content="    Posts"
+                            Style="{StaticResource NavButtonStyle}"
+                            Click="BtnPost_Clicl"/>
 
                     <Button Content="⚙   Configurações"
                             Style="{StaticResource NavButtonStyle}"
