@@ -56,7 +56,7 @@
             </Setter>
         </Style>
 
-        <!-- Logout button style (danger) -->
+        <!-- Logout button style (danger, full-width — no longer used but kept for reference) -->
         <Style x:Key="LogoutButtonStyle" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
             <Setter Property="Foreground" Value="#FCA5A5"/>
             <Setter Property="Template">
@@ -68,6 +68,33 @@
                                 Padding="16,0">
                             <ContentPresenter VerticalAlignment="Center"
                                                HorizontalAlignment="Left"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource DangerBrushHover}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Small square logout button — sits next to the profile card in the bottom-left -->
+        <Style x:Key="LogoutButtonSmallStyle" TargetType="Button">
+            <Setter Property="Background" Value="#2A1414"/>
+            <Setter Property="Foreground" Value="#FCA5A5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="10">
+                            <ContentPresenter VerticalAlignment="Center"
+                                               HorizontalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -103,7 +130,7 @@
             </Setter>
         </Style>
 
-        <!-- Stat card style -->
+        <!-- Stat card style (kept in case pages want to reuse it) -->
         <Style x:Key="StatCardStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource CardBrush}"/>
             <Setter Property="CornerRadius" Value="16"/>
@@ -128,6 +155,7 @@
 
             <DockPanel Margin="18,24,18,24">
 
+                <!-- Menu (top) -->
                 <StackPanel DockPanel.Dock="Top">
 
                     <StackPanel Orientation="Horizontal" Margin="6,0,0,44">
@@ -146,6 +174,10 @@
                     <TextBlock Text="MENU" FontSize="11" FontWeight="SemiBold"
                                Foreground="#475569" Margin="16,0,0,10"/>
 
+                    <Button Content="🏠   Dashboard"
+                            Style="{StaticResource NavButtonStyle}"
+                            Click="BtnDashboard_Click"/>
+
                     <Button Content="👥   Usuários"
                             Style="{StaticResource NavButtonStyle}"
                             Click="BtnUsuarios_Click"/>
@@ -153,6 +185,10 @@
                     <Button Content="✈   Viagens"
                             Style="{StaticResource NavButtonStyle}"
                             Click="BtnViagens_Click"/>
+
+                    <Button Content="Chat IA"
+                            Style="{StaticResource NavButtonStyle}"
+                            Click="BtnChatIA_Click"/>
 
                     <Button Content="⚙   Configurações"
                             Style="{StaticResource NavButtonStyle}"
@@ -165,170 +201,69 @@
 
                 </StackPanel>
 
-                <Button DockPanel.Dock="Bottom"
-                        Content="🚪   Sair"
-                        Style="{StaticResource LogoutButtonStyle}"
-                        Click="BtnLogout_Click"/>
+                <!-- Profile + logout (bottom) -->
+                <Grid DockPanel.Dock="Bottom">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0"
+                            Height="52"
+                            CornerRadius="14"
+                            Background="#1E293B"
+                            BorderBrush="#27324A"
+                            BorderThickness="1"
+                            Padding="10,0"
+                            Margin="0,0,8,0" VerticalAlignment="Bottom">
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+                            <Border Width="32" Height="32"
+                                    CornerRadius="16"
+                                    BorderBrush="{StaticResource AccentBrush}"
+                                    BorderThickness="2">
+                                <Border CornerRadius="14" ClipToBounds="True">
+                                    <Image x:Name="imgPerfil" Stretch="UniformToFill"/>
+                                </Border>
+                            </Border>
+
+                            <TextBlock Name="txtUsuario"
+                                       Text="Admin"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       FontWeight="SemiBold"
+                                       FontSize="13"
+                                       Margin="10,0,2,0"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
+
+                        </StackPanel>
+
+                    </Border>
+
+                    <Button Grid.Column="1"
+                            Content="🚪"
+                            Style="{StaticResource LogoutButtonSmallStyle}"
+                            Width="52" Height="52"
+                            ToolTip="Sair"
+                            Click="BtnLogout_Click" VerticalAlignment="Bottom"/>
+
+                </Grid>
 
             </DockPanel>
 
         </Border>
 
-        <!-- ============ MAIN AREA ============ -->
+        <!-- ============ MAIN AREA (bare — pages render here) ============ -->
 
         <Grid Grid.Column="1" Margin="36,32,36,32">
 
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <!-- HEADER -->
-
-            <Grid Grid.Row="0" Margin="0,0,0,28">
-
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" VerticalAlignment="Center">
-
-                    <TextBlock Text="Dashboard"
-                               FontSize="32"
-                               FontWeight="Bold"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
-
-                    <TextBlock Text="Painel administrativo"
-                               Foreground="{StaticResource TextMutedBrush}"
-                               FontSize="15"
-                               Margin="0,4,0,0"/>
-
-                </StackPanel>
-
-                <Border Grid.Column="1"
-                        Height="52"
-                        CornerRadius="14"
-                        Background="{StaticResource CardBrush}"
-                        BorderBrush="#27324A"
-                        BorderThickness="1"
-                        Padding="14,0">
-
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-
-                        <Border Width="32" Height="32"
-                                CornerRadius="16"
-                                BorderBrush="{StaticResource AccentBrush}"
-                                BorderThickness="2">
-                            <Border CornerRadius="14" ClipToBounds="True">
-                                <Image x:Name="imgPerfil" Stretch="UniformToFill"/>
-                            </Border>
-                        </Border>
-
-                        <TextBlock Name="txtUsuario"
-                                   Text="Admin"
-                                   Foreground="{StaticResource TextPrimaryBrush}"
-                                   FontWeight="SemiBold"
-                                   Margin="10,0,2,0"
-                                   VerticalAlignment="Center"/>
-
-                    </StackPanel>
-
-                </Border>
-
-            </Grid>
-
-            <!-- STAT CARDS -->
-
-            <UniformGrid Grid.Row="1" Columns="3" Margin="-10,0,-10,28">
-
-                <Border Style="{StaticResource StatCardStyle}">
-                    <Grid Margin="22,20">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="VIAGENS" Foreground="#FF94A3B8"
-                                       FontSize="12" FontWeight="SemiBold"/>
-                            <TextBlock x:Name="txtViagens" Text="0"
-                                       FontSize="36" FontWeight="Bold"
-                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                       Margin="0,6,0,0"/>
-                        </StackPanel>
-                        <Border Grid.Column="1" Width="44" Height="44" CornerRadius="12"
-                                Background="#1D3A63" VerticalAlignment="Top">
-                            <TextBlock Text="✈" FontSize="18" Foreground="#60A5FA"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </Grid>
-                </Border>
-
-                <Border Style="{StaticResource StatCardStyle}">
-                    <Grid Margin="22,20">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="USUÁRIOS" Foreground="{StaticResource TextMutedBrush}"
-                                       FontSize="12" FontWeight="SemiBold"/>
-                            <TextBlock Name="txtUsuarios" Text="0"
-                                       FontSize="36" FontWeight="Bold"
-                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                       Margin="0,6,0,0"/>
-                        </StackPanel>
-                        <Border Grid.Column="1" Width="44" Height="44" CornerRadius="12"
-                                Background="#1D3A2E" VerticalAlignment="Top">
-                            <TextBlock Text="👥" FontSize="18" Foreground="#4ADE80"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </Grid>
-                </Border>
-
-                <Border Style="{StaticResource StatCardStyle}">
-                    <Grid Margin="22,20">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="CHAT IA" Foreground="{StaticResource TextMutedBrush}"
-                                       FontSize="12" FontWeight="SemiBold"/>
-                            <TextBlock Name="txtChatIA" Text="0"
-                                       FontSize="36" FontWeight="Bold"
-                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                       Margin="0,6,0,0"/>
-                        </StackPanel>
-                        <Border Grid.Column="1" Width="44" Height="44" CornerRadius="12"
-                                Background="#3A2A1D" VerticalAlignment="Top">
-                            <TextBlock Text="💬" FontSize="18" Foreground="#FBBF24"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </Grid>
-                </Border>
-
-            </UniformGrid>
-
-            <!-- NAVIGABLE CONTENT -->
-
-            <Border Grid.Row="2"
-                    Background="{StaticResource CardBrush}"
-                    BorderBrush="#27324A"
-                    BorderThickness="1"
-                    CornerRadius="18"
-                    Padding="18"
-                    Effect="{StaticResource CardShadow}">
-
-                <Frame x:Name="MainFrame"
-                       NavigationUIVisibility="Hidden"
-                       Navigated="MainFrame_Navigated"
-                       HorizontalAlignment="Stretch"
-                       VerticalAlignment="Stretch"
-                       Background="Transparent"/>
-
-            </Border>
+            <Frame x:Name="MainFrame"
+                   NavigationUIVisibility="Hidden"
+                   Navigated="MainFrame_Navigated"
+                   HorizontalAlignment="Stretch"
+                   VerticalAlignment="Stretch" Background="#FF1E293B" BorderBrush="Red" Margin="0,0,-3,0" Padding="15,15,15,15"/>
 
         </Grid>
 

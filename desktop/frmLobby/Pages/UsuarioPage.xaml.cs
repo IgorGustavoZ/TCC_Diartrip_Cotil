@@ -62,7 +62,7 @@ namespace WindowLobby.Pages
             }
         }
 
-        // ---------- SORTING ----------
+        // ---------- De cima vem, pra baixo cai ----------
 
         private void ListViewHeader_Click(object sender, RoutedEventArgs e)
         {
@@ -89,7 +89,7 @@ namespace WindowLobby.Pages
             _lastDirection = direction;
         }
 
-        // ---------- FILTERING ----------
+        // ---------- Filtros!! ----------
 
         private void BtnFiltrar_Click(object sender, RoutedEventArgs e)
         {

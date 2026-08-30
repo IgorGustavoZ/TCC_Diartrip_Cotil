@@ -35,11 +35,11 @@ namespace WindowLobby.CRUD
                 return resp;
 
             // 401 → tentar renovar token
-            System.Diagnostics.Debug.WriteLine("[Usuario] 401 recebido — tentando refresh token...");
+            System.Diagnostics.Debug.WriteLine("[Chat_ia] 401 recebido — tentando refresh token...");
             bool renovado = await RefreshToken();
             if (!renovado)
             {
-                System.Diagnostics.Debug.WriteLine("[Usuario] Refresh falhou — sessão expirada.");
+                System.Diagnostics.Debug.WriteLine("[Chat_ia] Refresh falhou — sessão expirada.");
                 return resp; // retorna o 401 para o chamador tratar (ex: abrir janela de login)
             }
 
@@ -56,6 +56,7 @@ namespace WindowLobby.CRUD
                 return null;
             }
         }
+
         public static async Task<string?> BuscarMensagens()
         {
             var resp = await ExecutarComRefresh(() =>
@@ -67,18 +68,47 @@ namespace WindowLobby.CRUD
                 return req;
             });
 
-            if (!resp.IsSuccessStatusCode)
+            // Antes: "resp.IsSuccessStatusCode" quebrava com NullReferenceException
+            // quando a requisição falhava (resp == null, ex.: erro de rede/401 sem refresh).
+            if (resp is null || !resp.IsSuccessStatusCode)
             {
                 return null;
             }
 
             string respostaJson =
                 await resp.Content
-                .ReadAsStringAsync();  
+                .ReadAsStringAsync();
 
             return respostaJson;
         }
-        
+
+        /// <summary>
+        /// GET /chat/{id} — busca uma única interação de chat pelo id.
+        /// Útil para uma futura tela de detalhe (equivalente a Usuario.GetUsuariosById).
+        /// </summary>
+        public static async Task<string?> BuscarMensagemPorId(int id)
+        {
+            var resp = await ExecutarComRefresh(() =>
+            {
+                var req = new HttpRequestMessage(HttpMethod.Get, $"/chat/{id}")
+                {
+                    Content = new StringContent("", Encoding.UTF8, "application/json")
+                };
+                return req;
+            });
+
+            if (resp is null || !resp.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            string respostaJson =
+                await resp.Content
+                .ReadAsStringAsync();
+
+            return respostaJson;
+        }
+
         public static async Task<bool> RefreshToken()
         {
             try
@@ -90,20 +120,21 @@ namespace WindowLobby.CRUD
 
                 if (resp.IsSuccessStatusCode)
                 {
-                    System.Diagnostics.Debug.WriteLine("[Usuario.RefreshToken] Token renovado com sucesso.");
+                    System.Diagnostics.Debug.WriteLine("[Chat_ia.RefreshToken] Token renovado com sucesso.");
                     return true;
                 }
 
                 System.Diagnostics.Debug.WriteLine(
-                    $"[Usuario.RefreshToken] Falhou com status {(int)resp.StatusCode}");
+                    $"[Chat_ia.RefreshToken] Falhou com status {(int)resp.StatusCode}");
                 return false;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[Usuario.RefreshToken] Erro: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[Chat_ia.RefreshToken] Erro: {ex.Message}");
                 return false;
             }
         }
+
         internal static void AdicionarCsrfHeader(HttpRequestMessage req)
         {
             var csrf = CRUD.Sessao.GetCsrfToken();
@@ -112,4 +143,3 @@ namespace WindowLobby.CRUD
         }
     }
 }
-
