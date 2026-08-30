@@ -170,8 +170,7 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
 
         <div class="config-wrap">
             <div class="settings-menu">
-                <button id="btnAlterarConta" class="settings-row" type="button">
-                    <span class="settings-row-icon">👤</span>
+                <button id="btnAlterarConta" class="settings-row" type="button">                 
                     <span class="settings-row-text">
                         <span class="settings-row-title" data-i18n="config.changeAccount">Change account information</span>
                         <span class="settings-row-desc" data-i18n="config.changeAccountDesc">Update your name, email or delete your account</span>
@@ -182,7 +181,6 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
 
             <div class="settings-menu" style="margin-top:12px;">
                 <button id="btnAlterarSenha" class="settings-row" type="button">
-                    <span class="settings-row-icon">🔒</span>
                     <span class="settings-row-text">
                         <span class="settings-row-title" data-i18n="config.changePassword">Change password</span>
                         <span class="settings-row-desc" data-i18n="config.changePasswordDesc">Update the password used to sign in</span>
@@ -428,7 +426,7 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
                 if (!alvo) return
                 const vaiMostrar = alvo.type === "password"
                 alvo.type = vaiMostrar ? "text" : "password"
-                btn.textContent = vaiMostrar ? "🙈" : "👁"
+                btn.textContent = vaiMostrar ? "⌣" : "👁"
                 btn.setAttribute("aria-label", t(vaiMostrar ? 'config.hidePassword' : 'config.showPassword'))
             })
         })

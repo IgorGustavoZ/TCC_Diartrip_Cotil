@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diartrip</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="static/style.css?v=4">
-<link rel="shortcut icon" href="imagens/favicon-diartrip.png" type="image/x-icon">
+<link rel="stylesheet" href="../static/style.css?v=4">
+<link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="static/i18n.js"></script>
 </head>
 <body>
@@ -16,22 +16,24 @@
 
     <div class="sidebar">
 
-    <a href="#">
-        <div class="logo"><img src="imagens/logo-diartrip.png" alt=""></div>
+    <a href="lobby.html">
+        <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
     </a>
 
-    <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
+    <a href="lobby.html">
+        <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
+    </a>
     <a href="lobby-pags/grupos.html">
-        <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
+        <div class="menu-item" data-i18n="nav.groups">🌐︎ Groups</div>
     </a>
     <a href="lobby-pags/explorar-viagens.html">
-        <div class="menu-item" data-i18n="nav.explore">✈️ Explore Trips</div>
+        <div class="menu-item" data-i18n="nav.explore">🔍︎ Explore Trips</div>
     </a>
     <a href="lobby-pags/feed.html">
-        <div class="menu-item" data-i18n="nav.community">🌎 Community</div>
+        <div class="menu-item" data-i18n="nav.community">🗪 Community</div>
     </a>
     <a href="lobby-pags/perfil.html">
-        <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
+        <div class="menu-item" data-i18n="nav.profile">⚙ Profile</div>
     </a>
     <!-- <a href="lobby-pags/chat-viagem.html">
         <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
@@ -145,7 +147,7 @@
                 <div>
                     <div class="next-trip-label">✈ ${escapeHtml(t('lobby.nextTrip.label'))}</div>
                     <div class="next-trip-name">${escapeHtml(v.nome_grupo)}</div>
-                    <div class="next-trip-meta">📍 ${escapeHtml(v.destino_principal || "")} · ${escapeHtml(v.data_inicio || "")} — ${escapeHtml(v.data_fim || "")}</div>
+                    <div class="next-trip-meta">${escapeHtml(v.destino_principal || "")} · ${escapeHtml(v.data_inicio || "")} — ${escapeHtml(v.data_fim || "")}</div>
                 </div>
                 <button class="next-trip-btn" onclick="window.location.href='lobby-pags/viagem.html?id=${v.id_grupo}'">${escapeHtml(t('lobby.nextTrip.btn'))}</button>
             </div>
@@ -198,13 +200,13 @@
 
     card.innerHTML = `
         <div class="trip-cover" style="background:${capaPara(viagem.destino_principal)}">
-            <span class="trip-cover-emoji">✈️</span>
+            <span class="trip-cover-emoji">✈︎</span>
         </div>
         <div class="trip-card-body">
             <strong>${escapeHtml(viagem.nome_grupo)}</strong>
 
             <div class="trip-date">
-                📍 ${escapeHtml(viagem.destino_principal || "")}
+                ${escapeHtml(viagem.destino_principal || "")}
             </div>
 
             <div class="trip-date">
