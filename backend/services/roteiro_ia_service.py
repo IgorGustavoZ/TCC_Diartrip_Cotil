@@ -146,6 +146,23 @@ def _montar_prompt(
             "bom, priorize parques e atrações externas. Dias sem previsão listada: monte normalmente."
         )
 
+    # Quanto mais dias, menos itens por dia — o teto de tokens da resposta
+    # é fixo (limitado pelo saldo de créditos de IA, não pela viagem), então
+    # uma viagem longa com muitos itens/dia não cabe na resposta e a
+    # chamada é rejeitada antes mesmo de gerar algo.
+    if dias <= 4:
+        instrucao_quantidade = "Gere entre 3 e 5 itens por dia de viagem, cobrindo manhã, tarde e noite."
+    elif dias <= 8:
+        instrucao_quantidade = (
+            "Gere 2 a 3 itens por dia de viagem (um por período do dia) — mantenha a resposta "
+            "compacta, já que esta é uma viagem mais longa."
+        )
+    else:
+        instrucao_quantidade = (
+            "Gere 1 a 2 itens por dia de viagem — só a(s) atividade(s) principal(is) de cada dia — "
+            "mantenha a resposta bem compacta, já que esta é uma viagem longa."
+        )
+
     transporte = prefs.get("transporte")
     if transporte:
         instrucao_transporte = f"o grupo vai se deslocar de {_sanitizar(transporte)}."
@@ -193,7 +210,7 @@ def _montar_prompt(
         "- Formato exato: {\"itens\": [{\"titulo\": \"...\", \"descricao\": \"...\"}, ...]}\n"
         "- Cada item é UMA atividade (não um dia inteiro). O título deve incluir o dia e o horário, "
         "ex.: \"Dia 1 · 09:00 — Café da manhã\".\n"
-        "- Gere entre 3 e 5 itens por dia de viagem, cobrindo manhã, tarde e noite.\n"
+        f"- {instrucao_quantidade}\n"
         "- Responda SEMPRE em Português Brasileiro.\n\n"
         "DADOS REAIS (não negociável):\n"
         f"- {instrucao_pois}\n"
@@ -240,6 +257,26 @@ def _montar_prompt(
     )
     mensagem_usuario = f"Gere o roteiro em JSON para {dias} dia(s), seguindo exatamente o formato pedido."
     return system_prompt, mensagem_usuario
+
+
+def _max_tokens_para(dias: int) -> int:
+    """Teto de tokens de saída pedido à IA — limitado pelo saldo de créditos
+    gratuitos da conta OpenRouter, não pela duração da viagem. Pedir mais
+    tokens do que a conta consegue pagar faz a chamada falhar direto com
+    HTTP 402 ("requires more credits"), antes mesmo de gerar qualquer coisa;
+    esse teto fica com margem abaixo do afford observado (~2288) para
+    sobrar espaço mesmo com prompts maiores (mais POIs, mais dias)."""
+    return min(400 + 100 * dias, 1800)
+
+
+def _eh_erro_creditos(exc: Exception) -> bool:
+    """Detecta o erro 402 do OpenRouter (saldo de créditos insuficiente pro
+    max_tokens pedido) — tentar de novo nunca resolve esse caso, então quem
+    chama sabe que não vale a pena insistir."""
+    if getattr(exc, "status_code", None) == 402:
+        return True
+    texto = str(exc).lower()
+    return "402" in texto and "credit" in texto
 
 
 def _extrair_json(resposta: str) -> dict:
@@ -325,29 +362,50 @@ def gerar_com_ia(id_grupo: int, usuario_id: int) -> list:
             bloco_clima = _montar_bloco_clima(data_inicio, dias, previsao)
 
     system_prompt, mensagem_usuario = _montar_prompt(grupo, dias, pois, bloco_clima, prefs)
+    max_tokens = _max_tokens_para(dias)
 
-    try:
-        resposta_ia = _client.chat.completions.create(
-            model=IA_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": mensagem_usuario},
-            ],
-            max_tokens=3000,
-        )
-        conteudo = resposta_ia.choices[0].message.content
-        payload = _extrair_json(conteudo)
-        itens = _validar_itens(payload)
-    except HTTPException:
-        raise
-    except Exception as exc:
+    # Uma resposta mal formada (JSON truncado, texto extra que atrapalha o
+    # parsing) é um problema transitório do modelo — tentar de novo uma vez
+    # antes de desistir evita mostrar "não foi possível gerar" pro usuário
+    # por uma falha que uma segunda tentativa já resolveria sozinha. Erro de
+    # créditos (402) é diferente: tentar de novo nunca resolve, então já
+    # para na primeira tentativa em vez de gastar uma chamada à toa.
+    itens = None
+    ultimo_erro: Exception | None = None
+    for tentativa in range(2):
+        try:
+            resposta_ia = _client.chat.completions.create(
+                model=IA_MODEL,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": mensagem_usuario},
+                ],
+                max_tokens=max_tokens,
+            )
+            conteudo = resposta_ia.choices[0].message.content
+            payload = _extrair_json(conteudo)
+            itens = _validar_itens(payload)
+            break
+        except Exception as exc:
+            ultimo_erro = exc
+            logger.warning(
+                "Tentativa %d de gerar roteiro por IA falhou: %s", tentativa + 1, exc,
+                extra={"user_id": usuario_id, "grupo_id": id_grupo},
+            )
+            if _eh_erro_creditos(exc):
+                break
+
+    if itens is None:
         logger.error(
-            "Geração de roteiro por IA falhou: %s", exc,
+            "Geração de roteiro por IA falhou: %s", ultimo_erro,
             extra={"user_id": usuario_id, "grupo_id": id_grupo},
         )
-        raise HTTPException(
-            status_code=502, detail="Não foi possível gerar o roteiro. Tente novamente."
+        detail = (
+            "O serviço de IA está sem créditos disponíveis no momento. Tente novamente mais tarde."
+            if ultimo_erro is not None and _eh_erro_creditos(ultimo_erro)
+            else "Não foi possível gerar o roteiro. Tente novamente."
         )
+        raise HTTPException(status_code=502, detail=detail)
 
     criados_ids = []
     for item in itens:

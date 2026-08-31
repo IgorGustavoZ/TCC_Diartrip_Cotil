@@ -1,96 +1,113 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/app_logger.dart';
 import '../../../core/constants.dart';
-import '../../../core/theme.dart';
+import '../../../core/web_style.dart';
 import '../../../models/dashboard.dart';
 import '../../../providers/language_provider.dart';
-import '../../../services/dashboard_service.dart';
 
-class OverviewTab extends StatefulWidget {
-  final int idGrupo;
-  const OverviewTab({super.key, required this.idGrupo});
-  @override
-  State<OverviewTab> createState() => _OverviewTabState();
-}
-
-class _OverviewTabState extends State<OverviewTab> with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-  DashboardCompleto? _dash;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final d = await DashboardService.get(widget.idGrupo);
-      if (mounted) setState(() => _dash = d);
-    } catch (e, s) {
-      AppLogger.captureError('OverviewTab._load', e, s);
-    }
-  }
+/// Aba "geral" de viagem.html: dashboard do grupo — orçamento total, total
+/// gasto, restante com barra de progresso, e distribuição por categoria.
+/// Recebe o dashboard já carregado pelo [ViagemScreen] (compartilhado com
+/// Minhas Finanças e Admin) em vez de buscar o seu próprio — assim, mudar o
+/// orçamento pessoal em Minhas Finanças reflete aqui imediatamente.
+class OverviewTab extends StatelessWidget {
+  final DashboardCompleto? dash;
+  final Future<void> Function() onReload;
+  const OverviewTab({super.key, required this.dash, required this.onReload});
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     final lang = context.watch<LanguageProvider>();
-    if (_dash == null) return const Center(child: CircularProgressIndicator());
-    final g = _dash!.geral;
+    if (dash == null) {
+      return const Center(child: CircularProgressIndicator(color: WebColors.primary));
+    }
+    final g = dash!.geral;
+    final temOrcamento = g.orcamentoTotal > 0;
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: onReload,
+      color: WebColors.primary,
+      backgroundColor: WebColors.bg,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
         children: [
-          _statRow(lang.translate('overview.totalSpent'), 'R\$ ${g.totalConsumido.toStringAsFixed(2)}'),
-          _statRow(lang.translate('overview.remainingBudget'), 'R\$ ${g.orcamentoRestante.toStringAsFixed(2)}'),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: g.percentualConsumido / 100,
-              backgroundColor: AppTheme.surfaceVariant,
-              color: g.percentualConsumido > 80 ? AppTheme.error : AppTheme.primary,
-              minHeight: 10,
+          TripCardExpanded(
+            title: '📊 ${lang.translate('viagem.dashboard')}',
+            child: Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: [
+                SizedBox(
+                  width: _cardWidth(context),
+                  child: DashboardCard(
+                    title: '💰 ${lang.translate('viagem.budget')}',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        StatRow(
+                          label: lang.translate('viagem.budgetTotal'),
+                          value: 'R\$ ${g.orcamentoTotal.toStringAsFixed(2)}',
+                        ),
+                        StatRow(
+                          label: lang.translate('overview.totalSpent'),
+                          value: 'R\$ ${g.totalConsumido.toStringAsFixed(2)}',
+                        ),
+                        if (temOrcamento)
+                          StatRow(
+                            label: lang.translate('overview.remainingBudget'),
+                            value: 'R\$ ${g.orcamentoRestante.toStringAsFixed(2)}',
+                          ),
+                        const SizedBox(height: 4),
+                        WebProgressBar(value: temOrcamento ? g.percentualConsumido / 100 : 0),
+                        const SizedBox(height: 8),
+                        Center(
+                          child: Text(
+                            temOrcamento
+                                ? '${g.percentualConsumido}% ${lang.translate('overview.used')}'
+                                : '— ${lang.translate('overview.used')}',
+                            style: const TextStyle(fontSize: 12, color: WebColors.textMuted),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: _cardWidth(context),
+                  child: DashboardCard(
+                    title: '🏷️ ${lang.translate('viagem.categories')}',
+                    child: g.distribuicao.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Text(lang.translate('viagem.noExpenses'),
+                                  style: const TextStyle(color: WebColors.textMuted, fontSize: 14)),
+                            ),
+                          )
+                        : Column(
+                            children: g.distribuicao
+                                .map((c) => CategoryItemRow(
+                                      left: Text(
+                                        '${Constants.categoriaEmoji[c.categoria] ?? '📦'}  ${c.categoria}',
+                                        style: const TextStyle(color: WebColors.text, fontSize: 14),
+                                      ),
+                                      right: Text('R\$ ${c.total.toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                              color: WebColors.text, fontWeight: FontWeight.w700, fontSize: 14)),
+                                    ))
+                                .toList(),
+                          ),
+                  ),
+                ),
+              ],
             ),
           ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text('${g.percentualConsumido}% ${lang.translate('overview.used')}',
-                style: const TextStyle(fontSize: 12, color: AppTheme.onSurfaceMuted)),
-          ),
-          const SizedBox(height: 16),
-          Text(lang.translate('overview.byCategory'), style: const TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          ...g.distribuicao.map((c) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Text(Constants.categoriaEmoji[c.categoria] ?? '📦',
-                        style: const TextStyle(fontSize: 18)),
-                    const SizedBox(width: 10),
-                    Expanded(child: Text(c.categoria)),
-                    Text('R\$ ${c.total.toStringAsFixed(2)}',
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              )),
         ],
       ),
     );
   }
 
-  Widget _statRow(String label, String value) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(color: AppTheme.onSurfaceMuted)),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-          ],
-        ),
-      );
+  double _cardWidth(BuildContext context) {
+    final w = MediaQuery.of(context).size.width - 28 - 40 - 16; // padding + card padding + gap
+    return w < 260 ? w : (w > 560 ? (w - 16) / 2 : w);
+  }
 }

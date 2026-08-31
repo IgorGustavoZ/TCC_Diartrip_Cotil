@@ -166,6 +166,19 @@ class _RefreshInterceptor extends Interceptor {
   }
 }
 
+/// Erro de API que preserva o status HTTP além da mensagem já extraída por
+/// [apiError]. `toString()` retorna só a mensagem — todo o código existente
+/// que faz `catch (e) { _erro = e.toString(); }` continua funcionando sem
+/// nenhuma mudança; só quem precisa decidir algo pelo status (ex.: 409 de
+/// e-mail duplicado no cadastro) usa [statusCode].
+class ApiException implements Exception {
+  final String message;
+  final int? statusCode;
+  const ApiException(this.message, [this.statusCode]);
+  @override
+  String toString() => message;
+}
+
 String apiError(dynamic data, [String fallback = 'Erro desconhecido']) {
   if (data is! Map) return fallback;
   final detail = data['detail'];

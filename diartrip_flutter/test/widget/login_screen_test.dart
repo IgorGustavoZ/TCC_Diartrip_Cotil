@@ -65,9 +65,10 @@ void main() {
       expect(find.text('Cadastrar-se'), findsOneWidget);
     });
 
-    testWidgets('ícone de avião visível', (tester) async {
+    testWidgets('logo do Diartrip (favicon) visível', (tester) async {
       await pumpApp(tester);
-      expect(find.byIcon(Icons.flight_takeoff), findsOneWidget);
+      final logo = tester.widget<Image>(find.byType(Image));
+      expect((logo.image as AssetImage).assetName, 'assets/images/favicon-diartrip.png');
     });
   });
 

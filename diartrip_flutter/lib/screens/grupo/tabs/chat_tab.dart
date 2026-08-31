@@ -1,16 +1,23 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../../../core/app_logger.dart';
 import '../../../providers/language_provider.dart';
-import '../../../core/theme.dart';
+import '../../../core/web_style.dart';
 import '../../../models/grupo.dart';
 import '../../../models/mensagem.dart';
 import '../../../services/chat_service.dart';
+import '../../../widgets/avatar_widget.dart';
 
+/// Aba "chat" de viagem.html: chat do grupo — igual a
+/// `conectarChatWS()`/`_renderMsgHtml()`. No Flutter Web usa polling a cada
+/// 3s direto (o websocket já causou travamentos da aplicação inteira nessa
+/// plataforma); em desktop/mobile nativo ainda tenta websocket primeiro,
+/// caindo pro mesmo polling se a conexão falhar ou nunca resolver.
 class ChatTab extends StatefulWidget {
   final int idGrupo;
   final int meId;
@@ -72,8 +79,19 @@ class _ChatTabState extends State<ChatTab> with AutomaticKeepAliveClientMixin {
   }
 
   Future<void> _connectWs() async {
+    if (kIsWeb) {
+      // No Flutter Web, tentar abrir o websocket aqui já travou a aplicação
+      // inteira ao entrar nesta aba — em vez de arriscar de novo, usamos
+      // direto o polling (o mesmo fallback que já existia para quando o
+      // websocket falha), garantindo um chat funcional sem esse risco.
+      _startPolling();
+      return;
+    }
     try {
-      _ws = await ChatService.conectarWs(widget.idGrupo);
+      // Defesa extra: se a conexão nunca resolver (nem sucesso, nem erro),
+      // cai no polling depois de um tempo em vez de ficar esperando pra
+      // sempre — outra forma como isso poderia travar a experiência do chat.
+      _ws = await ChatService.conectarWs(widget.idGrupo).timeout(const Duration(seconds: 8));
       _ws!.stream.listen(
         _onWsData,
         onError: (e) {
@@ -150,84 +168,122 @@ class _ChatTabState extends State<ChatTab> with AutomaticKeepAliveClientMixin {
     });
   }
 
+  Membro? _membroDe(int idUsuario) {
+    for (final m in widget.membros) {
+      if (m.id == idUsuario) return m;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
     final lang = context.watch<LanguageProvider>();
-    return Column(
-      children: [
-        Expanded(
-          child: ListView.builder(
-            controller: _scroll,
-            padding: const EdgeInsets.all(12),
-            itemCount: _msgs.length,
-            itemBuilder: (_, i) {
-              final m = _msgs[i];
-              final isMe = m.idUsuario == widget.meId;
-              return Align(
-                alignment:
-                    isMe ? Alignment.centerRight : Alignment.centerLeft,
-                child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: 3),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
-                  constraints: BoxConstraints(
-                      maxWidth:
-                          MediaQuery.of(context).size.width * 0.75),
-                  decoration: BoxDecoration(
-                    color: isMe
-                        ? AppTheme.primary
-                        : AppTheme.surfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: isMe
-                        ? CrossAxisAlignment.end
-                        : CrossAxisAlignment.start,
-                    children: [
-                      if (!isMe)
-                        Text(m.nome,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 11,
-                                color: AppTheme.accent)),
-                      Text(m.conteudo,
-                          style: const TextStyle(
-                              fontSize: 14, color: Colors.white)),
-                      Text(
-                        _fmt(m.dataEnvio),
-                        style: const TextStyle(
-                            fontSize: 10,
-                            color: AppTheme.onSurfaceMuted),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+      child: GlassContainer(
+        child: Column(
+          children: [
+            Expanded(
+              child: _msgs.isEmpty
+                  ? const SizedBox.shrink()
+                  : ListView.builder(
+                      controller: _scroll,
+                      padding: const EdgeInsets.all(14),
+                      itemCount: _msgs.length,
+                      itemBuilder: (_, i) {
+                        final m = _msgs[i];
+                        final isMe = m.idUsuario == widget.meId;
+                        final membro = _membroDe(m.idUsuario);
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (!isMe) ...[
+                                AvatarWidget(
+                                  fotoUrl: membro?.fotoPerfil,
+                                  iniciais: m.nome.isNotEmpty ? m.nome[0].toUpperCase() : '?',
+                                  radius: 16,
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              Flexible(
+                                child: Column(
+                                  crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                                      child: Text('${m.nome} · ${_fmt(m.dataEnvio)}',
+                                          style: const TextStyle(fontSize: 11, color: WebColors.textMuted)),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Container(
+                                      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        gradient: isMe ? WebColors.gradient : null,
+                                        color: isMe ? null : WebColors.surface2,
+                                        borderRadius: BorderRadius.circular(14).copyWith(
+                                          bottomRight: isMe ? const Radius.circular(4) : null,
+                                          bottomLeft: !isMe ? const Radius.circular(4) : null,
+                                        ),
+                                      ),
+                                      child: Text(m.conteudo,
+                                          style: TextStyle(fontSize: 14, color: isMe ? Colors.white : WebColors.text)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 44,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: WebColors.surface2,
+                        borderRadius: BorderRadius.circular(WebColors.radiusPill),
+                        border: Border.all(color: WebColors.border),
                       ),
-                    ],
+                      child: TextField(
+                        controller: _msgCtrl,
+                        style: const TextStyle(color: WebColors.text, fontSize: 14),
+                        decoration: InputDecoration(
+                          filled: false,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          isCollapsed: true,
+                          hintText: lang.translate('viagem.chatPlaceholder'),
+                          hintStyle: const TextStyle(color: WebColors.textMuted, fontSize: 14),
+                        ),
+                        onSubmitted: (_) => _send(),
+                      ),
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(10),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _msgCtrl,
-                  decoration:
-                      InputDecoration(hintText: lang.translate('chat.hint')),
-                  onSubmitted: (_) => _send(),
-                ),
+                  const SizedBox(width: 8),
+                  GradientButton(
+                    radius: WebColors.radiusPill,
+                    padding: const EdgeInsets.all(12),
+                    onPressed: _sending ? null : _send,
+                    child: const Icon(Icons.send_rounded, size: 20),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              IconButton.filled(
-                onPressed: _sending ? null : _send,
-                icon: const Icon(Icons.send_rounded),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 

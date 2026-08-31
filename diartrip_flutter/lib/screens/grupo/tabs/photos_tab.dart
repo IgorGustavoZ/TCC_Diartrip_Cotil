@@ -1,9 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../core/app_logger.dart';
-import '../../../core/theme.dart';
+import '../../../core/web_style.dart';
 import '../../../models/foto.dart';
 import '../../../providers/language_provider.dart';
 import '../../../services/foto_service.dart';
@@ -12,7 +14,10 @@ import '../../../widgets/image_cropper_modal.dart';
 class PhotosTab extends StatefulWidget {
   final int idGrupo;
   final int meId;
-  const PhotosTab({super.key, required this.idGrupo, required this.meId});
+  /// Recarrega o dashboard compartilhado no [ViagemScreen] — o painel Admin
+  /// mostra o total de fotos enviadas, que fica desatualizado sem isso.
+  final Future<void> Function() onReload;
+  const PhotosTab({super.key, required this.idGrupo, required this.meId, required this.onReload});
   @override
   State<PhotosTab> createState() => _PhotosTabState();
 }
@@ -25,6 +30,10 @@ class _PhotosTabState extends State<PhotosTab>
   List<Foto> _fotos = [];
   bool _loading = true;
   bool _uploading = false;
+  /// Bytes da foto recém-recortada, mostrados na hora (antes mesmo do
+  /// upload terminar) pra não parecer que "a foto não aparece imediatamente"
+  /// — some assim que a lista recarregada do servidor já traz a foto real.
+  Uint8List? _pendingPreview;
 
   @override
   void initState() {
@@ -58,7 +67,10 @@ class _PhotosTabState extends State<PhotosTab>
     );
     if (croppedBytes == null || !mounted) return;
 
-    setState(() => _uploading = true);
+    setState(() {
+      _uploading = true;
+      _pendingPreview = croppedBytes;
+    });
     try {
       await FotoService.upload(
         idGrupo: widget.idGrupo,
@@ -68,8 +80,11 @@ class _PhotosTabState extends State<PhotosTab>
         bytes: croppedBytes,
       );
       await _load();
+      if (mounted) setState(() => _pendingPreview = null);
+      await widget.onReload();
     } catch (e) {
       if (mounted) {
+        setState(() => _pendingPreview = null);
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(e.toString())));
       }
@@ -83,16 +98,19 @@ class _PhotosTabState extends State<PhotosTab>
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(lang.translate('photos.deleteTitle')),
-        content: Text(lang.translate('photos.deleteDesc')),
+        backgroundColor: WebColors.bg2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(WebColors.radiusLg)),
+        title: Text(lang.translate('photos.deleteTitle'), style: const TextStyle(color: WebColors.text)),
+        content: Text(lang.translate('photos.deleteDesc'), style: const TextStyle(color: WebColors.textSecondary)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
+              style: TextButton.styleFrom(foregroundColor: WebColors.textMuted),
               child: Text(lang.translate('photos.cancel'))),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
-            child: Text(lang.translate('photos.delete')),
+            style: TextButton.styleFrom(foregroundColor: WebColors.danger),
+            child: Text(lang.translate('photos.delete'), style: const TextStyle(fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -100,7 +118,8 @@ class _PhotosTabState extends State<PhotosTab>
     if (ok != true) return;
     try {
       await FotoService.deletar(idFoto);
-      _load();
+      await _load();
+      await widget.onReload();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -117,6 +136,7 @@ class _PhotosTabState extends State<PhotosTab>
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton(
         mini: true,
+        backgroundColor: WebColors.primary,
         onPressed: _uploading ? null : _upload,
         tooltip: lang.translate('photos.addTooltip'),
         child: _uploading
@@ -129,23 +149,25 @@ class _PhotosTabState extends State<PhotosTab>
             : const Icon(Icons.add_photo_alternate_outlined),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: WebColors.primary))
           : RefreshIndicator(
               onRefresh: _load,
-              child: _fotos.isEmpty
+              color: WebColors.primary,
+              backgroundColor: WebColors.bg,
+              child: _fotos.isEmpty && _pendingPreview == null
                   ? Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.photo_library_outlined,
-                              size: 48, color: AppTheme.onSurfaceMuted),
+                              size: 48, color: WebColors.textMuted),
                           const SizedBox(height: 12),
                           Text(lang.translate('photos.empty'),
-                              style: const TextStyle(color: AppTheme.onSurfaceMuted)),
+                              style: const TextStyle(color: WebColors.textMuted)),
                           const SizedBox(height: 4),
                           Text(lang.translate('photos.hint'),
                               style: const TextStyle(
-                                  color: AppTheme.onSurfaceMuted,
+                                  color: WebColors.textMuted,
                                   fontSize: 12)),
                         ],
                       ),
@@ -158,9 +180,26 @@ class _PhotosTabState extends State<PhotosTab>
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
                       ),
-                      itemCount: _fotos.length,
+                      itemCount: _fotos.length + (_pendingPreview != null ? 1 : 0),
                       itemBuilder: (_, i) {
-                        final foto = _fotos[i];
+                        if (_pendingPreview != null && i == 0) {
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Image.memory(_pendingPreview!, fit: BoxFit.cover),
+                                Container(
+                                  color: Colors.black.withValues(alpha: 0.35),
+                                  child: const Center(
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        final foto = _fotos[i - (_pendingPreview != null ? 1 : 0)];
                         final isMe = foto.idUsuario == widget.meId;
                         return GestureDetector(
                           onLongPress: isMe
@@ -175,17 +214,17 @@ class _PhotosTabState extends State<PhotosTab>
                                   imageUrl: foto.caminhoArquivo,
                                   fit: BoxFit.cover,
                                   placeholder: (_, __) => Container(
-                                    color: AppTheme.surfaceVariant,
+                                    color: WebColors.surface2,
                                     child: const Center(
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2),
                                     ),
                                   ),
                                   errorWidget: (_, __, ___) => Container(
-                                    color: AppTheme.surfaceVariant,
+                                    color: WebColors.surface2,
                                     child: const Icon(
                                       Icons.broken_image_outlined,
-                                      color: AppTheme.onSurfaceMuted,
+                                      color: WebColors.textMuted,
                                     ),
                                   ),
                                 ),
@@ -220,20 +259,23 @@ class _PhotosTabState extends State<PhotosTab>
                                   Positioned(
                                     top: 4,
                                     right: 4,
-                                    child: GestureDetector(
-                                      onTap: () =>
-                                          _confirmarDelete(foto.id),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.5),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(
-                                          Icons.delete_outline,
-                                          color: Colors.white,
-                                          size: 14,
+                                    child: MouseRegion(
+                                      cursor: SystemMouseCursors.click,
+                                      child: GestureDetector(
+                                        onTap: () =>
+                                            _confirmarDelete(foto.id),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black
+                                                .withValues(alpha: 0.5),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.delete_outline,
+                                            color: Colors.white,
+                                            size: 14,
+                                          ),
                                         ),
                                       ),
                                     ),

@@ -48,13 +48,15 @@ class GrupoService {
     _check(r);
   }
 
+  /// Igual ao PUT /grupos/{id} do backend (`GrupoAtualizarInput`): o
+  /// orçamento total não é mais editável diretamente aqui — ele é sempre a
+  /// soma dos orçamentos individuais (ver [alterarMeuOrcamento]).
   static Future<void> atualizar({
     required int id,
     required String nomeGrupo,
     required String destinoPrincipal,
     required String dataInicio,
     required String dataFim,
-    required double orcamento,
     required String tipoViagem,
     required String preferencias,
   }) async {
@@ -63,7 +65,6 @@ class GrupoService {
       'destino_principal': destinoPrincipal,
       'data_inicio': dataInicio,
       'data_fim': dataFim,
-      'orcamento': orcamento,
       'tipo_viagem': tipoViagem,
       'preferencias': preferencias,
     });
@@ -72,6 +73,24 @@ class GrupoService {
 
   static Future<void> deletar(int id) async {
     final r = await dio.delete('/grupos/$id');
+    _check(r);
+  }
+
+  static Future<void> sair(int idGrupo) async {
+    final r = await dio.delete('/grupos/$idGrupo/sair');
+    _check(r);
+  }
+
+  static Future<void> alterarMeuOrcamento(int idGrupo, double orcamento) async {
+    final r = await dio.patch('/grupos/$idGrupo/meu-orcamento', data: {'orcamento': orcamento});
+    _check(r);
+  }
+
+  static Future<void> publicar(int idGrupo, {required bool publica, int? limiteParticipantes}) async {
+    final r = await dio.put('/grupos/$idGrupo/publicar', data: {
+      'publica': publica,
+      if (limiteParticipantes != null) 'limite_participantes': limiteParticipantes,
+    });
     _check(r);
   }
 

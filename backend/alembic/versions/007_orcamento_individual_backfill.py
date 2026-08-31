@@ -34,16 +34,24 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # A subquery correlacionada original referenciava grupo_membros dentro
+    # do UPDATE na própria grupo_membros — o MySQL proíbe isso ("can't
+    # specify target table for update in FROM clause"), mesmo com um alias
+    # diferente. Pré-computar a soma como uma tabela derivada separada
+    # (JOIN) contorna a restrição, com o mesmo resultado.
     op.execute("""
-        UPDATE grupos_viagem g
-        JOIN grupo_membros gm
+        UPDATE grupo_membros gm
+        JOIN grupos_viagem g
             ON gm.id_grupo = g.id_grupo AND gm.id_usuario = g.criado_por
+        LEFT JOIN (
+            SELECT gm2.id_grupo, SUM(gm2.orcamento) AS soma_outros
+            FROM grupo_membros gm2
+            JOIN grupos_viagem g2 ON g2.id_grupo = gm2.id_grupo
+            WHERE gm2.id_usuario != g2.criado_por
+            GROUP BY gm2.id_grupo
+        ) outros ON outros.id_grupo = g.id_grupo
         SET gm.orcamento = GREATEST(
-            COALESCE(g.orcamento, 0) - COALESCE((
-                SELECT SUM(gm2.orcamento)
-                FROM grupo_membros gm2
-                WHERE gm2.id_grupo = g.id_grupo AND gm2.id_usuario != g.criado_por
-            ), 0),
+            COALESCE(g.orcamento, 0) - COALESCE(outros.soma_outros, 0),
             0
         )
         WHERE gm.orcamento IS NULL

@@ -9,6 +9,9 @@ class Grupo {
   final String? preferencias;
   final String? codigoConvite;
   final int? criadorId;
+  final bool publica;
+  final int? limiteParticipantes;
+  final int vagasOcupadas;
 
   const Grupo({
     required this.id,
@@ -21,6 +24,9 @@ class Grupo {
     this.preferencias,
     this.codigoConvite,
     this.criadorId,
+    this.publica = false,
+    this.limiteParticipantes,
+    this.vagasOcupadas = 0,
   });
 
   factory Grupo.fromJson(Map<String, dynamic> j) => Grupo(
@@ -34,6 +40,9 @@ class Grupo {
         preferencias: j['preferencias'] as String?,
         codigoConvite: j['codigo_convite'] as String?,
         criadorId: j['criador_id'] as int?,
+        publica: j['publica'] as bool? ?? false,
+        limiteParticipantes: j['limite_participantes'] as int?,
+        vagasOcupadas: j['vagas_ocupadas'] as int? ?? 0,
       );
 }
 

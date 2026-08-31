@@ -1,105 +1,141 @@
 import 'package:flutter/material.dart';
-import '../core/theme.dart';
+import '../core/app_logger.dart';
+import '../core/web_style.dart';
 import '../models/grupo.dart';
+import '../services/dashboard_service.dart';
 
-class TripCard extends StatelessWidget {
+/// Trip card matching `.trip-card`/`.trip-cover`/`.trip-card-body` in
+/// backend/frontend/style.css: glass surface, gradient cover with an emoji,
+/// name/destination/dates, and a best-effort budget bar (same silent-failure
+/// enrichment as `enriquecerOrcamento()` in lobby.html).
+class TripCard extends StatefulWidget {
   final Grupo grupo;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final bool selected;
 
   const TripCard({
     super.key,
     required this.grupo,
     required this.onTap,
     this.onLongPress,
+    this.selected = false,
   });
 
   @override
+  State<TripCard> createState() => _TripCardState();
+}
+
+class _TripCardState extends State<TripCard> {
+  double? _orcamentoTotal;
+  int? _percentual;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarOrcamento();
+  }
+
+  Future<void> _carregarOrcamento() async {
+    try {
+      final geral = await DashboardService.geral(widget.grupo.id);
+      if (mounted && geral.orcamentoTotal > 0) {
+        setState(() {
+          _orcamentoTotal = geral.orcamentoTotal;
+          _percentual = geral.percentualConsumido.clamp(0, 100);
+        });
+      }
+    } catch (e) {
+      // Enriquecimento best-effort — igual a enriquecerOrcamento() em lobby.html:
+      // card continua útil sem a barra de orçamento, sem reportar como erro.
+      AppLogger.info('TripCard._carregarOrcamento', '$e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+    final g = widget.grupo;
+    return GlassContainer(
+      radius: WebColors.radiusLg,
+      color: widget.selected ? WebColors.primary.withValues(alpha: 0.10) : null,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onTap,
+          onLongPress: widget.onLongPress,
+          borderRadius: BorderRadius.circular(WebColors.radiusLg),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(WebColors.radiusLg),
+              border: widget.selected ? Border.all(color: WebColors.primary, width: 2) : null,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 92,
+                  decoration: BoxDecoration(
+                    gradient: tripCoverGradientFor(g.destinoPrincipal),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(WebColors.radiusLg)),
+                  ),
+                  alignment: Alignment.bottomRight,
+                  padding: const EdgeInsets.only(right: 14, bottom: 10),
+                  child: const Text('✈️', style: TextStyle(fontSize: 26)),
                 ),
-                child: const Icon(Icons.flight_takeoff, color: AppTheme.primary, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      grupo.nomeGrupo,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: AppTheme.onSurface,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        g.nomeGrupo,
+                        style: const TextStyle(color: WebColors.text, fontSize: 16, fontWeight: FontWeight.w700),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on, size: 13, color: AppTheme.onSurfaceMuted),
-                        const SizedBox(width: 3),
-                        Expanded(
-                          child: Text(
-                            grupo.destinoPrincipal,
-                            style: const TextStyle(color: AppTheme.onSurfaceMuted, fontSize: 13),
-                            overflow: TextOverflow.ellipsis,
+                      const SizedBox(height: 5),
+                      Text(
+                        '📍 ${g.destinoPrincipal}',
+                        style: const TextStyle(color: WebColors.textMuted, fontSize: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (g.dataInicio != null) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          '🗓 ${g.dataInicio} — ${g.dataFim ?? ''}',
+                          style: const TextStyle(color: WebColors.textMuted, fontSize: 13),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      if (_orcamentoTotal != null) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          'R\$ ${_orcamentoTotal!.toStringAsFixed(2)} · $_percentual%',
+                          style: const TextStyle(color: WebColors.textMuted, fontSize: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(WebColors.radiusPill),
+                          child: LinearProgressIndicator(
+                            value: (_percentual ?? 0) / 100,
+                            minHeight: 6,
+                            backgroundColor: WebColors.surface2,
+                            valueColor: const AlwaysStoppedAnimation(WebColors.accent),
                           ),
                         ),
                       ],
-                    ),
-                    if (grupo.dataInicio != null) ...[
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          const Icon(Icons.calendar_today, size: 12, color: AppTheme.onSurfaceMuted),
-                          const SizedBox(width: 3),
-                          Text(
-                            _formatRange(grupo.dataInicio, grupo.dataFim),
-                            style: const TextStyle(color: AppTheme.onSurfaceMuted, fontSize: 12),
-                          ),
-                        ],
-                      ),
                     ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.auto_awesome, color: AppTheme.primary, size: 16),
-                  const SizedBox(height: 6),
-                  Icon(
-                    Icons.info_outline,
-                    color: AppTheme.onSurfaceMuted.withValues(alpha: 0.5),
-                    size: 14,
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
-  }
-
-  String _formatRange(String? inicio, String? fim) {
-    if (inicio == null) return '';
-    if (fim == null) return inicio;
-    return '$inicio → $fim';
   }
 }

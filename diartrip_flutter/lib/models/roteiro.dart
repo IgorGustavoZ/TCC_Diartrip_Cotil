@@ -3,12 +3,14 @@ class Roteiro {
   final int idGrupo;
   final String titulo;
   final String descricao;
+  final bool origemIa;
 
   const Roteiro({
     required this.id,
     required this.idGrupo,
     required this.titulo,
     required this.descricao,
+    this.origemIa = false,
   });
 
   factory Roteiro.fromJson(Map<String, dynamic> j) => Roteiro(
@@ -16,5 +18,6 @@ class Roteiro {
         idGrupo: j['id_grupo'] as int,
         titulo: j['titulo'] as String,
         descricao: j['descricao'] as String? ?? '',
+        origemIa: j['origem_ia'] as bool? ?? false,
       );
 }
