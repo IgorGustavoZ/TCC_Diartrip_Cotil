@@ -32,7 +32,7 @@
         <div class="field" style="position:relative">
         <label data-i18n="register.pass.label">Password</label>
         <input id="password" type="password" data-i18n-placeholder="register.pass.placeholder" placeholder="Create a password" required>
-        <span id="togglePassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);" data-i18n="login.pass.show">show</span>
+        <span id="togglePassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);">⌣</span>
         <span style="font-size:12px; color:var(--text-muted); margin-top:4px; display:block;" data-i18n="register.pass.hint">
             Minimum 8 characters, with at least one uppercase letter and one number.
         </span>
@@ -61,10 +61,10 @@
     togglePassword.addEventListener("click", () => {
         if (passwordInput.type === "password") {
             passwordInput.type = "text"
-            togglePassword.textContent = t("login.pass.hide")
+            togglePassword.textContent = "👁"
         } else {
             passwordInput.type = "password"
-            togglePassword.textContent = t("login.pass.show")
+            togglePassword.textContent = "⌣"
         }
     })
 

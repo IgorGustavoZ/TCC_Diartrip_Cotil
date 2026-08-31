@@ -401,7 +401,7 @@ async function carregarGrupo() {
     const grupo = grupoAtual
 
     document.getElementById("nomeViagem").innerText = grupo.nome_grupo
-    document.getElementById("destinoViagem").innerText = `📍 ${grupo.destino_principal}`
+    document.getElementById("destinoViagem").innerText = `${grupo.destino_principal}`
     document.getElementById("datasViagem").innerText = `${grupo.data_inicio} → ${grupo.data_fim}`
     document.getElementById("infoDestino").innerText = grupo.destino_principal
     document.getElementById("infoPeriodo").innerText = `${grupo.data_inicio} ${t('common.at')} ${grupo.data_fim}`
