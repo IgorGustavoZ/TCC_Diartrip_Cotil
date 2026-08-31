@@ -9,6 +9,8 @@
         <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F8FAFC"/>
         <SolidColorBrush x:Key="TextMutedBrush" Color="#94A3B8"/>
         <SolidColorBrush x:Key="BorderBrush2" Color="#27324A"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6"/>
+        <SolidColorBrush x:Key="AccentBrushHover" Color="#2563EB"/>
 
         <!-- Voltar -->
         <Style x:Key="BackButtonStyle" TargetType="Button">
@@ -35,6 +37,39 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="#243248"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- chats iaa -->
+        <Style x:Key="ChatButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentBrushHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource CardBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -77,11 +112,12 @@
 
         <StackPanel Margin="0,0,4,10">
 
-            <!-- Botao e titulo -->
+            <!-- Botao, titulo e botao de chat -->
             <Grid Margin="0,0,0,20">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Column="0"
@@ -97,6 +133,12 @@
                            Foreground="{StaticResource TextPrimaryBrush}"
                            VerticalAlignment="Center"
                            Margin="16,0,0,0"/>
+
+                <Button x:Name="BtnVerConversa"
+                        Grid.Column="2"
+                        Content="💬   Ver conversa do grupo"
+                        Style="{StaticResource ChatButtonStyle}"
+                        Click="BtnVerConversa_Click"/>
             </Grid>
 
             <!-- Acredita em destino? -->

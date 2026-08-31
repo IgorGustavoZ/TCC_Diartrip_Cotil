@@ -25,7 +25,7 @@
         <DropShadowEffect x:Key="CardShadow" BlurRadius="18" ShadowDepth="2"
                            Direction="270" Color="#000000" Opacity="0.35"/>
 
-        <!-- Sidebar navigação button style -->
+        <!-- Sidebar navegação button style -->
         <Style x:Key="NavButtonStyle" TargetType="Button">
             <Setter Property="Height" Value="52"/>
             <Setter Property="Margin" Value="0,6,0,0"/>
@@ -130,7 +130,7 @@
             </Setter>
         </Style>
 
-        
+
 
     </Window.Resources>
 
@@ -151,12 +151,10 @@
                 <StackPanel DockPanel.Dock="Top">
 
                     <StackPanel Orientation="Horizontal" Margin="6,0,0,44">
-                        <Border Width="34" Height="34" CornerRadius="10" Background="{StaticResource AccentBrush}">
-                            <TextBlock Text="✈" FontSize="16" Foreground="White"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="DiarTrip"
-                                   FontSize="24"
+                        
+                        <TextBlock Text="Diartrip"
+                                   FontFamily=".Fonts/#Akira Expanded"
+                                   FontSize="32"
                                    FontWeight="Bold"
                                    Foreground="{StaticResource TextPrimaryBrush}"
                                    VerticalAlignment="Center"
