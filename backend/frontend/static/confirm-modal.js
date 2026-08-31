@@ -66,7 +66,7 @@ function _injetarModalConfirmacao() {
     wrapper.innerHTML = `
 <div class="confirm-modal-ov" id="confirmModalOv" onclick="fecharModalConfirmacao(event)">
     <div class="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirmModalTitulo" aria-describedby="confirmModalMsg">
-        <div class="confirm-modal-icon" id="confirmModalIcon">⚠️</div>
+        <div class="confirm-modal-icon" id="confirmModalIcon">⚠</div>
         <h3 class="confirm-modal-titulo" id="confirmModalTitulo"></h3>
         <p class="confirm-modal-msg" id="confirmModalMsg"></p>
         <div class="confirm-modal-acoes">

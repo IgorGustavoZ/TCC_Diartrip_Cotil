@@ -236,7 +236,7 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
                         <label for="senhaAtual" data-i18n="config.currentPassword">Senha atual</label>
                         <div class="password-input-wrap">
                             <input id="senhaAtual" type="password" autocomplete="current-password" data-i18n-placeholder="config.currentPasswordPlaceholder" placeholder="Sua senha atual">
-                            <button type="button" class="toggle-pass" data-target="senhaAtual" aria-label="Mostrar senha">👁</button>
+                            <button type="button" class="toggle-pass" data-target="senhaAtual" aria-label="Mostrar senha">⌣</button>
                         </div>
                         <span class="field-error" id="erroSenhaAtual"></span>
                     </div>
@@ -246,7 +246,7 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
                             <label for="novaSenha" data-i18n="config.newPassword">Nova senha</label>
                             <div class="password-input-wrap">
                                 <input id="novaSenha" type="password" autocomplete="new-password" data-i18n-placeholder="config.newPasswordPlaceholder" placeholder="Mínimo 8 caracteres">
-                                <button type="button" class="toggle-pass" data-target="novaSenha" aria-label="Mostrar senha">👁</button>
+                                <button type="button" class="toggle-pass" data-target="novaSenha" aria-label="Mostrar senha">⌣</button>
                             </div>
                             <span class="field-error" id="erroNovaSenha"></span>
                         </div>
@@ -255,7 +255,7 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
                             <label for="confirmarNovaSenha" data-i18n="config.confirmNewPassword">Confirmar nova senha</label>
                             <div class="password-input-wrap">
                                 <input id="confirmarNovaSenha" type="password" autocomplete="new-password" data-i18n-placeholder="config.confirmNewPasswordPlaceholder" placeholder="Repita a nova senha">
-                                <button type="button" class="toggle-pass" data-target="confirmarNovaSenha" aria-label="Mostrar senha">👁</button>
+                                <button type="button" class="toggle-pass" data-target="confirmarNovaSenha" aria-label="Mostrar senha">⌣</button>
                             </div>
                             <span class="field-error" id="erroConfirmarNovaSenha"></span>
                         </div>
@@ -426,7 +426,7 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
                 if (!alvo) return
                 const vaiMostrar = alvo.type === "password"
                 alvo.type = vaiMostrar ? "text" : "password"
-                btn.textContent = vaiMostrar ? "⌣" : "👁"
+                btn.textContent = vaiMostrar ? "👁" : "⌣"
                 btn.setAttribute("aria-label", t(vaiMostrar ? 'config.hidePassword' : 'config.showPassword'))
             })
         })
@@ -497,7 +497,7 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
             document.querySelectorAll("#alterarSenha .toggle-pass").forEach(btn => {
                 const alvo = document.getElementById(btn.dataset.target)
                 if (alvo) alvo.type = "password"
-                btn.textContent = "👁"
+                btn.textContent = "⌣"
             })
         }
 
