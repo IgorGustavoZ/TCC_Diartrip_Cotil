@@ -215,12 +215,15 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 
                             <Border Width="32" Height="32"
-                                    CornerRadius="16"
-                                    BorderBrush="{StaticResource AccentBrush}"
-                                    BorderThickness="2">
-                                <Border CornerRadius="14" ClipToBounds="True">
-                                    <Image x:Name="imgPerfil" Stretch="UniformToFill"/>
-                                </Border>
+        CornerRadius="16"
+        BorderBrush="{StaticResource AccentBrush}"
+        BorderThickness="2">
+                                <Ellipse>
+                                    <Ellipse.Fill>
+                                        <!-- Adicionamos o x:Name aqui para acessar no C# -->
+                                        <ImageBrush x:Name="imgPerfilBrush" Stretch="UniformToFill"/>
+                                    </Ellipse.Fill>
+                                </Ellipse>
                             </Border>
 
                             <TextBlock Name="txtUsuario"

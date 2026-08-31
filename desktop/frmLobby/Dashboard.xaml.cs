@@ -53,10 +53,10 @@ namespace WindowLobby
                     if (!string.IsNullOrEmpty(fotoUrl))
                     {
                         try
-                        {
-                            imgPerfil.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri(fotoUrl));
+                        {                         
+                            imgPerfilBrush.ImageSource = new System.Windows.Media.Imaging.BitmapImage(new Uri(fotoUrl));
                         }
-                        catch { /* imagem inacessível */ }
+                        catch { }
                     }
                 }
 
