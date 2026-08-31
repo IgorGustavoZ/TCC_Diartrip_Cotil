@@ -15,10 +15,18 @@ namespace WindowLobby.Pages
         private GridViewColumnHeader _lastHeaderClicked;
         private ListSortDirection _lastDirection = ListSortDirection.Ascending;
 
+        
+        private bool _carregado;
+
         public UsuarioPage()
         {
             InitializeComponent();
-            Loaded += async (_, _) => await CarregarPerfil();
+            Loaded += async (_, _) =>
+            {
+                if (_carregado) return;
+                _carregado = true;
+                await CarregarPerfil();
+            };
         }
 
         private async Task CarregarPerfil()
@@ -95,9 +103,7 @@ namespace WindowLobby.Pages
 
         private void ListUsuarios_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            // Sobe a árvore visual a partir do ponto clicado até achar o
-            // ListViewItem — evita abrir o detalhe ao dar duplo clique no
-            // cabeçalho da lista ou em uma área vazia sem item.
+            
             var dep = e.OriginalSource as DependencyObject;
             while (dep is not null && dep is not ListViewItem)
             {
@@ -107,10 +113,7 @@ namespace WindowLobby.Pages
             if (dep is not ListViewItem item || item.DataContext is not UsuarioModel usuario)
                 return;
 
-            // Passa a própria página (this) como "página anterior": o botão
-            // Voltar da UsuarioDetalhePage navega direto de volta pra essa
-            // mesma instância, preservando filtros/ordenação/rolagem, sem
-            // depender do back stack do Frame (ver nota no PostDetalhePage).
+           
             NavigationService?.Navigate(new UsuarioDetalhePage(usuario, this));
         }
 
@@ -147,6 +150,26 @@ namespace WindowLobby.Pages
                         return false;
                 }
 
+                //combo!! box!!
+                var chave = (cmbFiltroCriadosEm.SelectedItem as ComboBoxItem)?.Tag as string;
+                if (chave is not null && chave != "qualquer")
+                {
+                    if (!DateTime.TryParse(usuario.data_criacao, out var criadoEmJanela))
+                        return false;
+
+                    var limite = chave switch
+                    {
+                        "dia" => DateTime.Now.AddDays(-1),
+                        "semana" => DateTime.Now.AddDays(-7),
+                        "mes" => DateTime.Now.AddMonths(-1),
+                        "ano" => DateTime.Now.AddYears(-1),
+                        _ => DateTime.MinValue
+                    };
+
+                    if (criadoEmJanela < limite)
+                        return false;
+                }
+
                 return true;
             };
 
@@ -159,6 +182,7 @@ namespace WindowLobby.Pages
             txtFiltroNome.Clear();
             txtFiltroEmail.Clear();
             dpFiltroData.SelectedDate = null;
+            cmbFiltroCriadosEm.SelectedIndex = 0;
 
             var view = CollectionViewSource.GetDefaultView(listUsuarios.ItemsSource);
             if (view is null) return;

@@ -68,8 +68,7 @@ namespace WindowLobby.CRUD
                 return req;
             });
 
-            // Antes: "resp.IsSuccessStatusCode" quebrava com NullReferenceException
-            // quando a requisição falhava (resp == null, ex.: erro de rede/401 sem refresh).
+            
             if (resp is null || !resp.IsSuccessStatusCode)
             {
                 return null;
@@ -82,10 +81,8 @@ namespace WindowLobby.CRUD
             return respostaJson;
         }
 
-        /// <summary>
         /// GET /chat/{id} — busca uma única interação de chat pelo id.
-        /// Útil para uma futura tela de detalhe (equivalente a Usuario.GetUsuariosById).
-        /// </summary>
+        
         public static async Task<string?> BuscarMensagemPorId(int id)
         {
             var resp = await ExecutarComRefresh(() =>
@@ -113,8 +110,7 @@ namespace WindowLobby.CRUD
         {
             try
             {
-                // O CookieContainer enviará automaticamente o refresh_token
-                // pois o path do cookie ("/token/refresh") coincide com a URI
+
                 var req = new HttpRequestMessage(HttpMethod.Post, "/token/refresh");
                 var resp = await Client.SendAsync(req);
 

@@ -9,7 +9,7 @@
 
     <Window.Resources>
 
-        <!-- Color palette -->
+        <!-- Paleta de cores -->
         <SolidColorBrush x:Key="BgBrush" Color="#0F172A"/>
         <SolidColorBrush x:Key="SidebarBrush" Color="#111827"/>
         <SolidColorBrush x:Key="CardBrush" Color="#1E293B"/>
@@ -21,11 +21,11 @@
         <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F8FAFC"/>
         <SolidColorBrush x:Key="TextMutedBrush" Color="#94A3B8"/>
 
-        <!-- Drop shadow used on cards -->
+        <!-- Drop shadow -->
         <DropShadowEffect x:Key="CardShadow" BlurRadius="18" ShadowDepth="2"
                            Direction="270" Color="#000000" Opacity="0.35"/>
 
-        <!-- Sidebar nav button style -->
+        <!-- Sidebar navigação button style -->
         <Style x:Key="NavButtonStyle" TargetType="Button">
             <Setter Property="Height" Value="52"/>
             <Setter Property="Margin" Value="0,6,0,0"/>
@@ -56,7 +56,7 @@
             </Setter>
         </Style>
 
-        <!-- Logout button style (danger, full-width — no longer used but kept for reference) -->
+        <!-- Logout button styl -->
         <Style x:Key="LogoutButtonStyle" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
             <Setter Property="Foreground" Value="#FCA5A5"/>
             <Setter Property="Template">
@@ -80,7 +80,7 @@
             </Setter>
         </Style>
 
-        <!-- Small square logout button — sits next to the profile card in the bottom-left -->
+        <!-- Small weak vulnerable logout button -->
         <Style x:Key="LogoutButtonSmallStyle" TargetType="Button">
             <Setter Property="Background" Value="#2A1414"/>
             <Setter Property="Foreground" Value="#FCA5A5"/>
@@ -107,7 +107,7 @@
             </Setter>
         </Style>
 
-        <!-- Primary accent button (Export PDF) -->
+        <!-- Ele adora exportar pdfs -->
         <Style x:Key="AccentButtonStyle" TargetType="Button" BasedOn="{StaticResource NavButtonStyle}">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="Template">
@@ -130,15 +130,7 @@
             </Setter>
         </Style>
 
-        <!-- Stat card style (kept in case pages want to reuse it) -->
-        <Style x:Key="StatCardStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource CardBrush}"/>
-            <Setter Property="CornerRadius" Value="16"/>
-            <Setter Property="Margin" Value="10"/>
-            <Setter Property="Effect" Value="{StaticResource CardShadow}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#27324A"/>
-        </Style>
+        
 
     </Window.Resources>
 
@@ -149,7 +141,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ============ SIDEBAR ============ -->
+        <!-- ============ BARRALATERAL ============ -->
 
         <Border Grid.Column="0" Background="{StaticResource SidebarBrush}">
 
@@ -190,9 +182,9 @@
                             Style="{StaticResource NavButtonStyle}"
                             Click="BtnChatIA_Click"/>
 
-                    <Button Content="    Posts"
+                    <Button Content="📌    Posts"
                             Style="{StaticResource NavButtonStyle}"
-                            Click="BtnPost_Clicl"/>
+                            Click="BtnPost_Click"/>
 
                     <Button Content="⚙   Configurações"
                             Style="{StaticResource NavButtonStyle}"
@@ -205,7 +197,7 @@
 
                 </StackPanel>
 
-                <!-- Profile + logout (bottom) -->
+                <!-- proliferar e logout -->
                 <Grid DockPanel.Dock="Bottom">
 
                     <Grid.ColumnDefinitions>
@@ -259,7 +251,7 @@
 
         </Border>
 
-        <!-- ============ MAIN AREA (bare — pages render here) ============ -->
+        <!-- ============ Mainframe ============ -->
 
         <Grid Grid.Column="1" Margin="36,32,36,32">
 

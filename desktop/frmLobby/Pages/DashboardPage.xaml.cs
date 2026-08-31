@@ -24,12 +24,10 @@ using WindowLobby.CRUD.models;
 
 namespace WindowLobby.Pages
 {
-    /// <summary>
-    /// Interação lógica para DashboardPage.xaml
-    /// </summary>
+   
     public partial class DashboardPage : Page
     {
-        // Paleta usada para as fatias do gráfico de destinos.
+        // Paleta graficxo
         private static readonly string[] Paleta =
         {
             "#3B82F6", "#4ADE80", "#FBBF24", "#F472B6", "#A78BFA", "#38BDF8", "#FB7185"
@@ -38,6 +36,9 @@ namespace WindowLobby.Pages
         public DashboardPage()
         {
             InitializeComponent();
+
+            
+            chartDestinos.LegendTextPaint = new SolidColorPaint(SKColors.White);
 
             Loaded += async (_, _) => await CarregarEstatisticas();
         }
@@ -95,7 +96,7 @@ namespace WindowLobby.Pages
             }
         }
 
-        // ── Gráfico: usuários criados por mês (últimos 12 meses, sempre) ────────
+        // ── Gráfico: usuários criados por mês nos ultimos 12 meses ────────
 
         private void MontarGraficoUsuariosPorMes(List<UsuarioModel>? usuarios)
         {
@@ -105,8 +106,7 @@ namespace WindowLobby.Pages
                 .Select(data => data!.Value)
                 .ToList();
 
-            // Janela fixa: mês atual e os 11 anteriores — independe de quando o
-            // primeiro usuário foi cadastrado.
+            
             var mesAtual = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
             var primeiroMes = mesAtual.AddMonths(-11);
 
@@ -165,13 +165,11 @@ namespace WindowLobby.Pages
             };
         }
 
-        // ── Gráfico: top destinos das viagens (pizza) ───────────────────────────
+        // ── pizza... ───────────────────────────
 
         private void MontarGraficoDestinos(List<ViagemModel>? viagens)
         {
-            // NOTA: assume que ViagemModel tem uma propriedade "destino" (string),
-            // seguindo o mesmo padrão dos outros models (nome, email, pergunta...).
-            // Se o nome real for diferente, troque "v.destino" abaixo.
+            
             var destinosValidos = (viagens ?? new List<ViagemModel>())
                 .Select(v => v.destino_principal)
                 .Where(d => !string.IsNullOrWhiteSpace(d))

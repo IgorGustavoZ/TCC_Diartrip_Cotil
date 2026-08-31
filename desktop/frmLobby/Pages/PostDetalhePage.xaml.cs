@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media.Imaging;
+using WindowLobby.crud;
 using WindowLobby.CRUD.models;
 
 namespace WindowLobby.Pages
@@ -9,12 +12,14 @@ namespace WindowLobby.Pages
     public partial class PostDetalhePage : Page
     {
         private readonly Page _paginaAnterior;
+        private readonly int _idUsuarioPost;
 
         public PostDetalhePage(PostModel post, Page paginaAnterior)
         {
             InitializeComponent();
 
             _paginaAnterior = paginaAnterior;
+            _idUsuarioPost = post.id_usuario;
 
             txtTitulo.Text = $"Post de {post.nome}";
             txtSubtitulo.Text = $"Publicado em {post.data_criacao}";
@@ -46,11 +51,7 @@ namespace WindowLobby.Pages
             }
         }
 
-        /// <summary>
-        /// Carrega a imagem do post a partir da URL retornada pela API.
-        /// Se não houver "imagem" ou o carregamento falhar (URL inválida,
-        /// sem rede, 404, etc.), a moldura fica oculta em vez de quebrar a página.
-        /// </summary>
+        
         private void CarregarImagem(string? url)
         {
             if (string.IsNullOrWhiteSpace(url))
@@ -79,17 +80,62 @@ namespace WindowLobby.Pages
 
         private void BtnVoltar_Click(object sender, RoutedEventArgs e)
         {
-            // Navega direto pra mesma instância da página que abriu este
-            // detalhe — em vez de NavigationService.GoBack(), que depende do
-            // back stack do Frame e pode não voltar se algo no fluxo de
-            // navegação (ex.: Dashboard.MainFrame_Navigated) limpar essa
-            // pilha entre as duas navegações. Assim o botão sempre funciona,
-            // e a página anterior (filtros, ordenação, rolagem) fica intacta
-            // porque é o mesmo objeto, não uma nova instância recriada.
+            
             if (_paginaAnterior is not null)
                 NavigationService?.Navigate(_paginaAnterior);
             else if (NavigationService?.CanGoBack == true)
                 NavigationService.GoBack();
+        }
+
+        // ---------- Usuários clicáveis ----------
+
+        private async void LinkUsuarioPost_Click(object sender, RoutedEventArgs e)
+        {
+            await AbrirUsuarioDetalhe(_idUsuarioPost);
+        }
+
+        private async void LinkUsuarioComentario_Click(object sender, RoutedEventArgs e)
+        {
+           
+            if (sender is not Hyperlink link || link.DataContext is not ComentarioModel comentario)
+                return;
+
+            await AbrirUsuarioDetalhe(comentario.id_usuario);
+        }
+
+        
+        private async Task AbrirUsuarioDetalhe(int idUsuario)
+        {
+            try
+            {
+                var json = await Usuario.GetUsuariosById(idUsuario);
+                if (json is null)
+                {
+                    MessageBox.Show(
+                        "Não foi possível carregar os dados desse usuário.",
+                        "Aviso",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                var usuario = JsonSerializer.Deserialize<UsuarioModel>(
+                    json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
+
+                if (usuario is null) return;
+
+                NavigationService?.Navigate(new UsuarioDetalhePage(usuario, this));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erro ao carregar usuário: {ex.Message}",
+                    "Erro",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
     }
 }

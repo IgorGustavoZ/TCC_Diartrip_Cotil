@@ -13,7 +13,7 @@
         <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6"/>
         <SolidColorBrush x:Key="LikeAccentBrush" Color="#F87171"/>
 
-        <!-- Back button (top-left) -->
+        <!-- Voltar -->
         <Style x:Key="BackButtonStyle" TargetType="Button">
             <Setter Property="Height" Value="40"/>
             <Setter Property="Padding" Value="16,0"/>
@@ -60,8 +60,7 @@
             <Setter Property="Margin" Value="0,0,0,8"/>
         </Style>
 
-        <!-- Read-only TextBox styled to look like a plain wrapped label, but the
-             text can still be selected and Ctrl+C'd, unlike a TextBlock. -->
+        <!-- textbox -->
         <Style x:Key="SelectableTextStyle" TargetType="TextBox">
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
             <Setter Property="FontSize" Value="15"/>
@@ -85,13 +84,13 @@
             </Setter>
         </Style>
 
-        <!-- Meta line shown under the post content -->
+        <!-- METALINE!!! WITH THIS... I'LL CRUSH YOU KAISER...! -->
         <Style x:Key="MetaLineStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
             <Setter Property="FontSize" Value="12"/>
         </Style>
 
-        <!-- Card for each comment -->
+        <!-- Cartelinhas comentários -->
         <Style x:Key="ComentarioCardStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource FieldBrush}"/>
             <Setter Property="BorderBrush" Value="{StaticResource BorderBrush2}"/>
@@ -102,13 +101,13 @@
 
     </Page.Resources>
 
-    <!-- Only vertical scrolling — text/comments wrap instead of running off the side -->
+    
     <ScrollViewer VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled">
 
         <StackPanel Margin="0,0,4,10">
 
-            <!-- Top bar: back button + title -->
+            <!-- titulo e botao voltar -->
             <Grid Margin="0,0,0,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -136,12 +135,11 @@
                        FontSize="13"
                        Margin="0,6,0,20"/>
 
-            <!-- Card do post -->
+            <!-- Card Post -->
             <Border Style="{StaticResource ContentCardStyle}" Margin="0,0,0,24">
                 <StackPanel>
 
-                    <!-- Imagem do post — fica oculta se não houver "imagem" ou se
-                         o carregamento falhar (ver CarregarImagem no code-behind) -->
+                    <!-- Imagem -->
                     <Border x:Name="borderImagem"
                             CornerRadius="10"
                             ClipToBounds="True"
@@ -158,8 +156,7 @@
 
                     <TextBlock Style="{StaticResource MetaLineStyle}" Margin="0,18,0,0">
                         <Run Text="Id "/><Run x:Name="runIdPost"/>
-                        <Run Text=" • Usuário "/><Run x:Name="runIdUsuario"/>
-                        <Run Text=" ("/><Run x:Name="runNomeUsuario"/><Run Text=")"/>
+                        <Run Text=" • Usuário "/><Hyperlink Click="LinkUsuarioPost_Click" Foreground="{StaticResource AccentBrush}"><Run x:Name="runIdUsuario"/><Run Text=" ("/><Run x:Name="runNomeUsuario"/><Run Text=")"/></Hyperlink>
                         <Run Text=" • "/><Run x:Name="runData"/>
                     </TextBlock>
 
@@ -199,7 +196,7 @@
                                 <TextBlock FontWeight="SemiBold"
                                            FontSize="13"
                                            Foreground="{StaticResource TextPrimaryBrush}">
-                                    <Run Text="Usuário "/><Run Text="{Binding id_usuario, Mode=OneWay}"/>
+                                    <Run Text="Usuário "/><Hyperlink Click="LinkUsuarioComentario_Click" Foreground="{StaticResource AccentBrush}"><Run Text="{Binding id_usuario, Mode=OneWay}"/></Hyperlink>
                                 </TextBlock>
                                 <TextBox Text="{Binding conteudo, Mode=OneWay}"
                                          Style="{StaticResource SelectableTextStyle}"

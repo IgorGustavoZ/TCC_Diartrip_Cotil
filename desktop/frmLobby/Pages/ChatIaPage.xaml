@@ -12,7 +12,7 @@
         <SolidColorBrush x:Key="TextMutedBrush" Color="#94A3B8"/>
         <SolidColorBrush x:Key="BorderBrush2" Color="#27324A"/>
 
-        <!-- Label above each filter field -->
+        <!-- labels -->
         <Style x:Key="FilterLabelStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
             <Setter Property="FontSize" Value="12"/>
@@ -31,6 +31,29 @@
             <Setter Property="SelectionBrush" Value="{StaticResource AccentBrush}"/>
             <Setter Property="SelectionTextBrush" Value="White"/>
             <Setter Property="Margin" Value="0,0,0,18"/>
+        </Style>
+
+        <!-- datepickcekerrrr uggghhhhh -->
+        <Style TargetType="{x:Type DatePickerTextBox}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DatePickerTextBox}">
+                        <TextBox x:Name="PART_TextBox"
+                                 Text="{Binding Path=SelectedDate,
+                                                RelativeSource={RelativeSource AncestorType={x:Type DatePicker}},
+                                                StringFormat=yyyy/MM/dd,
+                                                Mode=OneWay}"
+                                 Background="Transparent"
+                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                 CaretBrush="{StaticResource TextPrimaryBrush}"
+                                 SelectionBrush="{StaticResource AccentBrush}"
+                                 BorderThickness="0"
+                                 Padding="0"
+                                 VerticalAlignment="Center"
+                                 IsReadOnly="True"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- DatePicker filter style -->
@@ -86,7 +109,7 @@
             </Setter>
         </Style>
 
-        <!-- Apply filters button -->
+        <!-- Aplicar filters button -->
         <Style x:Key="FilterButtonStyle" TargetType="Button">
             <Setter Property="Height" Value="42"/>
             <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
@@ -110,7 +133,7 @@
             </Setter>
         </Style>
 
-        <!-- Clear filters (secondary) button -->
+        <!-- Clear filters button -->
         <Style x:Key="ClearButtonStyle" TargetType="Button" BasedOn="{StaticResource FilterButtonStyle}">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
@@ -188,7 +211,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ============ FILTERS COLUMN ============ -->
+        <!-- ============ Filtros ============ -->
 
         <Border Grid.Column="0"
                 Background="{StaticResource CardBrush}"
@@ -237,7 +260,7 @@
 
         </Border>
 
-        <!-- ============ LIST COLUMN ============ -->
+        <!-- ============ Lista ============ -->
 
         <Grid Grid.Column="1">
 

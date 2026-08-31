@@ -137,7 +137,7 @@
 
         </UniformGrid>
 
-        <!-- ============ CHARTS (side by side) ============ -->
+        <!-- ============ Cartelinhas ============ -->
 
         <Grid Grid.Row="2">
 
@@ -167,7 +167,7 @@
                 </Grid>
             </Border>
 
-            <!-- Top destinos das viagens -->
+            <!-- TOP destinos das viagens -->
             <Border Grid.Column="1" Style="{StaticResource ChartCardStyle}">
                 <Grid>
                     <Grid.RowDefinitions>

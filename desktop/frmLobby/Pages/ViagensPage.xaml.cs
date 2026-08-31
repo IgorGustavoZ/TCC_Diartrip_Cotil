@@ -1,8 +1,13 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
+using System.Windows.Media;
 using WindowLobby.crud;
 using WindowLobby.CRUD.models;
 
@@ -13,10 +18,19 @@ namespace WindowLobby.Pages
 
         private GridViewColumnHeader _lastHeaderClicked;
         private ListSortDirection _lastDirection = ListSortDirection.Ascending;
+
+        
+        private bool _carregado;
+
         public ViagensPage()
         {
             InitializeComponent();
-            Loaded += async (_, _) => await CarregarViagens();
+            Loaded += async (_, _) =>
+            {
+                if (_carregado) return;
+                _carregado = true;
+                await CarregarViagens();
+            };
         }
 
         private async Task CarregarViagens()
@@ -26,8 +40,8 @@ namespace WindowLobby.Pages
                 var json = await CRUD.Viagem.GetViagens();
 
                 System.Diagnostics.Debug.WriteLine($"[Viagens] RAW JSON: {json}");
-                
-                
+
+
                 if (json is null)
                 {
                     MessageBox.Show(
@@ -37,12 +51,12 @@ namespace WindowLobby.Pages
                         MessageBoxImage.Warning);
                     return;
                 }
-               
+
                 var viagens = JsonSerializer.Deserialize<List<ViagemModel>>(
                     json,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                 );
-                
+
                 listViagens.ItemsSource = viagens;
             }
             catch (Exception ex)
@@ -55,7 +69,25 @@ namespace WindowLobby.Pages
             }
         }
 
-        // ---------- SORTING ----------
+        // ---------- Detalhe da viagem ----------
+
+        private void ListViagens_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            
+            var dep = e.OriginalSource as DependencyObject;
+            while (dep is not null && dep is not ListViewItem)
+            {
+                dep = VisualTreeHelper.GetParent(dep);
+            }
+
+            if (dep is not ListViewItem item || item.DataContext is not ViagemModel viagem)
+                return;
+
+           
+            NavigationService?.Navigate(new ViagensDetalhePage(viagem, this));
+        }
+
+        // ---------- Vem cima de, cai baixo para ----------
 
         private void ListViewHeader_Click(object sender, RoutedEventArgs e)
         {
@@ -82,9 +114,82 @@ namespace WindowLobby.Pages
             _lastDirection = direction;
         }
 
+        // ---------- rartlif ----------
+
         private void BtnFiltrar_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: implement filtering logic (id, nome, destino, data início/fim, criado por)
+            var view = CollectionViewSource.GetDefaultView(listViagens.ItemsSource);
+            if (view is null) return;
+
+            view.Filter = obj =>
+            {
+                if (obj is not ViagemModel viagem) return false;
+
+                if (!string.IsNullOrWhiteSpace(txtFiltroId.Text) &&
+                    !viagem.id_grupo.ToString()
+                        .Contains(txtFiltroId.Text.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                if (!string.IsNullOrWhiteSpace(txtFiltroNome.Text) &&
+                    !(viagem.nome_grupo ?? "")
+                        .Contains(txtFiltroNome.Text.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                if (!string.IsNullOrWhiteSpace(txtFiltroDestino.Text) &&
+                    !(viagem.destino_principal ?? "")
+                        .Contains(txtFiltroDestino.Text.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                if (!string.IsNullOrWhiteSpace(txtFiltroCriadoPor.Text) &&
+                    !(viagem.criador ?? "")
+                        .Contains(txtFiltroCriadoPor.Text.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                // aaaAAAAAAAAAAAAIIiiiiiiiii
+                if (!TryParseData(viagem.data_inicio, out var inicioEm)) return false;
+                if (!TryParseData(viagem.data_fim, out var fimEm)) return false;
+
+                if (dpFiltroDataInicio.SelectedDate.HasValue &&
+                    inicioEm.Date != dpFiltroDataInicio.SelectedDate.Value.Date)
+                    return false;
+
+                if (dpFiltroDataFim.SelectedDate.HasValue &&
+                    fimEm.Date != dpFiltroDataFim.SelectedDate.Value.Date)
+                    return false;
+
+                return true;
+            };
+
+            view.Refresh();
+        }
+
+
+       
+        private static readonly string[] FormatosData =
+        {
+            "yyyy-MM-dd",
+            "yyyy-MM-ddTHH:mm:ss",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy/MM/dd",
+            "yyyy/MM/dd HH:mm:ss",
+            "dd/MM/yyyy",
+            "dd/MM/yyyy HH:mm:ss"
+        };
+
+        
+        public static bool TryParseData(string? valor, out DateTime data)
+        {
+            data = default;
+            if (string.IsNullOrWhiteSpace(valor)) return false;
+
+            valor = valor.Trim();
+
+            if (DateTime.TryParseExact(
+                    valor, FormatosData, CultureInfo.InvariantCulture, DateTimeStyles.None, out data))
+                return true;
+
+            
+            return DateTime.TryParse(valor, new CultureInfo("pt-BR"), DateTimeStyles.None, out data);
         }
 
         private void BtnLimparFiltros_Click(object sender, RoutedEventArgs e)
@@ -95,6 +200,12 @@ namespace WindowLobby.Pages
             txtFiltroCriadoPor.Clear();
             dpFiltroDataInicio.SelectedDate = null;
             dpFiltroDataFim.SelectedDate = null;
+
+            var view = CollectionViewSource.GetDefaultView(listViagens.ItemsSource);
+            if (view is null) return;
+
+            view.Filter = null;
+            view.Refresh();
         }
     }
 }

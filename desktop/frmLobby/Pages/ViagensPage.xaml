@@ -1,8 +1,11 @@
 <Page x:Class="WindowLobby.Pages.ViagensPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="clr-namespace:WindowLobby.Pages">
 
     <Page.Resources>
+
+        <local:DataYyyyMmDdConverter x:Key="DataYyyyMmDdConverter"/>
 
         <SolidColorBrush x:Key="CardBrush" Color="#1E293B"/>
         <SolidColorBrush x:Key="FieldBrush" Color="#0F172A"/>
@@ -12,7 +15,7 @@
         <SolidColorBrush x:Key="TextMutedBrush" Color="#94A3B8"/>
         <SolidColorBrush x:Key="BorderBrush2" Color="#27324A"/>
 
-        <!-- Label above each filter field -->
+        <!-- Labels -->
         <Style x:Key="FilterLabelStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
             <Setter Property="FontSize" Value="12"/>
@@ -31,6 +34,29 @@
             <Setter Property="SelectionBrush" Value="{StaticResource AccentBrush}"/>
             <Setter Property="SelectionTextBrush" Value="White"/>
             <Setter Property="Margin" Value="0,0,0,18"/>
+        </Style>
+
+        <!-- O selecionador de datas -->
+        <Style TargetType="{x:Type DatePickerTextBox}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DatePickerTextBox}">
+                        <TextBox x:Name="PART_TextBox"
+                                 Text="{Binding Path=SelectedDate,
+                                                RelativeSource={RelativeSource AncestorType={x:Type DatePicker}},
+                                                StringFormat=yyyy/MM/dd,
+                                                Mode=OneWay}"
+                                 Background="Transparent"
+                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                 CaretBrush="{StaticResource TextPrimaryBrush}"
+                                 SelectionBrush="{StaticResource AccentBrush}"
+                                 BorderThickness="0"
+                                 Padding="0"
+                                 VerticalAlignment="Center"
+                                 IsReadOnly="True"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- DatePicker filter style -->
@@ -67,7 +93,7 @@
             </Setter>
         </Style>
 
-        <!-- Clear filters (secondary) button -->
+        <!-- Clear filters button -->
         <Style x:Key="ClearButtonStyle" TargetType="Button" BasedOn="{StaticResource FilterButtonStyle}">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
@@ -91,8 +117,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
-        <!-- Add these to Page.Resources, alongside the existing styles -->
 
         <!-- ListView header style -->
         <Style x:Key="ListHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
@@ -147,7 +171,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ============ FILTERS COLUMN ============ -->
+        <!-- ============ Filtros ============ -->
 
         <Border Grid.Column="0"
                 Background="{StaticResource CardBrush}"
@@ -196,7 +220,7 @@
 
         </Border>
 
-        <!-- ============ LIST COLUMN ============ -->
+        <!-- ============ Listars ============ -->
 
         <Grid Grid.Column="1">
 
@@ -227,7 +251,8 @@
                   HorizontalContentAlignment="Stretch"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                   ItemContainerStyle="{StaticResource ListRowStyle}"
-                  GridViewColumnHeader.Click="ListViewHeader_Click">
+                  GridViewColumnHeader.Click="ListViewHeader_Click"
+                  MouseDoubleClick="ListViagens_MouseDoubleClick">
 
                     <ListView.View>
                         <GridView ColumnHeaderContainerStyle="{StaticResource ListHeaderStyle}">
@@ -244,13 +269,17 @@
                                     DisplayMemberBinding="{Binding destino_principal}"
                                     Width="200"/>
 
-                            <GridViewColumn Header="Data de Início"
-                                    DisplayMemberBinding="{Binding data_inicio}"
-                                    Width="120"/>
+                            <GridViewColumn Header="Data de Início" Width="120">
+                                <GridViewColumn.DisplayMemberBinding>
+                                    <Binding Path="data_inicio" Converter="{StaticResource DataYyyyMmDdConverter}"/>
+                                </GridViewColumn.DisplayMemberBinding>
+                            </GridViewColumn>
 
-                            <GridViewColumn Header="Data de Fim"
-                                    DisplayMemberBinding="{Binding data_fim}"
-                                    Width="120"/>
+                            <GridViewColumn Header="Data de Fim" Width="120">
+                                <GridViewColumn.DisplayMemberBinding>
+                                    <Binding Path="data_fim" Converter="{StaticResource DataYyyyMmDdConverter}"/>
+                                </GridViewColumn.DisplayMemberBinding>
+                            </GridViewColumn>
 
                             <GridViewColumn Header="Criado por"
                                     DisplayMemberBinding="{Binding criador}"

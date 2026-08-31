@@ -12,7 +12,7 @@
         <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6"/>
         <SolidColorBrush x:Key="RespostaAccentBrush" Color="#FBBF24"/>
 
-        <!-- Back button (top-left) -->
+        <!-- voltar -->
         <Style x:Key="BackButtonStyle" TargetType="Button">
             <Setter Property="Height" Value="40"/>
             <Setter Property="Padding" Value="16,0"/>
@@ -59,8 +59,7 @@
             <Setter Property="Margin" Value="0,0,0,8"/>
         </Style>
 
-        <!-- Read-only TextBox styled to look like a plain wrapped label, but the
-             text can still be selected and Ctrl+C'd, unlike a TextBlock. -->
+        <!-- textbox selecionavel -->
         <Style x:Key="SelectableTextStyle" TargetType="TextBox">
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
             <Setter Property="FontSize" Value="15"/>
@@ -84,7 +83,7 @@
             </Setter>
         </Style>
 
-        <!-- Small meta line shown between each Pergunta/Resposta pair -->
+        <!-- liiiiiiiiiiiiiinnnnnneeeeeeeeeeee -->
         <Style x:Key="MetaLineStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
             <Setter Property="FontSize" Value="11"/>
@@ -94,13 +93,12 @@
 
     </Page.Resources>
 
-    <!-- Only vertical scrolling — text wraps instead of running off the side -->
     <ScrollViewer VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled">
 
         <StackPanel Margin="0,0,4,10">
 
-            <!-- Top bar: back button + title -->
+            <!-- Titulo e botao voltar -->
             <Grid Margin="0,0,0,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>

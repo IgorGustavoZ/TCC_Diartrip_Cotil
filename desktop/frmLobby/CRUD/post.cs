@@ -13,13 +13,6 @@ namespace WindowLobby.crud
 
         // ── Listar posts ─────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// GET /posts — lista posts paginados.
-        /// O access_token cookie é enviado automaticamente pelo CookieContainer.
-        /// Tenta renovar o token automaticamente se receber 401 (via Usuario.ExecutarComRefresh).
-        /// </summary>
-        /// <param name="limite">Quantidade máxima de posts (1-100). Default 50.</param>
-        /// <param name="offset">Quantidade de posts a pular. Default 0.</param>
         public async static Task<string?> GetPosts(int limite = 50, int offset = 0)
         {
             var resp = await Usuario.ExecutarComRefresh(() =>
@@ -48,8 +41,7 @@ namespace WindowLobby.crud
         // ── Buscar post por id ───────────────────────────────────────────────────
 
         /// <summary>
-        /// GET /posts/{id} — busca um post específico.
-        /// Ajuste/remova caso o endpoint não exista no backend.
+        /// GET /posts/{id} — busca um post específico
         /// </summary>
         public async static Task<string?> GetPostById(int id)
         {

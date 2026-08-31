@@ -17,16 +17,22 @@ namespace WindowLobby.Pages
         private GridViewColumnHeader _lastHeaderClicked;
         private ListSortDirection _lastDirection = ListSortDirection.Ascending;
 
-        // Lista completa (sem filtro), usada para: (a) montar o log inteiro de um
-        // grupo ao dar duplo clique, e (b) calcular o menor id_chat por grupo,
-        // usado pelo checkbox "ocultar duplicados por grupo".
+        
         private List<ChatModel>? _todosChats;
         private Dictionary<int, int>? _menorIdPorGrupo;
+
+        
+        private bool _carregado;
 
         public ChatIaPage()
         {
             InitializeComponent();
-            Loaded += async (_, _) => await CarregarChats();
+            Loaded += async (_, _) =>
+            {
+                if (_carregado) return;
+                _carregado = true;
+                await CarregarChats();
+            };
         }
 
         private async Task CarregarChats()
@@ -74,13 +80,11 @@ namespace WindowLobby.Pages
                 .OrderBy(c => c.id_chat)
                 .ToList();
 
-            // Empilha a página de detalhe no mesmo Frame, sem perder o estado
-            // desta página (filtros/ordenação) — o botão "Voltar" do detalhe
-            // usa NavigationService.GoBack() para retornar exatamente pra cá.
-            NavigationService?.Navigate(new ChatIaDetalhePage(mensagensDoGrupo, chat.id_grupo));
+            
+            NavigationService?.Navigate(new ChatIaDetalhePage(mensagensDoGrupo, chat.id_grupo, this));
         }
 
-        // ---------- Ordenação ----------
+        // ---------- De cima vem, para baixo cai ----------
 
         private void ListViewHeader_Click(object sender, RoutedEventArgs e)
         {

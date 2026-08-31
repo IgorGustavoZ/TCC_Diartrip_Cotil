@@ -12,7 +12,7 @@
         <SolidColorBrush x:Key="TextMutedBrush" Color="#94A3B8"/>
         <SolidColorBrush x:Key="BorderBrush2" Color="#27324A"/>
 
-        <!-- Label above each filter field -->
+        <!-- Labels -->
         <Style x:Key="FilterLabelStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
             <Setter Property="FontSize" Value="12"/>
@@ -33,8 +33,28 @@
             <Setter Property="Margin" Value="0,0,0,18"/>
         </Style>
 
-
-
+        <!-- The DatePicker -->
+        <Style TargetType="{x:Type DatePickerTextBox}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DatePickerTextBox}">
+                        <TextBox x:Name="PART_TextBox"
+                                 Text="{Binding Path=SelectedDate,
+                                                RelativeSource={RelativeSource AncestorType={x:Type DatePicker}},
+                                                StringFormat=yyyy/MM/dd,
+                                                Mode=OneWay}"
+                                 Background="Transparent"
+                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                 CaretBrush="{StaticResource TextPrimaryBrush}"
+                                 SelectionBrush="{StaticResource AccentBrush}"
+                                 BorderThickness="0"
+                                 Padding="0"
+                                 VerticalAlignment="Center"
+                                 IsReadOnly="True"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <!-- DatePicker filter style -->
         <Style x:Key="FilterDatePickerStyle" TargetType="DatePicker">
@@ -44,6 +64,107 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="10,8"/>
             <Setter Property="Margin" Value="0,0,0,18"/>
+        </Style>
+
+        <!-- ComboBox filter style -->
+        <Style x:Key="FilterComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Background" Value="{StaticResource FieldBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush2}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,0,0,18"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="▾"
+                                                           Grid.Column="1"
+                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,10,0"/>
+                                            </Grid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+
+                            <ContentPresenter x:Name="ContentSite"
+                                               IsHitTestVisible="False"
+                                               Content="{TemplateBinding SelectionBoxItem}"
+                                               ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                               ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                               Margin="{TemplateBinding Padding}"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"/>
+
+                            <Popup x:Name="Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Border x:Name="DropDownBorder"
+                                        Background="{StaticResource FieldBrush}"
+                                        BorderBrush="{StaticResource BorderBrush2}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                        MaxHeight="240"
+                                        Margin="0,4,0,0">
+                                    <ScrollViewer SnapsToDevicePixels="True">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ComboBoxItem style interno -->
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#243248"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1D3A63"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- Apply filters button -->
@@ -70,7 +191,7 @@
             </Setter>
         </Style>
 
-        <!-- Clear filters (secondary) button -->
+        <!-- Clear filters button -->
         <Style x:Key="ClearButtonStyle" TargetType="Button" BasedOn="{StaticResource FilterButtonStyle}">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
@@ -147,7 +268,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ============ FILTERS COLUMN ============ -->
+        <!-- ============ Filtros colunas!! ============ -->
 
         <Border Grid.Column="0"
                 Background="{StaticResource CardBrush}"
@@ -177,6 +298,15 @@
                 <TextBlock Text="DATA DE CRIAÇÃO" Style="{StaticResource FilterLabelStyle}"/>
                 <DatePicker x:Name="dpFiltroData" Style="{StaticResource FilterDatePickerStyle}"/>
 
+                <TextBlock Text="USUÁRIOS CRIADOS:" Style="{StaticResource FilterLabelStyle}"/>
+                <ComboBox x:Name="cmbFiltroCriadosEm" Style="{StaticResource FilterComboBoxStyle}" SelectedIndex="0">
+                    <ComboBoxItem Content="Qualquer período" Tag="qualquer"/>
+                    <ComboBoxItem Content="No último dia" Tag="dia"/>
+                    <ComboBoxItem Content="Nos últimos 7 dias" Tag="semana"/>
+                    <ComboBoxItem Content="No último mês" Tag="mes"/>
+                    <ComboBoxItem Content="No último ano" Tag="ano"/>
+                </ComboBox>
+
                 <Button x:Name="BtnFiltrar" Content="Filtrar"
                         Style="{StaticResource FilterButtonStyle}"
                         Margin="0,8,0,10"
@@ -190,7 +320,7 @@
 
         </Border>
 
-        <!-- ============ LIST COLUMN ============ -->
+        <!-- ============ Listas colunas!! ============ -->
 
         <Grid Grid.Column="1">
 

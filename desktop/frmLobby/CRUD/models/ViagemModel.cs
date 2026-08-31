@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace WindowLobby.CRUD.models
 {
-    class ViagemModel
+    public class ViagemModel
     {
         public int id_grupo { get; set; }
 
@@ -21,7 +21,7 @@ namespace WindowLobby.CRUD.models
 
         public string codigo_convite { get; set; }
 
-        public int criado_por { get; set; }      
+        public int criado_por { get; set; }
         public string criador { get; set; }
 
     }

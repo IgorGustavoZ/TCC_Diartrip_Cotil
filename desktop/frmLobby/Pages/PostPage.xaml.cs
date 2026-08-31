@@ -15,11 +15,21 @@ namespace WindowLobby.Pages
         private GridViewColumnHeader _lastHeaderClicked;
         private ListSortDirection _lastDirection = ListSortDirection.Ascending;
 
+        
+        private bool _carregado;
+
         public PostPage()
         {
             InitializeComponent();
-            Loaded += async (_, _) => await CarregarPosts();
+            Loaded += async (_, _) =>
+            {
+                if (_carregado) return;
+                _carregado = true;
+                await CarregarPosts();
+            };
         }
+
+        
 
         private async Task CarregarPosts()
         {
@@ -90,13 +100,25 @@ namespace WindowLobby.Pages
             _lastDirection = direction;
         }
 
+        
+        /*private void ReaplicarOrdenacao()
+        {
+            if (_lastHeaderClicked?.Column?.DisplayMemberBinding is not System.Windows.Data.Binding binding)
+                return;
+
+            var view = CollectionViewSource.GetDefaultView(listPosts.ItemsSource);
+            if (view is null) return;
+
+            view.SortDescriptions.Clear();
+            view.SortDescriptions.Add(new SortDescription(binding.Path.Path, _lastDirection));
+            view.Refresh();
+        }*/
+
         // ---------- Detalhe do post ----------
 
         private void ListPosts_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            // Sobe a árvore visual a partir do ponto clicado até achar o
-            // ListViewItem — evita abrir o detalhe ao dar duplo clique no
-            // cabeçalho da lista ou em uma área vazia sem item.
+           
             var dep = e.OriginalSource as DependencyObject;
             while (dep is not null && dep is not ListViewItem)
             {
@@ -106,16 +128,16 @@ namespace WindowLobby.Pages
             if (dep is not ListViewItem item || item.DataContext is not PostModel post)
                 return;
 
-            // Navega dentro do mesmo Frame sem fechar a PostPage — ela continua
-            // viva (filtros/ordenação/rolagem intactos) e é passada como
-            // "página anterior" para o botão Voltar da PostDetalhePage voltar
-            // direto pra essa mesma instância.
+           
             NavigationService?.Navigate(new PostDetalhePage(post, this));
         }
 
         // ---------- Filtros!! ----------
 
-        private void BtnFiltrar_Click(object sender, RoutedEventArgs e)
+        private void BtnFiltrar_Click(object sender, RoutedEventArgs e) => AplicarFiltro();
+
+        
+        private void AplicarFiltro()
         {
             var view = CollectionViewSource.GetDefaultView(listPosts.ItemsSource);
             if (view is null) return;

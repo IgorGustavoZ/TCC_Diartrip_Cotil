@@ -7,9 +7,13 @@ namespace WindowLobby.Pages
 {
     public partial class ChatIaDetalhePage : Page
     {
-        public ChatIaDetalhePage(List<ChatModel> mensagensDoGrupo, int idGrupo)
+        private readonly Page _paginaAnterior;
+
+        public ChatIaDetalhePage(List<ChatModel> mensagensDoGrupo, int idGrupo, Page paginaAnterior)
         {
             InitializeComponent();
+
+            _paginaAnterior = paginaAnterior;
 
             txtTitulo.Text = $"Conversa do grupo {idGrupo}";
             txtSubtitulo.Text = mensagensDoGrupo.Count == 1
@@ -21,10 +25,10 @@ namespace WindowLobby.Pages
 
         private void BtnVoltar_Click(object sender, RoutedEventArgs e)
         {
-            // Volta para a ChatIaPage exatamente como estava (filtros, ordenação,
-            // posição de rolagem) — a Dashboard não limpa o back stack ao navegar
-            // para esta página de detalhe (ver Dashboard.MainFrame_Navigated).
-            if (NavigationService?.CanGoBack == true)
+            
+            if (_paginaAnterior is not null)
+                NavigationService?.Navigate(_paginaAnterior);
+            else if (NavigationService?.CanGoBack == true)
                 NavigationService.GoBack();
         }
     }

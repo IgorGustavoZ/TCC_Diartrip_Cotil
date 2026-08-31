@@ -11,8 +11,9 @@
         <SolidColorBrush x:Key="TextMutedBrush" Color="#94A3B8"/>
         <SolidColorBrush x:Key="BorderBrush2" Color="#27324A"/>
         <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6"/>
+        <SolidColorBrush x:Key="AccentBrushHover" Color="#2563EB"/>
 
-        <!-- Back button (top-left) -->
+        <!-- Voltar -->
         <Style x:Key="BackButtonStyle" TargetType="Button">
             <Setter Property="Height" Value="40"/>
             <Setter Property="Padding" Value="16,0"/>
@@ -64,7 +65,158 @@
             <Setter Property="FontSize" Value="14"/>
         </Style>
 
-        <!-- ListView header/row styles — same look as UsuarioPage/PostPage -->
+        <!-- ============ FILTER styles ============ -->
+
+        <Style x:Key="FilterLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="2,0,0,6"/>
+        </Style>
+
+        <Style x:Key="FilterTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource FieldBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush2}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="CaretBrush" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="SelectionBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="SelectionTextBrush" Value="White"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+
+        <!-- datepicker. -->
+        <Style TargetType="{x:Type DatePickerTextBox}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DatePickerTextBox}">
+                        <TextBox x:Name="PART_TextBox"
+                                 Text="{Binding Path=SelectedDate,
+                                                RelativeSource={RelativeSource AncestorType={x:Type DatePicker}},
+                                                StringFormat=yyyy/MM/dd,
+                                                Mode=OneWay}"
+                                 Background="Transparent"
+                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                 CaretBrush="{StaticResource TextPrimaryBrush}"
+                                 SelectionBrush="{StaticResource AccentBrush}"
+                                 BorderThickness="0"
+                                 Padding="0"
+                                 VerticalAlignment="Center"
+                                 IsReadOnly="True"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FilterDatePickerStyle" TargetType="DatePicker">
+            <Setter Property="Background" Value="{StaticResource FieldBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush2}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+
+        <Style x:Key="FilterCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal">
+                            <Border x:Name="box"
+                                    Width="18" Height="18"
+                                    CornerRadius="5"
+                                    Background="{StaticResource FieldBrush}"
+                                    BorderBrush="{StaticResource BorderBrush2}"
+                                    BorderThickness="1"
+                                    VerticalAlignment="Top">
+                                <Path x:Name="check"
+                                      Data="M2,7 L6,11 L14,2"
+                                      Stroke="White"
+                                      StrokeThickness="2"
+                                      StrokeStartLineCap="Round"
+                                      StrokeEndLineCap="Round"
+                                      StrokeLineJoin="Round"
+                                      Visibility="Collapsed"/>
+                            </Border>
+                            <ContentPresenter VerticalAlignment="Top" Margin="10,0,0,0"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="box" Property="Background" Value="{StaticResource AccentBrush}"/>
+                                <Setter TargetName="box" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                <Setter TargetName="check" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="box" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FilterButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentBrushHover}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ClearButtonStyle" TargetType="Button" BasedOn="{StaticResource FilterButtonStyle}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{StaticResource BorderBrush2}"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#243248"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FiltersCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush2}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16,18"/>
+            <Setter Property="Margin" Value="0,0,14,0"/>
+        </Style>
+
+        <!-- listview styless -->
         <Style x:Key="ListHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
             <Setter Property="Background" Value="#243248"/>
             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
@@ -83,6 +235,7 @@
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush" Value="#1A2438"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type ListViewItem}">
@@ -106,7 +259,7 @@
             </Setter>
         </Style>
 
-        <!-- Tab strip -->
+        <!-- Tab -->
         <Style x:Key="DetalheTabItemStyle" TargetType="TabItem">
             <Setter Property="Padding" Value="16,10"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -150,7 +303,7 @@
 
         <StackPanel Margin="0,0,4,10">
 
-            <!-- Top bar: back button + title -->
+            <!-- titulo e voltar botao -->
             <Grid Margin="0,0,0,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -190,171 +343,362 @@
                 </StackPanel>
             </Border>
 
-            <!-- Abas: Viagens (Grupos) / Posts / Comentários -->
+            <!-- Abas -->
             <TabControl Style="{StaticResource DetalheTabControlStyle}">
 
                 <!-- ============ VIAGENS (GRUPOS) ============ -->
                 <TabItem Header="Viagens (Grupos)" Style="{StaticResource DetalheTabItemStyle}">
-                    <StackPanel Margin="0,16,0,0">
+                    <Grid Margin="0,16,0,0">
 
-                        <TextBlock x:Name="txtViagensTitulo"
-                                   Text="Viagens"
-                                   FontSize="16"
-                                   FontWeight="Bold"
-                                   Foreground="{StaticResource TextPrimaryBrush}"
-                                   Margin="0,0,0,12"/>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="240"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                        <TextBlock x:Name="txtSemViagens"
-                                   Text="Nenhuma viagem encontrada."
-                                   Foreground="{StaticResource TextMutedBrush}"
-                                   FontSize="14"
-                                   Margin="0,0,0,12"
-                                   Visibility="Collapsed"/>
+                        <!-- Filtros -->
+                        <Border Grid.Column="0" Style="{StaticResource FiltersCardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Filtros" FontSize="15" FontWeight="Bold"
+                                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14"/>
 
-                        <Border Background="{StaticResource CardBrush}"
-                                BorderBrush="{StaticResource BorderBrush2}"
-                                BorderThickness="1"
-                                CornerRadius="12">
-                            <ListView x:Name="listViagens"
-                                      Background="Transparent"
-                                      Foreground="{StaticResource TextPrimaryBrush}"
-                                      BorderThickness="0"
-                                      HorizontalContentAlignment="Stretch"
-                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                      ItemContainerStyle="{StaticResource ListRowStyle}"
-                                      GridViewColumnHeader.Click="ListViagensHeader_Click">
-                                <ListView.View>
-                                    <GridView ColumnHeaderContainerStyle="{StaticResource ListHeaderStyle}">
-                                        <GridViewColumn Header="Id"
-                                        DisplayMemberBinding="{Binding id_grupo}"
-                                        Width="60"/>
-                                        <GridViewColumn Header="Nome"
-                                        DisplayMemberBinding="{Binding nome_grupo}"
-                                        Width="200"/>
-                                        <GridViewColumn Header="Destino"
-                                        DisplayMemberBinding="{Binding destino_principal}"
-                                        Width="180"/>
-                                        <GridViewColumn Header="Início"
-                                        DisplayMemberBinding="{Binding data_inicio}"
-                                        Width="140"/>
-                                        <GridViewColumn Header="Fim"
-                                        DisplayMemberBinding="{Binding data_fim}"
-                                        Width="140"/>
-                                        <GridViewColumn Header="Criador"
-                                        DisplayMemberBinding="{Binding criador}"
-                                        Width="140"/>
-                                    </GridView>
-                                </ListView.View>
-                            </ListView>
+                                <TextBlock Text="ID" Style="{StaticResource FilterLabelStyle}"/>
+                                <TextBox x:Name="txtFiltroViagensId" Style="{StaticResource FilterTextBoxStyle}"/>
+
+                                <TextBlock Text="NOME" Style="{StaticResource FilterLabelStyle}"/>
+                                <TextBox x:Name="txtFiltroViagensNome" Style="{StaticResource FilterTextBoxStyle}"/>
+
+                                <TextBlock Text="DESTINO PRINCIPAL" Style="{StaticResource FilterLabelStyle}"/>
+                                <TextBox x:Name="txtFiltroViagensDestino" Style="{StaticResource FilterTextBoxStyle}"/>
+
+                                <TextBlock Text="DATA DE INÍCIO" Style="{StaticResource FilterLabelStyle}"/>
+                                <DatePicker x:Name="dpFiltroViagensInicio" Style="{StaticResource FilterDatePickerStyle}"/>
+
+                                <TextBlock Text="DATA DE FIM" Style="{StaticResource FilterLabelStyle}"/>
+                                <DatePicker x:Name="dpFiltroViagensFim" Style="{StaticResource FilterDatePickerStyle}"/>
+
+                                <Button Content="Filtrar" Style="{StaticResource FilterButtonStyle}"
+                                        Margin="0,4,0,8" Click="BtnFiltrarViagens_Click"/>
+                                <Button Content="Limpar filtros" Style="{StaticResource ClearButtonStyle}"
+                                        Click="BtnLimparFiltrosViagens_Click"/>
+                            </StackPanel>
                         </Border>
 
-                    </StackPanel>
+                        <!-- Lista -->
+                        <StackPanel Grid.Column="1">
+
+                            <TextBlock x:Name="txtViagensTitulo"
+                                       Text="Viagens"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       Margin="0,0,0,12"/>
+
+                            <TextBlock x:Name="txtSemViagens"
+                                       Text="Nenhuma viagem encontrada."
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="14"
+                                       Margin="0,0,0,12"
+                                       Visibility="Collapsed"/>
+
+                            <Border Background="{StaticResource CardBrush}"
+                                    BorderBrush="{StaticResource BorderBrush2}"
+                                    BorderThickness="1"
+                                    CornerRadius="12">
+                                <ListView x:Name="listViagens"
+                                          Background="Transparent"
+                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                          BorderThickness="0"
+                                          HorizontalContentAlignment="Stretch"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                          ItemContainerStyle="{StaticResource ListRowStyle}"
+                                          GridViewColumnHeader.Click="ListViagensHeader_Click"
+                                          MouseDoubleClick="ListViagens_MouseDoubleClick">
+                                    <ListView.View>
+                                        <GridView ColumnHeaderContainerStyle="{StaticResource ListHeaderStyle}">
+                                            <GridViewColumn Header="Id"
+                                            DisplayMemberBinding="{Binding id_grupo}"
+                                            Width="60"/>
+                                            <GridViewColumn Header="Nome"
+                                            DisplayMemberBinding="{Binding nome_grupo}"
+                                            Width="200"/>
+                                            <GridViewColumn Header="Destino"
+                                            DisplayMemberBinding="{Binding destino_principal}"
+                                            Width="180"/>
+                                            <GridViewColumn Header="Início"
+                                            DisplayMemberBinding="{Binding data_inicio}"
+                                            Width="140"/>
+                                            <GridViewColumn Header="Fim"
+                                            DisplayMemberBinding="{Binding data_fim}"
+                                            Width="140"/>
+                                            <GridViewColumn Header="Criador"
+                                            DisplayMemberBinding="{Binding criador}"
+                                            Width="140"/>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </Border>
+
+                        </StackPanel>
+
+                    </Grid>
                 </TabItem>
 
                 <!-- ============ POSTS ============ -->
                 <TabItem Header="Posts" Style="{StaticResource DetalheTabItemStyle}">
-                    <StackPanel Margin="0,16,0,0">
+                    <Grid Margin="0,16,0,0">
 
-                        <TextBlock x:Name="txtPostsTitulo"
-                                   Text="Posts"
-                                   FontSize="16"
-                                   FontWeight="Bold"
-                                   Foreground="{StaticResource TextPrimaryBrush}"
-                                   Margin="0,0,0,12"/>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="240"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                        <TextBlock x:Name="txtSemPosts"
-                                   Text="Nenhum post encontrado."
-                                   Foreground="{StaticResource TextMutedBrush}"
-                                   FontSize="14"
-                                   Margin="0,0,0,12"
-                                   Visibility="Collapsed"/>
+                        <!-- Filtros -->
+                        <Border Grid.Column="0" Style="{StaticResource FiltersCardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Filtros" FontSize="15" FontWeight="Bold"
+                                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14"/>
 
-                        <Border Background="{StaticResource CardBrush}"
-                                BorderBrush="{StaticResource BorderBrush2}"
-                                BorderThickness="1"
-                                CornerRadius="12">
-                            <ListView x:Name="listPosts"
-                                      Background="Transparent"
-                                      Foreground="{StaticResource TextPrimaryBrush}"
-                                      BorderThickness="0"
-                                      HorizontalContentAlignment="Stretch"
-                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                      ItemContainerStyle="{StaticResource ListRowStyle}"
-                                      GridViewColumnHeader.Click="ListPostsHeader_Click"
-                                      MouseDoubleClick="ListPosts_MouseDoubleClick">
-                                <ListView.View>
-                                    <GridView ColumnHeaderContainerStyle="{StaticResource ListHeaderStyle}">
-                                        <GridViewColumn Header="Id"
-                                        DisplayMemberBinding="{Binding id_post}"
-                                        Width="60"/>
-                                        <GridViewColumn Header="Conteúdo"
-                                        DisplayMemberBinding="{Binding conteudo}"
-                                        Width="360"/>
-                                        <GridViewColumn Header="Curtidas"
-                                        DisplayMemberBinding="{Binding curtidas}"
-                                        Width="90"/>
-                                        <GridViewColumn Header="Data de criação"
-                                        DisplayMemberBinding="{Binding data_criacao}"
-                                        Width="180"/>
-                                    </GridView>
-                                </ListView.View>
-                            </ListView>
+                                <TextBlock Text="ID" Style="{StaticResource FilterLabelStyle}"/>
+                                <TextBox x:Name="txtFiltroPostsId" Style="{StaticResource FilterTextBoxStyle}"/>
+
+                                <TextBlock Text="CONTEÚDO" Style="{StaticResource FilterLabelStyle}"/>
+                                <TextBox x:Name="txtFiltroPostsConteudo" Style="{StaticResource FilterTextBoxStyle}"/>
+
+                                <TextBlock Text="DATA DE CRIAÇÃO" Style="{StaticResource FilterLabelStyle}"/>
+                                <DatePicker x:Name="dpFiltroPostsData" Style="{StaticResource FilterDatePickerStyle}"/>
+
+                                <Button Content="Filtrar" Style="{StaticResource FilterButtonStyle}"
+                                        Margin="0,4,0,8" Click="BtnFiltrarPosts_Click"/>
+                                <Button Content="Limpar filtros" Style="{StaticResource ClearButtonStyle}"
+                                        Click="BtnLimparFiltrosPosts_Click"/>
+                            </StackPanel>
                         </Border>
 
-                    </StackPanel>
+                        <!-- Lista -->
+                        <StackPanel Grid.Column="1">
+
+                            <TextBlock x:Name="txtPostsTitulo"
+                                       Text="Posts"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       Margin="0,0,0,12"/>
+
+                            <TextBlock x:Name="txtSemPosts"
+                                       Text="Nenhum post encontrado."
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="14"
+                                       Margin="0,0,0,12"
+                                       Visibility="Collapsed"/>
+
+                            <Border Background="{StaticResource CardBrush}"
+                                    BorderBrush="{StaticResource BorderBrush2}"
+                                    BorderThickness="1"
+                                    CornerRadius="12">
+                                <ListView x:Name="listPosts"
+                                          Background="Transparent"
+                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                          BorderThickness="0"
+                                          HorizontalContentAlignment="Stretch"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                          ItemContainerStyle="{StaticResource ListRowStyle}"
+                                          GridViewColumnHeader.Click="ListPostsHeader_Click"
+                                          MouseDoubleClick="ListPosts_MouseDoubleClick">
+                                    <ListView.View>
+                                        <GridView ColumnHeaderContainerStyle="{StaticResource ListHeaderStyle}">
+                                            <GridViewColumn Header="Id"
+                                            DisplayMemberBinding="{Binding id_post}"
+                                            Width="60"/>
+                                            <GridViewColumn Header="Conteúdo"
+                                            DisplayMemberBinding="{Binding conteudo}"
+                                            Width="360"/>
+                                            <GridViewColumn Header="Curtidas"
+                                            DisplayMemberBinding="{Binding curtidas}"
+                                            Width="90"/>
+                                            <GridViewColumn Header="Data de criação"
+                                            DisplayMemberBinding="{Binding data_criacao}"
+                                            Width="180"/>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </Border>
+
+                        </StackPanel>
+
+                    </Grid>
                 </TabItem>
 
                 <!-- ============ COMENTÁRIOS ============ -->
                 <TabItem Header="Comentários" Style="{StaticResource DetalheTabItemStyle}">
-                    <StackPanel Margin="0,16,0,0">
+                    <Grid Margin="0,16,0,0">
 
-                        <TextBlock x:Name="txtComentariosTitulo"
-                                   Text="Comentários"
-                                   FontSize="16"
-                                   FontWeight="Bold"
-                                   Foreground="{StaticResource TextPrimaryBrush}"
-                                   Margin="0,0,0,12"/>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="240"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                        <TextBlock x:Name="txtSemComentarios"
-                                   Text="Nenhum comentário encontrado."
-                                   Foreground="{StaticResource TextMutedBrush}"
-                                   FontSize="14"
-                                   Margin="0,0,0,12"
-                                   Visibility="Collapsed"/>
+                        <!-- Filtros -->
+                        <Border Grid.Column="0" Style="{StaticResource FiltersCardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Filtros" FontSize="15" FontWeight="Bold"
+                                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14"/>
 
-                        <Border Background="{StaticResource CardBrush}"
-                                BorderBrush="{StaticResource BorderBrush2}"
-                                BorderThickness="1"
-                                CornerRadius="12">
-                            <ListView x:Name="listComentarios"
-                                      Background="Transparent"
-                                      Foreground="{StaticResource TextPrimaryBrush}"
-                                      BorderThickness="0"
-                                      HorizontalContentAlignment="Stretch"
-                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                      ItemContainerStyle="{StaticResource ListRowStyle}"
-                                      GridViewColumnHeader.Click="ListComentariosHeader_Click"
-                                      MouseDoubleClick="ListComentarios_MouseDoubleClick">
-                                <ListView.View>
-                                    <GridView ColumnHeaderContainerStyle="{StaticResource ListHeaderStyle}">
-                                        <GridViewColumn Header="Id"
-                                        DisplayMemberBinding="{Binding id}"
-                                        Width="60"/>
-                                        <GridViewColumn Header="Post"
-                                        DisplayMemberBinding="{Binding id_post}"
-                                        Width="80"/>
-                                        <GridViewColumn Header="Conteúdo"
-                                        DisplayMemberBinding="{Binding conteudo}"
-                                        Width="380"/>
-                                        <GridViewColumn Header="Data de criação"
-                                        DisplayMemberBinding="{Binding data_criacao}"
-                                        Width="180"/>
-                                    </GridView>
-                                </ListView.View>
-                            </ListView>
+                                <TextBlock Text="POST ID" Style="{StaticResource FilterLabelStyle}"/>
+                                <TextBox x:Name="txtFiltroComentariosPostId" Style="{StaticResource FilterTextBoxStyle}"/>
+
+                                <TextBlock Text="ID" Style="{StaticResource FilterLabelStyle}"/>
+                                <TextBox x:Name="txtFiltroComentariosId" Style="{StaticResource FilterTextBoxStyle}"/>
+
+                                <Button Content="Filtrar" Style="{StaticResource FilterButtonStyle}"
+                                        Margin="0,4,0,8" Click="BtnFiltrarComentarios_Click"/>
+                                <Button Content="Limpar filtros" Style="{StaticResource ClearButtonStyle}"
+                                        Click="BtnLimparFiltrosComentarios_Click"/>
+                            </StackPanel>
                         </Border>
 
-                    </StackPanel>
+                        <!-- Lista -->
+                        <StackPanel Grid.Column="1">
+
+                            <TextBlock x:Name="txtComentariosTitulo"
+                                       Text="Comentários"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       Margin="0,0,0,12"/>
+
+                            <TextBlock x:Name="txtSemComentarios"
+                                       Text="Nenhum comentário encontrado."
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="14"
+                                       Margin="0,0,0,12"
+                                       Visibility="Collapsed"/>
+
+                            <Border Background="{StaticResource CardBrush}"
+                                    BorderBrush="{StaticResource BorderBrush2}"
+                                    BorderThickness="1"
+                                    CornerRadius="12">
+                                <ListView x:Name="listComentarios"
+                                          Background="Transparent"
+                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                          BorderThickness="0"
+                                          HorizontalContentAlignment="Stretch"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                          ItemContainerStyle="{StaticResource ListRowStyle}"
+                                          GridViewColumnHeader.Click="ListComentariosHeader_Click"
+                                          MouseDoubleClick="ListComentarios_MouseDoubleClick">
+                                    <ListView.View>
+                                        <GridView ColumnHeaderContainerStyle="{StaticResource ListHeaderStyle}">
+                                            <GridViewColumn Header="Id"
+                                            DisplayMemberBinding="{Binding id}"
+                                            Width="60"/>
+                                            <GridViewColumn Header="Post"
+                                            DisplayMemberBinding="{Binding id_post}"
+                                            Width="80"/>
+                                            <GridViewColumn Header="Conteúdo"
+                                            DisplayMemberBinding="{Binding conteudo}"
+                                            Width="380"/>
+                                            <GridViewColumn Header="Data de criação"
+                                            DisplayMemberBinding="{Binding data_criacao}"
+                                            Width="180"/>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </Border>
+
+                        </StackPanel>
+
+                    </Grid>
+                </TabItem>
+
+                <!-- ============ CHAT IA ============ -->
+                <TabItem Header="Chat IA" Style="{StaticResource DetalheTabItemStyle}">
+                    <Grid Margin="0,16,0,0">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="240"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Filtros -->
+                        <Border Grid.Column="0" Style="{StaticResource FiltersCardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Filtros" FontSize="15" FontWeight="Bold"
+                                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14"/>
+
+                                <TextBlock Text="ID" Style="{StaticResource FilterLabelStyle}"/>
+                                <TextBox x:Name="txtFiltroChatId" Style="{StaticResource FilterTextBoxStyle}"/>
+
+                                <TextBlock Text="ID DO GRUPO" Style="{StaticResource FilterLabelStyle}"/>
+                                <TextBox x:Name="txtFiltroChatIdGrupo" Style="{StaticResource FilterTextBoxStyle}"/>
+
+                                <CheckBox x:Name="chkChatSemRepeticao"
+                                          Content="Mostrar grupos sem repetir"
+                                          Style="{StaticResource FilterCheckBoxStyle}"
+                                          Checked="ChkChatSemRepeticao_Changed"
+                                          Unchecked="ChkChatSemRepeticao_Changed"/>
+
+                                <TextBlock Text="DATA DA INTERAÇÃO" Style="{StaticResource FilterLabelStyle}"/>
+                                <DatePicker x:Name="dpFiltroChatData" Style="{StaticResource FilterDatePickerStyle}"/>
+
+                                <Button Content="Filtrar" Style="{StaticResource FilterButtonStyle}"
+                                        Margin="0,4,0,8" Click="BtnFiltrarChat_Click"/>
+                                <Button Content="Limpar filtros" Style="{StaticResource ClearButtonStyle}"
+                                        Click="BtnLimparFiltrosChat_Click"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Lista -->
+                        <StackPanel Grid.Column="1">
+
+                            <TextBlock x:Name="txtChatTitulo"
+                                       Text="Chat IA"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       Margin="0,0,0,12"/>
+
+                            <TextBlock x:Name="txtSemChat"
+                                       Text="Nenhuma mensagem encontrada."
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="14"
+                                       Margin="0,0,0,12"
+                                       Visibility="Collapsed"/>
+
+                            <Border Background="{StaticResource CardBrush}"
+                                    BorderBrush="{StaticResource BorderBrush2}"
+                                    BorderThickness="1"
+                                    CornerRadius="12">
+                                <ListView x:Name="listChat"
+                                          Background="Transparent"
+                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                          BorderThickness="0"
+                                          HorizontalContentAlignment="Stretch"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                          ItemContainerStyle="{StaticResource ListRowStyle}"
+                                          GridViewColumnHeader.Click="ListChatHeader_Click"
+                                          MouseDoubleClick="ListChat_MouseDoubleClick">
+                                    <ListView.View>
+                                        <GridView ColumnHeaderContainerStyle="{StaticResource ListHeaderStyle}">
+                                            <GridViewColumn Header="Id"
+                                            DisplayMemberBinding="{Binding id_chat}"
+                                            Width="60"/>
+                                            <GridViewColumn Header="Grupo"
+                                            DisplayMemberBinding="{Binding id_grupo}"
+                                            Width="70"/>
+                                            <GridViewColumn Header="Pergunta"
+                                            DisplayMemberBinding="{Binding pergunta}"
+                                            Width="360"/>
+                                            <GridViewColumn Header="Data"
+                                            DisplayMemberBinding="{Binding data_interacao}"
+                                            Width="180"/>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </Border>
+
+                        </StackPanel>
+
+                    </Grid>
                 </TabItem>
 
             </TabControl>
