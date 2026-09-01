@@ -1,11 +1,12 @@
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:timeago/timeago.dart' as timeago;
-import '../../core/theme.dart';
+import '../../core/web_style.dart';
 import '../../models/comentario.dart';
 import '../../models/post.dart';
 import '../../providers/auth_provider.dart';
@@ -15,6 +16,11 @@ import '../../services/social_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/avatar_widget.dart';
 
+/// Mirrors backend/frontend/lobby-pags/feed.html: compose box always
+/// visible at the top (not behind a toggle), posts as discrete glass cards
+/// (header → text → image → pill actions with inline counts → comments),
+/// same order the site uses — instead of the Instagram-style layout this
+/// screen had before.
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
   @override
@@ -25,22 +31,38 @@ class _FeedScreenState extends State<FeedScreen> {
   List<Post> _posts = [];
   bool _loading = true;
   String? _erro;
-  bool _showCreate = false;
   final _conteudoCtrl = TextEditingController();
+  final _composeFocus = FocusNode();
+  final _scrollCtrl = ScrollController();
   XFile? _imagem;
   Uint8List? _imagemBytes;
   bool _publishing = false;
+  bool _showComposeFab = false;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _scrollCtrl.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _conteudoCtrl.dispose();
+    _composeFocus.dispose();
+    _scrollCtrl.removeListener(_onScroll);
+    _scrollCtrl.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    final show = _scrollCtrl.offset > 200;
+    if (show != _showComposeFab) setState(() => _showComposeFab = show);
+  }
+
+  Future<void> _irParaCompor() async {
+    await _scrollCtrl.animateTo(0, duration: const Duration(milliseconds: 350), curve: Curves.easeOut);
+    if (mounted) _composeFocus.requestFocus();
   }
 
   Future<void> _load() async {
@@ -77,7 +99,7 @@ class _FeedScreenState extends State<FeedScreen> {
         imagemMime: _imagem?.mimeType,
       );
       _conteudoCtrl.clear();
-      setState(() { _imagem = null; _imagemBytes = null; _showCreate = false; });
+      setState(() { _imagem = null; _imagemBytes = null; });
       await _load();
     } catch (e) {
       if (mounted) {
@@ -94,79 +116,127 @@ class _FeedScreenState extends State<FeedScreen> {
     final me = context.watch<AuthProvider>().usuario;
     final lang = context.watch<LanguageProvider>();
     return Scaffold(
+      backgroundColor: WebColors.bg,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Diartrip',
-            style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 22,
-                letterSpacing: -0.5)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_box_outlined, size: 26),
-            tooltip: lang.translate('feed.newPostTooltip'),
-            onPressed: () => setState(() => _showCreate = !_showCreate),
+        backgroundColor: const Color(0xB80B1220),
+        elevation: 0,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: const SizedBox.expand(),
           ),
-          const SizedBox(width: 4),
+        ),
+        iconTheme: const IconThemeData(color: WebColors.textSecondary),
+        title: Text(
+          lang.translate('feed.header'),
+          style: const TextStyle(color: WebColors.text, fontWeight: FontWeight.w700, fontSize: 18),
+        ),
+        actions: [
+          Material(
+            color: WebColors.surface2,
+            shape: const CircleBorder(side: BorderSide(color: WebColors.border)),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => Navigator.pushNamed(context, '/perfil/${me?.id}'),
+              child: Padding(
+                padding: const EdgeInsets.all(3),
+                child: AvatarWidget(fotoUrl: me?.fotoPerfil, iniciais: me?.iniciais ?? '?', radius: 16),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
         ],
       ),
       drawer: const AppDrawer(activeRoute: '/feed'),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : _erro != null
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.wifi_off,
-                            size: 48, color: AppTheme.onSurfaceMuted),
-                        const SizedBox(height: 12),
-                        Text(lang.translate('feed.loadError'),
-                            style: const TextStyle(
-                                color: AppTheme.onSurfaceMuted)),
-                        const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: _load,
-                          child: Text(lang.translate('feed.retry')),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: AmbientBackground()),
+          SafeArea(
+            child: RefreshIndicator(
+              onRefresh: _load,
+              color: WebColors.primary,
+              backgroundColor: WebColors.bg,
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator(color: WebColors.primary))
+                  : _erro != null
+                      ? ListView(
+                          padding: EdgeInsets.only(top: kToolbarHeight + 4),
+                          children: [
+                            Center(
+                              child: Column(
+                                children: [
+                                  const Icon(Icons.wifi_off, size: 48, color: WebColors.textMuted),
+                                  const SizedBox(height: 12),
+                                  Text(lang.translate('feed.loadError'), style: const TextStyle(color: WebColors.textMuted)),
+                                  const SizedBox(height: 12),
+                                  TextButton(onPressed: _load, child: Text(lang.translate('feed.retry'))),
+                                ],
+                              ),
+                            ),
+                          ],
+                        )
+                      : Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 600),
+                            child: ListView(
+                              controller: _scrollCtrl,
+                              padding: EdgeInsets.fromLTRB(14, kToolbarHeight + 4, 14, 24),
+                              children: [
+                                _CreateCard(
+                                  me: me,
+                                  ctrl: _conteudoCtrl,
+                                  focusNode: _composeFocus,
+                                  imagemBytes: _imagemBytes,
+                                  publishing: _publishing,
+                                  onPickImage: _pickImage,
+                                  onRemoveImage: () => setState(() {
+                                    _imagem = null;
+                                    _imagemBytes = null;
+                                  }),
+                                  onPublish: _publish,
+                                ),
+                                const SizedBox(height: 16),
+                                if (_posts.isEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 48),
+                                    child: Center(
+                                      child: Text(lang.translate('feed.empty'), style: const TextStyle(color: WebColors.textMuted)),
+                                    ),
+                                  )
+                                else
+                                  for (final p in _posts) ...[
+                                    _PostCard(key: ValueKey(p.id), post: p, meId: me?.id ?? 0, onDeleted: _load),
+                                    const SizedBox(height: 16),
+                                  ],
+                              ],
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
-                  )
-                : ListView(
-                children: [
-                  if (_showCreate)
-                    _CreateCard(
-                      me: me,
-                      ctrl: _conteudoCtrl,
-                      imagemBytes: _imagemBytes,
-                      publishing: _publishing,
-                      onPickImage: _pickImage,
-                      onRemoveImage: () => setState(() {
-                        _imagem = null;
-                        _imagemBytes = null;
-                      }),
-                      onPublish: _publish,
-                    ),
-                  if (_posts.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(48),
-                      child: Center(
-                        child: Text(lang.translate('feed.noPostsYet'),
-                            style: const TextStyle(
-                                color: AppTheme.onSurfaceMuted)),
-                      ),
-                    )
-                  else
-                    ..._posts.map((p) => _PostCard(
-                          key: ValueKey(p.id),
-                          post: p,
-                          meId: me?.id ?? 0,
-                          onDeleted: _load,
-                        )),
-                ],
-              ),
+            ),
+          ),
+        ],
       ),
+      // Só aparece depois de rolar a lista — perto do topo o cartão de criar
+      // post já está visível, então o botão seria redundante ali.
+      floatingActionButton: _showComposeFab
+          ? Material(
+              color: WebColors.surface2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(WebColors.radiusMd),
+                side: const BorderSide(color: WebColors.border),
+              ),
+              clipBehavior: Clip.antiAlias,
+              elevation: 4,
+              child: InkWell(
+                onTap: _irParaCompor,
+                child: const Padding(
+                  padding: EdgeInsets.all(14),
+                  child: Icon(Icons.edit_outlined, color: WebColors.text, size: 22),
+                ),
+              ),
+            )
+          : null,
     );
   }
 }
@@ -174,6 +244,7 @@ class _FeedScreenState extends State<FeedScreen> {
 class _CreateCard extends StatelessWidget {
   final dynamic me;
   final TextEditingController ctrl;
+  final FocusNode? focusNode;
   final Uint8List? imagemBytes;
   final bool publishing;
   final VoidCallback onPickImage;
@@ -183,6 +254,7 @@ class _CreateCard extends StatelessWidget {
   const _CreateCard({
     required this.me,
     required this.ctrl,
+    this.focusNode,
     required this.imagemBytes,
     required this.publishing,
     required this.onPickImage,
@@ -193,26 +265,29 @@ class _CreateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
-    return Container(
-      color: AppTheme.surface,
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+    return GlassContainer(
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AvatarWidget(
-                  fotoUrl: me?.fotoPerfil,
-                  iniciais: me?.iniciais ?? '?',
-                  radius: 18),
+              AvatarWidget(fotoUrl: me?.fotoPerfil, iniciais: me?.iniciais ?? '?', radius: 18),
               const SizedBox(width: 10),
               Expanded(
                 child: TextField(
                   controller: ctrl,
+                  focusNode: focusNode,
                   maxLines: 3,
+                  style: const TextStyle(color: WebColors.text),
                   decoration: InputDecoration(
-                      hintText: lang.translate('feed.createHint')),
+                    hintText: lang.translate('feed.placeholder'),
+                    hintStyle: const TextStyle(color: WebColors.textMuted),
+                    filled: true,
+                    fillColor: WebColors.surface2,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(WebColors.radiusMd), borderSide: BorderSide.none),
+                  ),
                 ),
               ),
             ],
@@ -222,9 +297,8 @@ class _CreateCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.memory(imagemBytes!,
-                      height: 160, width: double.infinity, fit: BoxFit.cover),
+                  borderRadius: BorderRadius.circular(WebColors.radiusMd),
+                  child: Image.memory(imagemBytes!, height: 160, width: double.infinity, fit: BoxFit.cover),
                 ),
                 Positioned(
                   top: 6,
@@ -232,14 +306,10 @@ class _CreateCard extends StatelessWidget {
                   child: GestureDetector(
                     onTap: onRemoveImage,
                     child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.55),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.close,
-                          color: Colors.white, size: 18),
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(color: WebColors.bg.withValues(alpha: 0.6), shape: BoxShape.circle),
+                      child: const Icon(Icons.close, color: Colors.white, size: 16),
                     ),
                   ),
                 ),
@@ -249,24 +319,24 @@ class _CreateCard extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              IconButton(
+              OutlinedButton.icon(
                 onPressed: onPickImage,
-                icon: const Icon(Icons.photo_outlined,
-                    color: AppTheme.onSurfaceMuted),
+                icon: const Icon(Icons.photo_outlined, size: 16, color: WebColors.textSecondary),
+                label: Text(lang.translate('feed.photo'), style: const TextStyle(color: WebColors.textSecondary, fontSize: 13)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: WebColors.border),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(WebColors.radiusSm)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                ),
               ),
               const Spacer(),
-              ElevatedButton(
+              GradientButton(
+                radius: WebColors.radiusSm,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 onPressed: publishing ? null : onPublish,
-                style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 10)),
                 child: publishing
-                    ? const SizedBox(
-                        height: 14,
-                        width: 14,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : Text(lang.translate('feed.share')),
+                    ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : Text(lang.translate('feed.publish'), style: const TextStyle(fontSize: 13)),
               ),
             ],
           ),
@@ -360,15 +430,20 @@ class _PostCardState extends State<_PostCard> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(lang.translate('feed.deleteTitle')),
+        backgroundColor: WebColors.bg,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(WebColors.radiusLg),
+          side: const BorderSide(color: WebColors.border),
+        ),
+        title: Text(lang.translate('feed.confirmDelete'), style: const TextStyle(color: WebColors.text)),
+        content: Text(lang.translate('feed.confirmDeleteBody'), style: const TextStyle(color: WebColors.textSecondary)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text(lang.translate('feed.deleteCancel'))),
+              child: Text(lang.translate('perfil.cancel'), style: const TextStyle(color: WebColors.textMuted))),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: Text(lang.translate('feed.deleteConfirm'),
-                  style: const TextStyle(color: AppTheme.error))),
+              child: Text(lang.translate('common.delete'), style: const TextStyle(color: WebColors.danger))),
         ],
       ),
     );
@@ -381,238 +456,209 @@ class _PostCardState extends State<_PostCard> {
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildHeader(),
-        if (widget.post.imagem != null)
-          GestureDetector(
-            onDoubleTap: _curtir,
-            child: CachedNetworkImage(
-              imageUrl: widget.post.imagem!,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              placeholder: (_, __) => const SizedBox(
-                  height: 240,
-                  child: Center(child: CircularProgressIndicator())),
+    return GlassContainer(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(lang),
+          if (widget.post.conteudo.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              widget.post.conteudo,
+              style: const TextStyle(fontSize: 14, color: WebColors.textSecondary, height: 1.5),
             ),
-          ),
-        _buildActionBar(),
-        if (_curtidas > 0)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 4),
-            child: Text(
-              '$_curtidas ${_curtidas == 1 ? lang.translate('perfil.like') : lang.translate('perfil.likes')}',
-              style: const TextStyle(
-                  fontWeight: FontWeight.w700, fontSize: 13),
-            ),
-          ),
-        if (widget.post.conteudo.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 2, 14, 4),
-            child: RichText(
-              text: TextSpan(
-                style: const TextStyle(
-                    fontSize: 14, color: AppTheme.onSurface),
-                children: [
-                  TextSpan(
-                    text: '${widget.post.nome} ',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  TextSpan(text: widget.post.conteudo),
-                ],
+          ],
+          if (widget.post.imagem != null) ...[
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(WebColors.radiusMd),
+              child: GestureDetector(
+                onDoubleTap: _curtir,
+                child: CachedNetworkImage(
+                  imageUrl: widget.post.imagem!,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => const SizedBox(
+                      height: 220,
+                      child: Center(child: CircularProgressIndicator(color: WebColors.primary))),
+                ),
               ),
             ),
+          ],
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _pillButton(
+                icon: AnimatedScale(
+                  scale: _heartBig ? 1.35 : 1.0,
+                  duration: const Duration(milliseconds: 140),
+                  curve: Curves.easeOut,
+                  onEnd: () {
+                    if (mounted && _heartBig) setState(() => _heartBig = false);
+                  },
+                  child: Icon(_jaCurtiu ? Icons.favorite : Icons.favorite_border,
+                      size: 16, color: _jaCurtiu ? WebColors.danger : WebColors.textMuted),
+                ),
+                label: '$_curtidas',
+                active: _jaCurtiu,
+                onTap: _savingLike ? null : _curtir,
+              ),
+              const SizedBox(width: 8),
+              _pillButton(
+                icon: const Icon(Icons.chat_bubble_outline, size: 15, color: WebColors.textMuted),
+                label: '${_comentarios.length}',
+                onTap: () => setState(() => _showComments = !_showComments),
+              ),
+            ],
           ),
-        _buildComments(lang),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-          child: Text(
-            _relativo(widget.post.dataCriacao),
-            style: const TextStyle(
-                color: AppTheme.onSurfaceMuted, fontSize: 11),
-          ),
-        ),
-        Divider(height: 1, color: Colors.white.withValues(alpha: 0.07)),
-      ],
-    );
-  }
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pushNamed(
-                context, '/perfil/${widget.post.idUsuario}'),
-            child: AvatarWidget(
-              fotoUrl: widget.post.fotoPerfil,
-              iniciais: widget.post.nome.isNotEmpty
-                  ? widget.post.nome[0].toUpperCase()
-                  : '?',
-              radius: 18,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => Navigator.pushNamed(
-                  context, '/perfil/${widget.post.idUsuario}'),
-              child: Text(widget.post.nome,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 14)),
-            ),
-          ),
-          if (widget.post.idUsuario == widget.meId)
-            IconButton(
-              icon: const Icon(Icons.more_horiz,
-                  color: AppTheme.onSurfaceMuted),
-              onPressed: _confirmDelete,
-            ),
+          if (_showComments) _buildComments(lang),
         ],
       ),
     );
   }
 
-  Widget _buildActionBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      child: Row(
-        children: [
-          InkWell(
-            onTap: _savingLike ? null : _curtir,
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: AnimatedScale(
-                scale: _heartBig ? 1.35 : 1.0,
-                duration: const Duration(milliseconds: 140),
-                curve: Curves.easeOut,
-                onEnd: () {
-                  if (mounted && _heartBig) {
-                    setState(() => _heartBig = false);
-                  }
-                },
-                child: Icon(
-                  _jaCurtiu ? Icons.favorite : Icons.favorite_border,
-                  color: _jaCurtiu ? AppTheme.error : AppTheme.onSurface,
-                  size: 27,
-                ),
-              ),
+  Widget _buildHeader(LanguageProvider lang) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () => Navigator.pushNamed(context, '/perfil/${widget.post.idUsuario}'),
+          child: AvatarWidget(
+            fotoUrl: widget.post.fotoPerfil,
+            iniciais: widget.post.nome.isNotEmpty ? widget.post.nome[0].toUpperCase() : '?',
+            radius: 18,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => Navigator.pushNamed(context, '/perfil/${widget.post.idUsuario}'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.post.nome, style: const TextStyle(color: WebColors.text, fontWeight: FontWeight.w700, fontSize: 14)),
+                Text(_formatarData(widget.post.dataCriacao, lang), style: const TextStyle(color: WebColors.textMuted, fontSize: 12)),
+              ],
             ),
           ),
-          InkWell(
-            onTap: () => setState(() => _showComments = !_showComments),
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Icon(
-                _showComments
-                    ? Icons.chat_bubble
-                    : Icons.chat_bubble_outline,
-                color: _showComments
-                    ? AppTheme.primary
-                    : AppTheme.onSurface,
-                size: 25,
-              ),
-            ),
+        ),
+        if (widget.post.idUsuario == widget.meId)
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.close, color: WebColors.textMuted, size: 18),
+            onPressed: _confirmDelete,
           ),
-          const Spacer(),
-        ],
+      ],
+    );
+  }
+
+  Widget _pillButton({required Widget icon, required String label, VoidCallback? onTap, bool active = false}) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(WebColors.radiusPill),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            border: Border.all(color: active ? WebColors.danger.withValues(alpha: 0.35) : WebColors.border),
+            borderRadius: BorderRadius.circular(WebColors.radiusPill),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              icon,
+              const SizedBox(width: 5),
+              Text(label, style: TextStyle(color: active ? WebColors.danger : WebColors.textMuted, fontSize: 13)),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildComments(LanguageProvider lang) {
-    if (!_showComments && _comentarios.isEmpty) return const SizedBox.shrink();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!_showComments && _comentarios.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 4),
-            child: GestureDetector(
-              onTap: () => setState(() => _showComments = true),
-              child: Text(
-                lang.translate('feed.viewAll')
-                    .replaceAll('{count}', '${_comentarios.length}'),
-                style: const TextStyle(
-                    color: AppTheme.onSurfaceMuted, fontSize: 13),
-              ),
-            ),
-          ),
-        if (_showComments) ...[
-          ..._comentarios.map((c) => Padding(
-                padding: const EdgeInsets.fromLTRB(14, 3, 14, 0),
-                child: RichText(
-                  text: TextSpan(
-                    style: const TextStyle(
-                        fontSize: 13, color: AppTheme.onSurface),
-                    children: [
-                      TextSpan(
-                          text: '${c.nome} ',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w700)),
-                      TextSpan(text: c.conteudo),
-                    ],
-                  ),
-                ),
-              )),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1)),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        const SizedBox(height: 10),
+        ..._comentarios.map((c) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  AvatarWidget(fotoUrl: c.fotoPerfil, iniciais: c.nome.isNotEmpty ? c.nome[0].toUpperCase() : '?', radius: 13),
+                  const SizedBox(width: 8),
                   Expanded(
-                    child: TextField(
-                      controller: _comentCtrl,
-                      style: const TextStyle(fontSize: 13),
-                      decoration: InputDecoration(
-                        hintText: lang.translate('feed.addComment'),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                        isDense: true,
+                    child: RichText(
+                      text: TextSpan(
+                        style: const TextStyle(fontSize: 13, color: WebColors.textSecondary, height: 1.5),
+                        children: [
+                          TextSpan(text: '${c.nome} ', style: const TextStyle(fontWeight: FontWeight.w700, color: WebColors.text)),
+                          TextSpan(text: c.conteudo),
+                        ],
                       ),
-                      onSubmitted: (_) => _enviarComentario(),
-                      textInputAction: TextInputAction.send,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  _commenting
-                      ? const SizedBox(
-                          height: 16, width: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : GestureDetector(
-                          onTap: _enviarComentario,
-                          child: Text(lang.translate('perfil.post'),
-                              style: const TextStyle(
-                                  color: AppTheme.primary,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13)),
-                        ),
                 ],
               ),
-            ),
+            )),
+        Container(
+          decoration: BoxDecoration(
+            color: WebColors.surface2,
+            borderRadius: BorderRadius.circular(WebColors.radiusPill),
+            border: Border.all(color: WebColors.border),
           ),
-        ],
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _comentCtrl,
+                  style: const TextStyle(color: WebColors.text, fontSize: 13),
+                  decoration: InputDecoration(
+                    filled: false,
+                    hintText: lang.translate('feed.addComment'),
+                    hintStyle: const TextStyle(color: WebColors.textMuted),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _enviarComentario(),
+                  textInputAction: TextInputAction.send,
+                ),
+              ),
+              const SizedBox(width: 8),
+              _commenting
+                  ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2, color: WebColors.accent))
+                  : GestureDetector(
+                      onTap: _enviarComentario,
+                      child: Text(lang.translate('feed.publish'),
+                          style: const TextStyle(color: WebColors.primary, fontWeight: FontWeight.w700, fontSize: 13)),
+                    ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  String _relativo(String iso) {
+  /// Mesma lógica de `formatarData()` em feed.html — exceto que aqui o
+  /// sufixo já carrega o idioma inteiro ("min atrás"/"min ago"), então não
+  /// precisa do prefixo "há" fixo em português que o site usa mesmo na
+  /// versão em inglês (o que lá vira "5 min ago" com um "há" solto).
+  String _formatarData(String iso, LanguageProvider lang) {
     try {
-      return timeago.format(DateTime.parse(iso).toLocal());
+      final d = DateTime.parse(iso).toLocal();
+      final diff = DateTime.now().difference(d).inSeconds;
+      if (diff < 60) return lang.translate('feed.date.now');
+      if (diff < 3600) return '${diff ~/ 60}${lang.translate('feed.date.min')}';
+      if (diff < 86400) return '${diff ~/ 3600}${lang.translate('feed.date.hour')}';
+      if (diff < 604800) return '${diff ~/ 86400}${lang.translate('feed.date.days')}';
+      return DateFormat.yMd(lang.locale.toString()).format(d);
     } catch (_) {
       return iso;
     }

@@ -93,10 +93,20 @@ async def capturar_excecoes(request: Request, call_next):
             content={"detail": "Erro interno do servidor. Tente novamente mais tarde."},
         )
 
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://127.0.0.1:8000").split(",")
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "http://127.0.0.1:8000").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
+    # Além da lista fixa acima, aceita qualquer porta em localhost/127.0.0.1.
+    # O Flutter web em modo debug (`flutter run -d chrome`) sobe numa porta
+    # aleatória a cada execução — sem isso, o ALLOWED_ORIGINS ficaria
+    # desatualizado (e o login quebrado) toda vez que essa porta mudasse.
+    # Restrito a loopback: não abre CORS para nenhum host externo.
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

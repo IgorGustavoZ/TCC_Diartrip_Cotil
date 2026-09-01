@@ -54,12 +54,14 @@ class Estatisticas {
 }
 
 class DashboardGeral {
+  final double orcamentoTotal;
   final double totalConsumido;
   final double orcamentoRestante;
   final int percentualConsumido;
   final List<CategoriaGasto> distribuicao;
 
   const DashboardGeral({
+    required this.orcamentoTotal,
     required this.totalConsumido,
     required this.orcamentoRestante,
     required this.percentualConsumido,
@@ -67,6 +69,7 @@ class DashboardGeral {
   });
 
   factory DashboardGeral.fromJson(Map<String, dynamic> j) => DashboardGeral(
+        orcamentoTotal: (j['orcamento_total'] as num?)?.toDouble() ?? 0,
         totalConsumido: (j['total_consumido'] as num).toDouble(),
         orcamentoRestante: (j['orcamento_restante'] as num).toDouble(),
         percentualConsumido: (j['percentual_consumido'] as num?)?.toInt() ?? 0,
@@ -80,11 +83,15 @@ class DashboardPessoal {
   final double totalPagoPorMim;
   final double minhaDividaAtual;
   final List<GastoResumido> ultimosGastos;
+  final double? meuOrcamento;
+  final double? disponivel;
 
   const DashboardPessoal({
     required this.totalPagoPorMim,
     required this.minhaDividaAtual,
     required this.ultimosGastos,
+    this.meuOrcamento,
+    this.disponivel,
   });
 
   factory DashboardPessoal.fromJson(Map<String, dynamic> j) => DashboardPessoal(
@@ -93,6 +100,8 @@ class DashboardPessoal {
         ultimosGastos: (j['ultimos_gastos_pessoais'] as List? ?? [])
             .map((e) => GastoResumido.fromJson(e as Map<String, dynamic>))
             .toList(),
+        meuOrcamento: (j['meu_orcamento'] as num?)?.toDouble(),
+        disponivel: (j['disponivel'] as num?)?.toDouble(),
       );
 }
 

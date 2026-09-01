@@ -26,7 +26,7 @@ class UsuarioService {
       'senha': senha,
     });
     if (r.statusCode != 200 && r.statusCode != 201) {
-      throw apiError(r.data, 'Erro ao criar conta');
+      throw ApiException(apiError(r.data, 'Erro ao criar conta'), r.statusCode);
     }
   }
 
@@ -72,9 +72,27 @@ class UsuarioService {
     _check(r);
   }
 
+  /// Igual ao PUT /usuarios/{id}/senha do config.html. Backend responde 401
+  /// especificamente quando `senhaAtual` está errada — o chamador pode
+  /// checar `e.statusCode` (via [ApiException]) pra rotear o erro pro campo
+  /// certo, como o site faz.
+  static Future<void> trocarSenha({
+    required int id,
+    required String senhaAtual,
+    required String novaSenha,
+  }) async {
+    final r = await dio.put('/usuarios/$id/senha', data: {
+      'senha_atual': senhaAtual,
+      'nova_senha': novaSenha,
+    });
+    if (r.statusCode != 200) {
+      throw ApiException(apiError(r.data, 'Erro ao alterar senha'), r.statusCode);
+    }
+  }
+
   static void _check(Response r) {
     if (r.statusCode != null && r.statusCode! >= 400) {
-      throw apiError(r.data, 'Erro ${r.statusCode}');
+      throw ApiException(apiError(r.data, 'Erro ${r.statusCode}'), r.statusCode);
     }
   }
 }

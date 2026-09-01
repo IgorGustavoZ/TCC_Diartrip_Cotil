@@ -38,9 +38,9 @@ Future<void> pumpApp(
 
 void main() {
   group('RegisterScreen — renderização', () {
-    testWidgets('exibe título Criar Conta', (tester) async {
+    testWidgets('exibe título Cadastro', (tester) async {
       await pumpApp(tester);
-      expect(find.text('Criar Conta'), findsWidgets);
+      expect(find.text('Cadastro'), findsOneWidget);
     });
 
     testWidgets('exibe três campos de formulário', (tester) async {
@@ -48,9 +48,9 @@ void main() {
       expect(find.byType(TextFormField), findsNWidgets(3));
     });
 
-    testWidgets('exibe botão Criar Conta', (tester) async {
+    testWidgets('exibe botão Criar conta', (tester) async {
       await pumpApp(tester);
-      expect(find.widgetWithText(ElevatedButton, 'Criar Conta'), findsOneWidget);
+      expect(find.widgetWithText(ElevatedButton, 'Criar conta'), findsOneWidget);
     });
 
     testWidgets('exibe link Entrar', (tester) async {
@@ -58,9 +58,10 @@ void main() {
       expect(find.text('Entrar'), findsOneWidget);
     });
 
-    testWidgets('ícone de avião presente', (tester) async {
+    testWidgets('logo do Diartrip (favicon) visível', (tester) async {
       await pumpApp(tester);
-      expect(find.byIcon(Icons.flight_takeoff), findsOneWidget);
+      final logo = tester.widget<Image>(find.byType(Image));
+      expect((logo.image as AssetImage).assetName, 'assets/images/favicon-diartrip.png');
     });
   });
 
@@ -68,18 +69,18 @@ void main() {
     testWidgets('erro quando nome muito curto', (tester) async {
       await pumpApp(tester);
       await tester.enterText(find.byType(TextFormField).at(0), 'ab');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar Conta'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar conta'));
       await tester.pump();
-      expect(find.text('Mínimo 3 caracteres'), findsOneWidget);
+      expect(find.text('Nome deve ter pelo menos 3 caracteres.'), findsOneWidget);
     });
 
     testWidgets('erro quando email inválido', (tester) async {
       await pumpApp(tester);
       await tester.enterText(find.byType(TextFormField).at(0), 'Nome Válido');
       await tester.enterText(find.byType(TextFormField).at(1), 'emailsemarroba');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar Conta'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar conta'));
       await tester.pump();
-      expect(find.text('E-mail inválido'), findsOneWidget);
+      expect(find.text('Email inválido.'), findsOneWidget);
     });
 
     testWidgets('erro quando senha muito curta', (tester) async {
@@ -87,9 +88,9 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(0), 'Nome Válido');
       await tester.enterText(find.byType(TextFormField).at(1), 'a@b.com');
       await tester.enterText(find.byType(TextFormField).at(2), '1234567');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar Conta'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar conta'));
       await tester.pump();
-      expect(find.text('Mínimo 8 caracteres'), findsOneWidget);
+      expect(find.text('Senha deve ter no mínimo 8 caracteres.'), findsOneWidget);
     });
 
     testWidgets('erro quando senha sem letra maiúscula', (tester) async {
@@ -97,9 +98,9 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(0), 'Nome Válido');
       await tester.enterText(find.byType(TextFormField).at(1), 'a@b.com');
       await tester.enterText(find.byType(TextFormField).at(2), 'semmaius1');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar Conta'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar conta'));
       await tester.pump();
-      expect(find.text('Precisa de uma maiúscula'), findsOneWidget);
+      expect(find.text('A senha deve conter ao menos uma letra maiúscula.'), findsOneWidget);
     });
 
     testWidgets('erro quando senha sem número', (tester) async {
@@ -107,9 +108,9 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(0), 'Nome Válido');
       await tester.enterText(find.byType(TextFormField).at(1), 'a@b.com');
       await tester.enterText(find.byType(TextFormField).at(2), 'SemNumeroAqui');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar Conta'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar conta'));
       await tester.pump();
-      expect(find.text('Precisa de um número'), findsOneWidget);
+      expect(find.text('A senha deve conter ao menos um número.'), findsOneWidget);
     });
 
     testWidgets('sem erros com todos os campos válidos', (tester) async {
@@ -118,11 +119,11 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(0), 'Nome Completo');
       await tester.enterText(find.byType(TextFormField).at(1), 'valido@email.com');
       await tester.enterText(find.byType(TextFormField).at(2), 'Senha1234');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar Conta'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Criar conta'));
       await tester.pump();
-      expect(find.text('Mínimo 3 caracteres'), findsNothing);
-      expect(find.text('E-mail inválido'), findsNothing);
-      expect(find.text('Mínimo 8 caracteres'), findsNothing);
+      expect(find.text('Nome deve ter pelo menos 3 caracteres.'), findsNothing);
+      expect(find.text('Email inválido.'), findsNothing);
+      expect(find.text('Senha deve ter no mínimo 8 caracteres.'), findsNothing);
     });
   });
 
@@ -147,7 +148,7 @@ void main() {
     testWidgets('botão habilitado no estado inicial', (tester) async {
       await pumpApp(tester);
       final btn = tester.widget<ElevatedButton>(
-        find.widgetWithText(ElevatedButton, 'Criar Conta'),
+        find.widgetWithText(ElevatedButton, 'Criar conta'),
       );
       expect(btn.onPressed, isNotNull);
     });

@@ -188,6 +188,26 @@ class TestGerarRoteiroIA:
 
         assert resp.status_code == 502
 
+    def test_ia_sem_creditos_retorna_mensagem_especifica_sem_retentar(self, client_usuario):
+        cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo()])
+        conn = make_connection(cur)
+
+        erro_402 = Exception(
+            "Error code: 402 - {'error': {'message': 'This request requires more credits, "
+            "or fewer max_tokens.', 'code': 402}}"
+        )
+
+        with patch("database.get_db", fake_get_db(conn)), \
+             patch("services.roteiro_ia_service.geocodificar", return_value=None), \
+             patch("services.roteiro_ia_service._client") as mock_client:
+            mock_client.chat.completions.create.side_effect = erro_402
+            resp = client_usuario.post("/grupos/10/roteiros/gerar-ia")
+
+        assert resp.status_code == 502
+        assert "crédito" in resp.json()["detail"].lower()
+        # erro de créditos nunca é resolvido por retry — só 1 chamada, não 2
+        assert mock_client.chat.completions.create.call_count == 1
+
     def test_data_fim_antes_do_inicio_retorna_400(self, client_usuario):
         cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo(data_inicio="2026-09-12", data_fim="2026-09-10")])
         conn = make_connection(cur)

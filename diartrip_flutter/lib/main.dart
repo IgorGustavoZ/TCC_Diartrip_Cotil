@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'core/api_client.dart';
 import 'core/app_logger.dart';
@@ -7,6 +8,7 @@ import 'providers/auth_provider.dart';
 import 'providers/language_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
+import 'screens/grupo/explorar_viagens_screen.dart';
 import 'screens/grupo/form_viagem_screen.dart';
 import 'screens/grupo/grupos_screen.dart';
 import 'screens/grupo/viagem_screen.dart';
@@ -17,6 +19,7 @@ import 'screens/social/feed_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting();
   try {
     await initApiClient();
   } catch (e, s) {
@@ -69,6 +72,7 @@ class DiartripApp extends StatelessWidget {
     if (path == '/register') return _page(const RegisterScreen(), s);
     if (path == '/lobby') return _page(const LobbyScreen(), s);
     if (path == '/grupos') return _page(const GruposScreen(), s);
+    if (path == '/explorar') return _page(const ExplorarViagensScreen(), s);
     if (path == '/feed') return _page(const FeedScreen(), s);
     if (path == '/nova-viagem') return _page(const FormViagemScreen(), s);
     if (path == '/config') return _page(const ConfigScreen(), s);
@@ -76,7 +80,8 @@ class DiartripApp extends StatelessWidget {
     final viagemMatch = RegExp(r'^/viagem/(\d+)$').firstMatch(path);
     if (viagemMatch != null) {
       final id = int.parse(viagemMatch.group(1)!);
-      return _page(ViagemScreen(idGrupo: id), s);
+      final initialTab = uri.queryParameters['tab'] == 'chat' ? 'chat' : 'geral';
+      return _page(ViagemScreen(idGrupo: id, initialTab: initialTab), s);
     }
 
     final perfilMatch = RegExp(r'^/perfil/(\d+)$').firstMatch(path);

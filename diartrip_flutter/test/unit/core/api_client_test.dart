@@ -61,4 +61,21 @@ void main() {
       expect(apiError(data, 'fb'), 'erro de validação');
     });
   });
+
+  group('ApiException', () {
+    test('toString() retorna só a mensagem (compatível com catch (e) { e.toString() })', () {
+      final e = ApiException('E-mail já cadastrado', 409);
+      expect(e.toString(), 'E-mail já cadastrado');
+    });
+
+    test('preserva o statusCode pra quem precisa decidir por ele', () {
+      final e = ApiException('Conflito', 409);
+      expect(e.statusCode, 409);
+    });
+
+    test('statusCode é opcional', () {
+      final e = ApiException('Erro genérico');
+      expect(e.statusCode, isNull);
+    });
+  });
 }

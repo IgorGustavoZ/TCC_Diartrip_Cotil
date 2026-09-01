@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../core/theme.dart';
+import '../core/web_style.dart';
 import '../providers/auth_provider.dart';
 import '../providers/language_provider.dart';
 import 'avatar_widget.dart';
 
+/// Sidebar navigation, mirroring `.sidebar`/`.menu-item`/`.new-trip` in
+/// backend/frontend/style.css: dark glass background, primary-tinted active
+/// state, gradient "New Trip" button, red logout. Every item uses an emoji
+/// (matching the site's own `.menu-item` glyphs) rather than a Material
+/// icon — Explorar Viagens gets 🧭 instead of reusing ✈️ like the web does,
+/// since a repeated plane emoji right under "Minhas Viagens" was already
+/// flagged as confusing earlier.
 class AppDrawer extends StatelessWidget {
   final String activeRoute;
   const AppDrawer({super.key, required this.activeRoute});
@@ -16,12 +23,12 @@ class AppDrawer extends StatelessWidget {
     final lang = context.watch<LanguageProvider>();
 
     return Drawer(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: WebColors.bg,
       child: SafeArea(
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
               child: Row(
                 children: [
                   AvatarWidget(
@@ -32,46 +39,52 @@ class AppDrawer extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user?.nome ?? '',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                            color: AppTheme.onSurface,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          user?.email ?? '',
-                          style: const TextStyle(
-                            color: AppTheme.onSurfaceMuted,
-                            fontSize: 12,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                    child: Text(
+                      user?.nome ?? '',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: WebColors.text,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1),
-            const SizedBox(height: 8),
-            _item(context, Icons.home_outlined, lang.translate('nav.myTrips'), '/lobby'),
-            _item(context, Icons.groups_outlined, lang.translate('nav.groups'), '/grupos'),
-            _item(context, Icons.dynamic_feed_outlined, lang.translate('nav.feed'), '/feed'),
-            _item(context, Icons.person_outline, lang.translate('nav.profile'), '/perfil/${user?.id}'),
-            _item(context, Icons.settings_outlined, lang.translate('nav.settings'), '/config'),
+            Divider(height: 1, color: WebColors.border),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Column(
+                children: [
+                  _item(context, '✈️', lang.translate('nav.myTrips'), '/lobby'),
+                  _item(context, '🌐', lang.translate('nav.groups'), '/grupos'),
+                  _item(context, '🧭', lang.translate('nav.explore'), '/explorar'),
+                  _item(context, '📰', lang.translate('nav.feed'), '/feed'),
+                  _item(context, '⚙️', lang.translate('nav.settings'), '/config'),
+                  const SizedBox(height: 8),
+                  GradientButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/nova-viagem');
+                    },
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Text('+ ${lang.translate('lobby.newTrip')}', textAlign: TextAlign.center),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const Spacer(),
-            const Divider(height: 1),
+            Divider(height: 1, color: WebColors.border),
             ListTile(
-              leading: const Icon(Icons.logout, color: AppTheme.error, size: 20),
+              leading: const Icon(Icons.logout, color: WebColors.danger, size: 20),
               title: Text(
                 lang.translate('nav.signOut'),
-                style: const TextStyle(color: AppTheme.error, fontSize: 14),
+                style: const TextStyle(color: WebColors.danger, fontSize: 14, fontWeight: FontWeight.w600),
               ),
               onTap: () async {
                 Navigator.pop(context);
@@ -88,29 +101,50 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  Widget _item(BuildContext context, IconData icon, String label, String route) {
-    final active = activeRoute == route || activeRoute.startsWith(route.split('?')[0]);
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: active ? AppTheme.primary : AppTheme.onSurfaceMuted,
-        size: 20,
-      ),
-      title: Text(
-        label,
-        style: TextStyle(
-          color: active ? AppTheme.primary : AppTheme.onSurface,
-          fontWeight: active ? FontWeight.w600 : FontWeight.normal,
-          fontSize: 14,
+  Widget _item(BuildContext context, String emoji, String label, String route) {
+    final active = _isActive(route);
+    return _navRow(
+      context,
+      Text(emoji, style: const TextStyle(fontSize: 17)),
+      label,
+      route,
+      active,
+    );
+  }
+
+  bool _isActive(String route) => activeRoute == route || activeRoute.startsWith(route.split('?')[0]);
+
+  Widget _navRow(BuildContext context, Widget leading, String label, String route, bool active) {
+    return Material(
+      color: active ? WebColors.primary.withValues(alpha: 0.14) : Colors.transparent,
+      borderRadius: BorderRadius.circular(WebColors.radiusMd),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(WebColors.radiusMd),
+        onTap: () {
+          Navigator.pop(context);
+          _go(context, route);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              SizedBox(width: 20, child: Center(child: leading)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: active ? WebColors.primary : WebColors.textSecondary,
+                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      tileColor: active ? AppTheme.primary.withValues(alpha: 0.08) : null,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-      onTap: () {
-        Navigator.pop(context);
-        _go(context, route);
-      },
     );
   }
 

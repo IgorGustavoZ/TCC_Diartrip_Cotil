@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import '../core/theme.dart';
+import '../core/web_style.dart';
 
 class AvatarWidget extends StatelessWidget {
   final String? fotoUrl;
@@ -23,9 +23,14 @@ class AvatarWidget extends StatelessWidget {
             radius: radius,
             backgroundImage: CachedNetworkImageProvider(fotoUrl!),
           )
-        : CircleAvatar(
-            radius: radius,
-            backgroundColor: AppTheme.primary,
+        : Container(
+            width: radius * 2,
+            height: radius * 2,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: WebColors.gradient,
+            ),
+            alignment: Alignment.center,
             child: Text(
               iniciais,
               style: TextStyle(
@@ -36,7 +41,12 @@ class AvatarWidget extends StatelessWidget {
             ),
           );
 
-    if (onTap != null) return GestureDetector(onTap: onTap, child: avatar);
+    if (onTap != null) {
+      return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(onTap: onTap, child: avatar),
+      );
+    }
     return avatar;
   }
 }

@@ -1,10 +1,12 @@
+import 'dart:ui';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import '../../core/theme.dart';
+import '../../core/web_style.dart';
 import '../../models/post.dart';
 import '../../models/usuario.dart';
 import '../../models/comentario.dart';
@@ -17,6 +19,10 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/avatar_widget.dart';
 import '../../widgets/image_cropper_modal.dart';
 
+/// Mirrors backend/frontend/lobby-pags/perfil.html: Instagram-style profile
+/// (avatar, stats, inline edit, follow/unfollow, 3-column post grid, post
+/// detail with like/comment/delete, followers/following lists) restyled to
+/// the same dark glass look as the rest of the app-shell screens.
 class PerfilScreen extends StatefulWidget {
   final int? idUsuario;
   const PerfilScreen({super.key, this.idUsuario});
@@ -40,6 +46,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
   int _seguidores = 0;
   int _seguindo = 0;
   bool _savingFollow = false;
+
+  final _gridAnchorKey = GlobalKey();
 
   @override
   void initState() {
@@ -161,6 +169,21 @@ class _PerfilScreenState extends State<PerfilScreen> {
     }
   }
 
+  void _scrollToPosts() {
+    final ctx = _gridAnchorKey.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+    }
+  }
+
+  /// Cursor de "mãozinha" + tap — mesmo tratamento em posts/seguidores/seguindo.
+  Widget _statTappable({required VoidCallback onTap, required Widget child}) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(onTap: onTap, child: child),
+    );
+  }
+
   void _showListaUsuarios(
     String titulo,
     Future<List<Map<String, dynamic>>> Function() carregarFn,
@@ -168,9 +191,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.surface,
+      backgroundColor: WebColors.bg,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(WebColors.radiusLg))),
       builder: (_) =>
           _ListaUsuariosSheet(titulo: titulo, carregarFn: carregarFn),
     );
@@ -180,13 +203,26 @@ class _PerfilScreenState extends State<PerfilScreen> {
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
     return Scaffold(
+      backgroundColor: WebColors.bg,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(_usuario?.nome ?? (_isMe ? lang.translate('perfil.myProfile') : lang.translate('perfil.profile')),
-            style: const TextStyle(fontWeight: FontWeight.w700)),
+        backgroundColor: const Color(0xB80B1220),
+        elevation: 0,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: const SizedBox.expand(),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: WebColors.textSecondary),
+        title: Text(
+          _usuario?.nome ?? (_isMe ? lang.translate('perfil.myProfile') : lang.translate('perfil.profile')),
+          style: const TextStyle(color: WebColors.text, fontWeight: FontWeight.w700, fontSize: 17),
+        ),
         actions: _isMe
             ? [
                 IconButton(
-                  icon: const Icon(Icons.settings_outlined),
+                  icon: const Icon(Icons.settings_outlined, color: WebColors.textSecondary),
                   onPressed: () =>
                       Navigator.pushNamed(context, '/config'),
                 ),
@@ -194,26 +230,40 @@ class _PerfilScreenState extends State<PerfilScreen> {
             : null,
       ),
       drawer: _isMe ? AppDrawer(activeRoute: '/perfil/$_targetId') : null,
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _buildHeader(lang)),
-                  const SliverToBoxAdapter(
-                    child: Divider(height: 1),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: AmbientBackground()),
+          SafeArea(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator(color: WebColors.primary))
+                : RefreshIndicator(
+                    onRefresh: _load,
+                    color: WebColors.primary,
+                    backgroundColor: WebColors.bg,
+                    child: CustomScrollView(
+                      slivers: [
+                        SliverPadding(
+                          padding: EdgeInsets.only(top: kToolbarHeight + 4),
+                          sliver: SliverToBoxAdapter(child: _buildHeader(lang)),
+                        ),
+                        SliverToBoxAdapter(
+                          key: _gridAnchorKey,
+                          child: Divider(height: 1, color: WebColors.border),
+                        ),
+                        const SliverToBoxAdapter(child: SizedBox(height: 2)),
+                        _buildGrid(lang),
+                      ],
+                    ),
                   ),
-                  _buildGrid(lang),
-                ],
-              ),
-            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildHeader(LanguageProvider lang) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -234,7 +284,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: const BoxDecoration(
-                            color: AppTheme.primary,
+                            color: WebColors.primary,
                             shape: BoxShape.circle),
                         child: const Icon(Icons.camera_alt,
                             size: 13, color: Colors.white),
@@ -247,15 +297,18 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _StatCol(label: lang.translate('perfil.posts'), value: _posts.length),
-                    GestureDetector(
+                    _statTappable(
+                      onTap: _scrollToPosts,
+                      child: _StatCol(label: lang.translate('perfil.posts'), value: _posts.length),
+                    ),
+                    _statTappable(
                       onTap: () => _showListaUsuarios(
                         lang.translate('perfil.followers'),
                         () => SocialService.listarSeguidores(_targetId),
                       ),
                       child: _StatCol(label: lang.translate('perfil.followers'), value: _seguidores),
                     ),
-                    GestureDetector(
+                    _statTappable(
                       onTap: () => _showListaUsuarios(
                         lang.translate('perfil.following'),
                         () => SocialService.listarSeguindo(_targetId),
@@ -269,17 +322,21 @@ class _PerfilScreenState extends State<PerfilScreen> {
           ),
           const SizedBox(height: 12),
           Text(_usuario?.nome ?? '',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+              style: const TextStyle(color: WebColors.text, fontWeight: FontWeight.w700, fontSize: 15)),
           if (_usuario?.bio?.isNotEmpty == true) ...[
             const SizedBox(height: 4),
             Text(_usuario!.bio!,
-                style: const TextStyle(color: AppTheme.onSurface, fontSize: 13)),
+                style: const TextStyle(color: WebColors.textSecondary, fontSize: 13)),
+          ] else if (_isMe) ...[
+            const SizedBox(height: 4),
+            Text(lang.translate('perfil.addBio'),
+                style: const TextStyle(color: WebColors.textMuted, fontSize: 13, fontStyle: FontStyle.italic)),
           ],
           if (_usuario?.dataCriacao != null) ...[
             const SizedBox(height: 4),
             Text(
-              '${lang.translate('perfil.memberSince')} ${_memberSince(_usuario!.dataCriacao!)}',
-              style: const TextStyle(color: AppTheme.onSurfaceMuted, fontSize: 12),
+              '${lang.translate('perfil.memberSince')} ${_memberSince(_usuario!.dataCriacao!, lang.locale.toString())}',
+              style: const TextStyle(color: WebColors.textMuted, fontSize: 12),
             ),
           ],
           const SizedBox(height: 14),
@@ -288,62 +345,113 @@ class _PerfilScreenState extends State<PerfilScreen> {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () => setState(() => _editando = true),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: WebColors.textSecondary,
+                  side: const BorderSide(color: WebColors.borderStrong),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(WebColors.radiusMd)),
+                ),
                 child: Text(lang.translate('perfil.editProfile')),
               ),
             ),
-          if (_isMe && _editando) ...[
-            TextField(
-              controller: _nomeCtrl,
-              decoration: InputDecoration(labelText: lang.translate('perfil.name')),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _bioCtrl,
-              decoration: InputDecoration(labelText: lang.translate('perfil.bio')),
-              maxLines: 3,
-              maxLength: 200,
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => setState(() => _editando = false),
-                    child: Text(lang.translate('perfil.cancel')),
+          if (_isMe && _editando)
+            // Card de edição — equivalente ao .p-edit-form do site
+            // (var(--surface-2), borda, blur, radius maior).
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: WebColors.surface2,
+                border: Border.all(color: WebColors.border),
+                borderRadius: BorderRadius.circular(WebColors.radiusLg),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _campoEdicao(controller: _nomeCtrl, label: lang.translate('perfil.name')),
+                  const SizedBox(height: 14),
+                  _campoEdicao(controller: _bioCtrl, label: lang.translate('perfil.bio'), maxLines: 3, maxLength: 200),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GradientButton(
+                          onPressed: _saving ? null : _salvar,
+                          child: Center(
+                            child: _saving
+                                ? const SizedBox(
+                                    height: 14, width: 14,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                : Text(lang.translate('perfil.save')),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      OutlinedButton(
+                        onPressed: () => setState(() => _editando = false),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: WebColors.textMuted,
+                          side: const BorderSide(color: WebColors.border),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(WebColors.radiusMd)),
+                        ),
+                        child: Text(lang.translate('perfil.cancel')),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _saving ? null : _salvar,
-                    child: _saving
-                        ? const SizedBox(
-                            height: 14, width: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text(lang.translate('perfil.save')),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ],
           if (!_isMe)
             SizedBox(
               width: double.infinity,
               child: _jaSegue
                   ? OutlinedButton(
                       onPressed: _savingFollow ? null : _toggleSeguir,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: WebColors.textSecondary,
+                        side: const BorderSide(color: WebColors.borderStrong),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(WebColors.radiusMd)),
+                      ),
                       child: _savingFollow
                           ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2))
                           : Text(lang.translate('perfil.followingBtn')),
                     )
-                  : ElevatedButton(
+                  : GradientButton(
                       onPressed: _savingFollow ? null : _toggleSeguir,
-                      child: _savingFollow
-                          ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : Text(lang.translate('perfil.follow')),
+                      child: Center(
+                        child: _savingFollow
+                            ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : Text(lang.translate('perfil.follow')),
+                      ),
                     ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _campoEdicao({required TextEditingController controller, required String label, int maxLines = 1, int? maxLength}) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      maxLength: maxLength,
+      style: const TextStyle(color: WebColors.text, fontSize: 14),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: WebColors.textMuted),
+        filled: true,
+        fillColor: WebColors.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(WebColors.radiusMd),
+          borderSide: const BorderSide(color: WebColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(WebColors.radiusMd),
+          borderSide: const BorderSide(color: WebColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(WebColors.radiusMd),
+          borderSide: const BorderSide(color: WebColors.primary, width: 1.5),
+        ),
       ),
     );
   }
@@ -353,27 +461,30 @@ class _PerfilScreenState extends State<PerfilScreen> {
       return SliverFillRemaining(
         child: Center(
           child: Text(lang.translate('perfil.noPosts'),
-              style: const TextStyle(color: AppTheme.onSurfaceMuted)),
+              style: const TextStyle(color: WebColors.textMuted)),
         ),
       );
     }
-    return SliverGrid(
-      delegate: SliverChildBuilderDelegate(
-        (ctx, i) => _PostThumb(post: _posts[i], isMe: _isMe,
-            onDeleted: _load),
-        childCount: _posts.length,
-      ),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 2,
-        mainAxisSpacing: 2,
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      sliver: SliverGrid(
+        delegate: SliverChildBuilderDelegate(
+          (ctx, i) => _PostThumb(post: _posts[i], isMe: _isMe,
+              onDeleted: _load),
+          childCount: _posts.length,
+        ),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 2,
+          mainAxisSpacing: 2,
+        ),
       ),
     );
   }
 
-  String _memberSince(String iso) {
+  String _memberSince(String iso, String locale) {
     try {
-      return DateFormat('MMMM yyyy').format(DateTime.parse(iso));
+      return DateFormat('MMMM yyyy', locale).format(DateTime.parse(iso));
     } catch (_) {
       return iso;
     }
@@ -399,10 +510,10 @@ class _PostThumb extends StatelessWidget {
                 imageUrl: post.imagem!, fit: BoxFit.cover)
           else
             Container(
-              color: AppTheme.surfaceVariant,
+              color: WebColors.surface2,
               child: const Center(
                 child: Icon(Icons.article_outlined,
-                    color: AppTheme.onSurfaceMuted, size: 28),
+                    color: WebColors.textMuted, size: 28),
               ),
             ),
           Positioned(
@@ -430,9 +541,9 @@ class _PostThumb extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.surface,
+      backgroundColor: WebColors.bg,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(WebColors.radiusLg))),
       builder: (_) => _PostDetailSheet(
           post: post, isMe: isMe, onDeleted: onDeleted),
     );
@@ -529,7 +640,7 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                  color: AppTheme.onSurfaceMuted.withValues(alpha: 0.4),
+                  color: WebColors.textMuted.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2)),
             ),
           ),
@@ -545,7 +656,7 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
               children: [
                 RichText(
                   text: TextSpan(
-                    style: const TextStyle(fontSize: 14, color: AppTheme.onSurface),
+                    style: const TextStyle(fontSize: 14, color: WebColors.text),
                     children: [
                       TextSpan(
                           text: '${widget.post.nome} ',
@@ -571,7 +682,7 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
                           },
                           child: Icon(
                             _jaCurtiu ? Icons.favorite : Icons.favorite_border,
-                            color: _jaCurtiu ? AppTheme.error : AppTheme.onSurface,
+                            color: _jaCurtiu ? WebColors.danger : WebColors.text,
                             size: 26,
                           ),
                         ),
@@ -581,25 +692,25 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
                     if (_curtidas > 0)
                       Text(
                         '$_curtidas ${_curtidas == 1 ? lang.translate('perfil.like') : lang.translate('perfil.likes')}',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        style: const TextStyle(color: WebColors.text, fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
                   _relativo(widget.post.dataCriacao),
-                  style: const TextStyle(color: AppTheme.onSurfaceMuted, fontSize: 11),
+                  style: const TextStyle(color: WebColors.textMuted, fontSize: 11),
                 ),
                 if (widget.isMe) ...[
                   const SizedBox(height: 14),
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      icon: const Icon(Icons.delete_outline, size: 16, color: AppTheme.error),
+                      icon: const Icon(Icons.delete_outline, size: 16, color: WebColors.danger),
                       label: Text(lang.translate('perfil.deletePost'),
-                          style: const TextStyle(color: AppTheme.error)),
+                          style: const TextStyle(color: WebColors.danger)),
                       style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppTheme.error)),
+                          side: const BorderSide(color: WebColors.danger)),
                       onPressed: () async {
                         Navigator.pop(context);
                         await PostService.deletar(widget.post.id);
@@ -608,15 +719,15 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
                     ),
                   ),
                 ],
-                const Divider(height: 24),
+                Divider(height: 24, color: WebColors.border),
                 Text(lang.translate('perfil.comments'),
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                    style: const TextStyle(color: WebColors.text, fontWeight: FontWeight.w700, fontSize: 14)),
                 const SizedBox(height: 8),
                 ..._comentarios.map((c) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: RichText(
                         text: TextSpan(
-                          style: const TextStyle(fontSize: 13, color: AppTheme.onSurface),
+                          style: const TextStyle(fontSize: 13, color: WebColors.text),
                           children: [
                             TextSpan(
                                 text: '${c.nome} ',
@@ -633,9 +744,11 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
                       Expanded(
                         child: TextField(
                           controller: _comentCtrl,
-                          style: const TextStyle(fontSize: 13),
+                          style: const TextStyle(color: WebColors.text, fontSize: 13),
                           decoration: InputDecoration(
+                            filled: false,
                             hintText: lang.translate('perfil.addComment'),
+                            hintStyle: const TextStyle(color: WebColors.textMuted),
                             border: InputBorder.none,
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
@@ -650,12 +763,12 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
                       _commenting
                           ? const SizedBox(
                               height: 16, width: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2))
+                              child: CircularProgressIndicator(strokeWidth: 2, color: WebColors.accent))
                           : GestureDetector(
                               onTap: _enviarComentario,
                               child: Text(lang.translate('perfil.post'),
                                   style: const TextStyle(
-                                      color: AppTheme.primary,
+                                      color: WebColors.primary,
                                       fontWeight: FontWeight.w700,
                                       fontSize: 13)),
                             ),
@@ -692,11 +805,11 @@ class _StatCol extends StatelessWidget {
             style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: AppTheme.onSurface)),
+                color: WebColors.text)),
         const SizedBox(height: 2),
         Text(label,
             style: const TextStyle(
-                color: AppTheme.onSurfaceMuted, fontSize: 12)),
+                color: WebColors.textMuted, fontSize: 12)),
       ],
     );
   }
@@ -745,24 +858,24 @@ class _ListaUsuariosSheetState extends State<_ListaUsuariosSheet> {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppTheme.onSurfaceMuted.withValues(alpha: 0.4),
+              color: WebColors.textMuted.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(height: 14),
           Text(widget.titulo,
               style: const TextStyle(
-                  fontWeight: FontWeight.w700, fontSize: 16)),
-          const Divider(height: 20),
+                  color: WebColors.text, fontWeight: FontWeight.w700, fontSize: 16)),
+          Divider(height: 20, color: WebColors.border),
           if (_loading)
             const Expanded(
-                child: Center(child: CircularProgressIndicator()))
+                child: Center(child: CircularProgressIndicator(color: WebColors.primary)))
           else if (_lista.isEmpty)
             Expanded(
               child: Center(
                 child: Text(
                     context.watch<LanguageProvider>().translate('perfil.noUsers'),
-                    style: const TextStyle(color: AppTheme.onSurfaceMuted)),
+                    style: const TextStyle(color: WebColors.textMuted)),
               ),
             )
           else
@@ -785,7 +898,7 @@ class _ListaUsuariosSheetState extends State<_ListaUsuariosSheet> {
                     ),
                     title: Text(nome,
                         style: const TextStyle(
-                            fontWeight: FontWeight.w600)),
+                            color: WebColors.text, fontWeight: FontWeight.w600)),
                     onTap: id != null
                         ? () {
                             Navigator.pop(ctx);
