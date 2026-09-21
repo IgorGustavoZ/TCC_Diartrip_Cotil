@@ -27,6 +27,8 @@ class ExpensesTab extends StatefulWidget {
   /// Visão Geral/Minhas Finanças/Admin ficam com valores desatualizados até
   /// a próxima vez que a viagem for reaberta.
   final Future<void> Function() onReload;
+  /// Viagem que já passou: só o histórico — sem registrar, editar nem excluir.
+  final bool somenteLeitura;
 
   const ExpensesTab({
     super.key,
@@ -36,6 +38,7 @@ class ExpensesTab extends StatefulWidget {
     required this.dataInicioViagem,
     required this.dataFimViagem,
     required this.onReload,
+    this.somenteLeitura = false,
   });
 
   @override
@@ -242,6 +245,7 @@ class _ExpensesTabState extends State<ExpensesTab>
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
       children: [
+        if (!widget.somenteLeitura)
         TripCardExpanded(
           title: '💸 ${lang.translate('viagem.registerExpense')}',
           child: Column(
@@ -411,7 +415,7 @@ class _ExpensesTabState extends State<ExpensesTab>
                             children: [
                               Text('R\$ ${g.valor.toStringAsFixed(2)}',
                                   style: const TextStyle(color: WebColors.success, fontWeight: FontWeight.w700, fontSize: 14)),
-                              if (isMe) ...[
+                              if (isMe && !widget.somenteLeitura) ...[
                                 const SizedBox(width: 4),
                                 IconButton(
                                   icon: const Icon(Icons.edit_outlined, size: 16, color: WebColors.textMuted),

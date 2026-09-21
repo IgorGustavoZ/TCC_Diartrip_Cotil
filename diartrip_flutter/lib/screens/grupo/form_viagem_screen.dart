@@ -371,6 +371,7 @@ class _FormViagemScreenState extends State<FormViagemScreen> {
                       ),
                     ),
                     Divider(height: 1, color: WebColors.border),
+                    _faixaPreencherManual(lang),
                     Expanded(child: _buildMessages(lang)),
                     Padding(
                       padding: const EdgeInsets.all(14),
@@ -379,6 +380,37 @@ class _FormViagemScreenState extends State<FormViagemScreen> {
                   ],
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Alternativa ao chat: abre o formulário de preenchimento manual
+  /// (FormViagemManualScreen). Desativada enquanto a viagem está sendo criada.
+  Widget _faixaPreencherManual(LanguageProvider lang) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 6, 12, 0),
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8,
+        children: [
+          Text(
+            lang.translate('formViagem.manualHint'),
+            style: const TextStyle(color: WebColors.textMuted, fontSize: 13),
+          ),
+          TextButton.icon(
+            onPressed: _phase == _WizardPhase.creating
+                ? null
+                : () => Navigator.pushReplacementNamed(context, '/nova-viagem/manual'),
+            icon: const Icon(Icons.edit_note, size: 18),
+            label: Text(lang.translate('formViagem.manualBtn')),
+            style: TextButton.styleFrom(
+              foregroundColor: WebColors.accent,
+              visualDensity: VisualDensity.compact,
+              textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ),
         ],

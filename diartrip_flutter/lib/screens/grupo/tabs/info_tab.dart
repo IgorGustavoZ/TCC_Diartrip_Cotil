@@ -17,7 +17,16 @@ class InfoTab extends StatefulWidget {
   final Grupo grupo;
   final int meId;
   final VoidCallback onReload;
-  const InfoTab({super.key, required this.grupo, required this.meId, required this.onReload});
+  /// Viagem que já passou: sem código de convite/convidar e com as
+  /// configurações da viagem travadas (só leitura).
+  final bool somenteLeitura;
+  const InfoTab({
+    super.key,
+    required this.grupo,
+    required this.meId,
+    required this.onReload,
+    this.somenteLeitura = false,
+  });
 
   @override
   State<InfoTab> createState() => _InfoTabState();
@@ -42,6 +51,7 @@ class _InfoTabState extends State<InfoTab> with AutomaticKeepAliveClientMixin {
   String? _sucessoSettings;
 
   bool get _souCriador => widget.grupo.criadorId == widget.meId;
+  bool get _travado => widget.somenteLeitura;
 
   List<String> _aiTips(LanguageProvider lang) => [
         lang.translate('info.aiTip1'),
@@ -249,8 +259,8 @@ class _InfoTabState extends State<InfoTab> with AutomaticKeepAliveClientMixin {
               _infoItem(lang.translate('info.destination'), g.destinoPrincipal),
               if (g.dataInicio != null)
                 _infoItem(lang.translate('info.period'), '${g.dataInicio} → ${g.dataFim ?? '?'}'),
-              if (g.codigoConvite != null) _infoItem(lang.translate('info.inviteCode'), g.codigoConvite!),
-              if (g.codigoConvite != null) ...[
+              if (g.codigoConvite != null && !_travado) _infoItem(lang.translate('info.inviteCode'), g.codigoConvite!),
+              if (g.codigoConvite != null && !_travado) ...[
                 const SizedBox(height: 16),
                 Divider(color: WebColors.border, height: 1),
                 const SizedBox(height: 16),
@@ -374,6 +384,13 @@ class _InfoTabState extends State<InfoTab> with AutomaticKeepAliveClientMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (_travado) ...[
+          Text(
+            lang.translate('viagem.pastReadOnly'),
+            style: const TextStyle(color: WebColors.textMuted, fontSize: 12, height: 1.4),
+          ),
+          const SizedBox(height: 12),
+        ],
         _label(lang.translate('viagem.settings.name')),
         _textField(_nomeCtrl),
         const SizedBox(height: 12),
@@ -415,7 +432,7 @@ class _InfoTabState extends State<InfoTab> with AutomaticKeepAliveClientMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _label(lang.translate('viagem.settings.startDate')),
-                  _dateBtn(_dataInicio, () => _pickData(true)),
+                  _dateBtn(_dataInicio, _travado ? null : () => _pickData(true)),
                 ],
               ),
             ),
@@ -425,7 +442,7 @@ class _InfoTabState extends State<InfoTab> with AutomaticKeepAliveClientMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _label(lang.translate('viagem.settings.endDate')),
-                  _dateBtn(_dataFim, () => _pickData(false)),
+                  _dateBtn(_dataFim, _travado ? null : () => _pickData(false)),
                 ],
               ),
             ),
@@ -437,14 +454,16 @@ class _InfoTabState extends State<InfoTab> with AutomaticKeepAliveClientMixin {
         const SizedBox(height: 12),
         _label(lang.translate('viagem.settings.preferences')),
         _textField(_prefCtrl, maxLines: 3),
-        const SizedBox(height: 14),
-        GradientButton(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          onPressed: _salvando ? null : _salvarSettings,
-          child: _salvando
-              ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : Text(lang.translate('viagem.settings.save'), style: const TextStyle(fontSize: 13)),
-        ),
+        if (!_travado) ...[
+          const SizedBox(height: 14),
+          GradientButton(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            onPressed: _salvando ? null : _salvarSettings,
+            child: _salvando
+                ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : Text(lang.translate('viagem.settings.save'), style: const TextStyle(fontSize: 13)),
+          ),
+        ],
         if (_erroSettings != null) ...[
           const SizedBox(height: 8),
           Text(_erroSettings!, style: const TextStyle(color: WebColors.danger, fontSize: 12)),
@@ -467,7 +486,8 @@ class _InfoTabState extends State<InfoTab> with AutomaticKeepAliveClientMixin {
       controller: ctrl,
       maxLines: maxLines,
       onChanged: onChanged,
-      style: const TextStyle(color: WebColors.text, fontSize: 14),
+      enabled: !_travado,
+      style: TextStyle(color: _travado ? WebColors.textMuted : WebColors.text, fontSize: 14),
       decoration: InputDecoration(
         filled: true,
         fillColor: WebColors.surface2,
@@ -480,11 +500,15 @@ class _InfoTabState extends State<InfoTab> with AutomaticKeepAliveClientMixin {
           borderRadius: BorderRadius.circular(WebColors.radiusSm),
           borderSide: const BorderSide(color: WebColors.border),
         ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(WebColors.radiusSm),
+          borderSide: const BorderSide(color: WebColors.border),
+        ),
       ),
     );
   }
 
-  Widget _dateBtn(DateTime? date, VoidCallback onTap) {
+  Widget _dateBtn(DateTime? date, VoidCallback? onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(WebColors.radiusSm),
@@ -501,7 +525,7 @@ class _InfoTabState extends State<InfoTab> with AutomaticKeepAliveClientMixin {
             const SizedBox(width: 8),
             Text(
               date != null ? _dateFmt.format(date) : '—',
-              style: const TextStyle(color: WebColors.text, fontSize: 13),
+              style: TextStyle(color: _travado ? WebColors.textMuted : WebColors.text, fontSize: 13),
             ),
           ],
         ),

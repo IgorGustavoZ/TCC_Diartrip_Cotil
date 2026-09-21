@@ -12,6 +12,7 @@ import '../../services/grupo_service.dart';
 import '../../services/ia_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/avatar_widget.dart';
+import '../../widgets/collapsible_section.dart';
 import '../../widgets/next_trip_banner.dart';
 import '../../widgets/trip_card.dart';
 
@@ -252,6 +253,14 @@ class _LobbyScreenState extends State<LobbyScreen> {
     }
 
     final proxima = NextTripBanner.proxima(_grupos);
+    // Viagens cuja data final já passou saem da lista principal e ficam numa
+    // seção própria no fim da página (as demais seguem exatamente como antes).
+    final ativas = _grupos.where((g) => !g.jaPassou()).toList();
+    final passadas = _grupos.where((g) => g.jaPassou()).toList();
+    // Folga no fim da lista: o botão flutuante "+" fica fixo no canto inferior
+    // direito (~52px + 16px de margem). Sem essa folga, o último item — a seta
+    // do puxador de "Viagens passadas" ou o último card — ficava por baixo dele.
+    const espacoBotaoFlutuante = 96.0;
 
     return RefreshIndicator(
       onRefresh: _loadGrupos,
@@ -281,40 +290,79 @@ class _LobbyScreenState extends State<LobbyScreen> {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+            padding: EdgeInsets.fromLTRB(
+              16, 0, 16, passadas.isEmpty ? espacoBotaoFlutuante : 24,
+            ),
             sliver: SliverToBoxAdapter(
-              // Wrap em vez de GridView de altura fixa: cada card tem largura
-              // fixa mas altura livre, então nome/destino longos ou a barra de
-              // orçamento (presente só em alguns cards) nunca ficam espremidos
-              // numa célula pequena demais — a causa do "RenderFlex overflowed".
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  const spacing = 14.0;
-                  const minCardWidth = 260.0;
-                  final columns = (constraints.maxWidth / (minCardWidth + spacing)).floor().clamp(1, 6);
-                  final cardWidth = (constraints.maxWidth - spacing * (columns - 1)) / columns;
-                  return Wrap(
-                    spacing: spacing,
-                    runSpacing: spacing,
-                    children: [
-                      for (final g in _grupos)
-                        SizedBox(
-                          width: cardWidth,
-                          child: TripCard(
-                            grupo: g,
-                            selected: _grupoSelecionado?.id == g.id,
-                            onTap: () => _selecionar(g),
-                            onLongPress: () => Navigator.pushNamed(context, '/viagem/${g.id}'),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
+              child: ativas.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        lang.translate('lobby.noUpcoming'),
+                        style: const TextStyle(color: WebColors.textMuted, fontSize: 13),
+                      ),
+                    )
+                  : _tripGrid(ativas),
             ),
           ),
+          if (passadas.isNotEmpty)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, espacoBotaoFlutuante),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Divider(height: 1, color: WebColors.border),
+                    const SizedBox(height: 12),
+                    // Recolhida por padrão: só aparece se a pessoa tocar no
+                    // cabeçalho (puxador). Os cards só são construídos abertos.
+                    CollapsibleSection(
+                      title: lang.translate('lobby.pastTrips'),
+                      count: passadas.length,
+                      // Levemente esmaecidas para diferenciar das viagens ativas;
+                      // continuam clicáveis (selecionar p/ IA, abrir viagem).
+                      child: _tripGrid(passadas, opacity: 0.7),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
+    );
+  }
+
+  // Wrap em vez de GridView de altura fixa: cada card tem largura fixa mas
+  // altura livre, então nome/destino longos ou a barra de orçamento (presente
+  // só em alguns cards) nunca ficam espremidos numa célula pequena demais —
+  // a causa do "RenderFlex overflowed".
+  Widget _tripGrid(List<Grupo> grupos, {double opacity = 1}) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 14.0;
+        const minCardWidth = 260.0;
+        final columns = (constraints.maxWidth / (minCardWidth + spacing)).floor().clamp(1, 6);
+        final cardWidth = (constraints.maxWidth - spacing * (columns - 1)) / columns;
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (final g in grupos)
+              SizedBox(
+                width: cardWidth,
+                child: Opacity(
+                  opacity: opacity,
+                  child: TripCard(
+                    grupo: g,
+                    selected: _grupoSelecionado?.id == g.id,
+                    onTap: () => _selecionar(g),
+                    onLongPress: () => Navigator.pushNamed(context, '/viagem/${g.id}'),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 

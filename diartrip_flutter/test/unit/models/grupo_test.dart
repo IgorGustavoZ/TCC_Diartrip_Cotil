@@ -89,4 +89,42 @@ void main() {
       expect(m.fotoPerfil, 'https://cdn.test/foto.jpg');
     });
   });
+
+  group('Grupo.jaPassou', () {
+    final hoje = DateTime(2026, 9, 20, 15, 30);
+
+    Grupo g({String? inicio, String? fim}) => Grupo(
+          id: 1,
+          nomeGrupo: 'G',
+          destinoPrincipal: 'D',
+          dataInicio: inicio,
+          dataFim: fim,
+        );
+
+    test('data final anterior a hoje → passou', () {
+      expect(g(inicio: '2026-08-01', fim: '2026-08-10').jaPassou(hoje), isTrue);
+    });
+
+    test('termina hoje → ainda não passou', () {
+      expect(g(inicio: '2026-09-18', fim: '2026-09-20').jaPassou(hoje), isFalse);
+    });
+
+    test('em andamento (começou, ainda não terminou) → não passou', () {
+      expect(g(inicio: '2026-09-15', fim: '2026-09-25').jaPassou(hoje), isFalse);
+    });
+
+    test('futura → não passou', () {
+      expect(g(inicio: '2026-12-01', fim: '2026-12-10').jaPassou(hoje), isFalse);
+    });
+
+    test('sem data final usa a inicial', () {
+      expect(g(inicio: '2026-01-01').jaPassou(hoje), isTrue);
+      expect(g(inicio: '2027-01-01').jaPassou(hoje), isFalse);
+    });
+
+    test('sem datas ou data inválida → não passou', () {
+      expect(g().jaPassou(hoje), isFalse);
+      expect(g(inicio: 'lixo', fim: 'lixo').jaPassou(hoje), isFalse);
+    });
+  });
 }

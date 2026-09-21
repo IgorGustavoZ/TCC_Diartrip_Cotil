@@ -44,6 +44,19 @@ class Grupo {
         limiteParticipantes: j['limite_participantes'] as int?,
         vagasOcupadas: j['vagas_ocupadas'] as int? ?? 0,
       );
+
+  /// True quando a viagem já terminou: a data final (ou, se não houver, a
+  /// inicial) é anterior a hoje. Viagem em andamento ou sem data nenhuma não
+  /// conta como passada. [hoje] existe só para tornar a regra testável.
+  bool jaPassou([DateTime? hoje]) {
+    final ref = dataFim ?? dataInicio;
+    if (ref == null) return false;
+    final data = DateTime.tryParse(ref);
+    if (data == null) return false;
+    final agora = hoje ?? DateTime.now();
+    final hojeSemHora = DateTime(agora.year, agora.month, agora.day);
+    return DateTime(data.year, data.month, data.day).isBefore(hojeSemHora);
+  }
 }
 
 class Membro {

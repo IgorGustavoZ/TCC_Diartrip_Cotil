@@ -55,6 +55,11 @@ class _ViagemScreenState extends State<ViagemScreen> with TickerProviderStateMix
   /// travar a interface depois de navegar por algumas abas.
   int _currentTabIndex = 0;
 
+  /// Viagem cuja data final já passou: as abas viram só consulta (sem
+  /// alterar orçamento, gastos, roteiro, configurações etc.). Fotos, Chat e
+  /// Visão Geral seguem como sempre.
+  bool get _passada => _grupo?.jaPassou() ?? false;
+
   @override
   void initState() {
     super.initState();
@@ -167,7 +172,7 @@ class _ViagemScreenState extends State<ViagemScreen> with TickerProviderStateMix
       case 'geral':
         return OverviewTab(dash: _dash, onReload: _load);
       case 'pessoal':
-        return FinancesTab(idGrupo: widget.idGrupo, dash: _dash, onReload: _load);
+        return FinancesTab(idGrupo: widget.idGrupo, dash: _dash, onReload: _load, somenteLeitura: _passada);
       case 'admin':
         return AdminTab(
           idGrupo: widget.idGrupo,
@@ -177,6 +182,7 @@ class _ViagemScreenState extends State<ViagemScreen> with TickerProviderStateMix
           meId: _meId,
           isAdmin: _isMeAdmin,
           onReload: _load,
+          somenteLeitura: _passada,
         );
       case 'gastos':
         return ExpensesTab(
@@ -186,15 +192,21 @@ class _ViagemScreenState extends State<ViagemScreen> with TickerProviderStateMix
           dataInicioViagem: _grupo?.dataInicio,
           dataFimViagem: _grupo?.dataFim,
           onReload: _load,
+          somenteLeitura: _passada,
         );
       case 'roteiro':
-        return ItineraryTab(idGrupo: widget.idGrupo, isAdmin: _isMeAdmin, onReload: _load);
+        return ItineraryTab(
+          idGrupo: widget.idGrupo,
+          isAdmin: _isMeAdmin,
+          onReload: _load,
+          somenteLeitura: _passada,
+        );
       case 'fotos':
         return PhotosTab(idGrupo: widget.idGrupo, meId: _meId, onReload: _load);
       case 'chat':
         return ChatTab(idGrupo: widget.idGrupo, meId: _meId, membros: _membros);
       case 'info':
-        return InfoTab(grupo: _grupo!, meId: _meId, onReload: _load);
+        return InfoTab(grupo: _grupo!, meId: _meId, onReload: _load, somenteLeitura: _passada);
       default:
         return const SizedBox.shrink();
     }
@@ -310,7 +322,8 @@ class _ViagemScreenState extends State<ViagemScreen> with TickerProviderStateMix
             Text('${g.dataInicio} → ${g.dataFim ?? ''}',
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 12)),
           ],
-          if (g.codigoConvite != null) ...[
+          // Viagem que já passou não recebe mais convites: sem o código.
+          if (g.codigoConvite != null && !_passada) ...[
             const SizedBox(height: 14),
             Material(
               color: Colors.white.withValues(alpha: 0.18),

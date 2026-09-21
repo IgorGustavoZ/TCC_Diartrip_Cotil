@@ -17,7 +17,16 @@ class ItineraryTab extends StatefulWidget {
   /// Recarrega o dashboard compartilhado no [ViagemScreen] — o painel Admin
   /// mostra a contagem de itens do roteiro, que fica desatualizada sem isso.
   final Future<void> Function() onReload;
-  const ItineraryTab({super.key, required this.idGrupo, required this.isAdmin, required this.onReload});
+  /// Viagem que já passou: só consulta — sem gerar por IA, adicionar, editar
+  /// nem excluir itens do roteiro.
+  final bool somenteLeitura;
+  const ItineraryTab({
+    super.key,
+    required this.idGrupo,
+    required this.isAdmin,
+    required this.onReload,
+    this.somenteLeitura = false,
+  });
   @override
   State<ItineraryTab> createState() => _ItineraryTabState();
 }
@@ -26,6 +35,11 @@ class _ItineraryTabState extends State<ItineraryTab>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
+
+  /// Admin de uma viagem que ainda não passou — único caso em que aparecem os
+  /// controles que alteram o roteiro.
+  bool get _podeEditar => widget.isAdmin && !widget.somenteLeitura;
+
   List<Roteiro> _roteiros = [];
   bool _loading = true;
   bool _gerandoIA = false;
@@ -221,7 +235,7 @@ class _ItineraryTabState extends State<ItineraryTab>
     final lang = context.watch<LanguageProvider>();
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: widget.isAdmin
+      floatingActionButton: _podeEditar
           ? FloatingActionButton(
               mini: true,
               backgroundColor: WebColors.primary,
@@ -237,7 +251,7 @@ class _ItineraryTabState extends State<ItineraryTab>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (widget.isAdmin) ...[
+                if (_podeEditar) ...[
                   Row(
                     children: [
                       Flexible(
@@ -346,7 +360,7 @@ class _ItineraryTabState extends State<ItineraryTab>
                         ],
                       ),
               ),
-              if (widget.isAdmin && !editando)
+              if (_podeEditar && !editando)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

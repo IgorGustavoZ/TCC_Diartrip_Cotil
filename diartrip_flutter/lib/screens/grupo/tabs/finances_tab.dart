@@ -16,7 +16,15 @@ class FinancesTab extends StatefulWidget {
   final int idGrupo;
   final DashboardCompleto? dash;
   final Future<void> Function() onReload;
-  const FinancesTab({super.key, required this.idGrupo, required this.dash, required this.onReload});
+  /// Viagem que já passou: só consulta — sem a opção de alterar o orçamento.
+  final bool somenteLeitura;
+  const FinancesTab({
+    super.key,
+    required this.idGrupo,
+    required this.dash,
+    required this.onReload,
+    this.somenteLeitura = false,
+  });
   @override
   State<FinancesTab> createState() => _FinancesTabState();
 }
@@ -193,7 +201,7 @@ class _FinancesTabState extends State<FinancesTab> {
                             ),
                           ],
                         ),
-                      ] else
+                      ] else if (!widget.somenteLeitura)
                         Align(
                           alignment: Alignment.centerLeft,
                           child: OutlinedButton(

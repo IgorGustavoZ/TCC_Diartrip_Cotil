@@ -9,6 +9,7 @@ import 'providers/language_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/grupo/explorar_viagens_screen.dart';
+import 'screens/grupo/form_viagem_manual_screen.dart';
 import 'screens/grupo/form_viagem_screen.dart';
 import 'screens/grupo/grupos_screen.dart';
 import 'screens/grupo/viagem_screen.dart';
@@ -58,6 +59,11 @@ class DiartripApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       locale: language.locale,
+      // Sem balões de dica ao passar o mouse nos botões, no app inteiro (inclusive
+      // os implícitos, como o do menu e os de voltar). Os textos continuam
+      // disponíveis para leitores de tela (semântica), só não ficam visíveis.
+      builder: (context, child) =>
+          TooltipVisibility(visible: false, child: child ?? const SizedBox.shrink()),
       home: const _Splash(),
       onGenerateRoute: _generateRoute,
     );
@@ -75,6 +81,7 @@ class DiartripApp extends StatelessWidget {
     if (path == '/explorar') return _page(const ExplorarViagensScreen(), s);
     if (path == '/feed') return _page(const FeedScreen(), s);
     if (path == '/nova-viagem') return _page(const FormViagemScreen(), s);
+    if (path == '/nova-viagem/manual') return _page(const FormViagemManualScreen(), s);
     if (path == '/config') return _page(const ConfigScreen(), s);
 
     final viagemMatch = RegExp(r'^/viagem/(\d+)$').firstMatch(path);

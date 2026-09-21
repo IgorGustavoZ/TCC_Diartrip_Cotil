@@ -25,6 +25,9 @@ class AdminTab extends StatefulWidget {
   final int meId;
   final bool isAdmin;
   final Future<void> Function() onReload;
+  /// Viagem que já passou: sem "Explorar viagens" (publicar) nem solicitações
+  /// de participação — a viagem não recebe mais gente.
+  final bool somenteLeitura;
 
   const AdminTab({
     super.key,
@@ -35,6 +38,7 @@ class AdminTab extends StatefulWidget {
     required this.meId,
     required this.isAdmin,
     required this.onReload,
+    this.somenteLeitura = false,
   });
 
   @override
@@ -52,7 +56,7 @@ class _AdminTabState extends State<AdminTab> {
   void initState() {
     super.initState();
     if (widget.isAdmin) {
-      _loadSolicitacoes();
+      if (!widget.somenteLeitura) _loadSolicitacoes();
       _limiteCtrl.text = (widget.grupo.limiteParticipantes ?? '').toString();
     }
   }
@@ -199,7 +203,7 @@ class _AdminTabState extends State<AdminTab> {
     final adminData = widget.dash?.admin;
     return RefreshIndicator(
       onRefresh: () async {
-        await Future.wait([widget.onReload(), _loadSolicitacoes()]);
+        await Future.wait([widget.onReload(), if (!widget.somenteLeitura) _loadSolicitacoes()]);
       },
       color: WebColors.primary,
       backgroundColor: WebColors.bg,
@@ -255,6 +259,7 @@ class _AdminTabState extends State<AdminTab> {
               children: widget.membros.map((m) => _membroRow(context, lang, m)).toList(),
             ),
           ),
+          if (!widget.somenteLeitura)
           TripCardExpanded(
             title: lang.translate('viagem.explore.panel'),
             child: Column(
@@ -323,6 +328,7 @@ class _AdminTabState extends State<AdminTab> {
               ],
             ),
           ),
+          if (!widget.somenteLeitura)
           TripCardExpanded(
             title: lang.translate('viagem.explore.requests'),
             child: _loadingSolicitacoes
