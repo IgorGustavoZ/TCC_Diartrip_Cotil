@@ -119,6 +119,7 @@ class _FormViagemManualScreenState extends State<FormViagemManualScreen> {
     final lang = context.read<LanguageProvider>();
     final nome = _nomeCtrl.text.trim();
     final destino = _destinoCtrl.text.trim();
+    int? participantes = int.tryParse(_partCtrl.text);
 
     String? erro;
     if (nome.isEmpty || destino.isEmpty || _inicio == null || _fim == null || _tipo == null) {
@@ -127,6 +128,9 @@ class _FormViagemManualScreenState extends State<FormViagemManualScreen> {
     final orcamento = double.tryParse(_orcCtrl.text.trim().replaceAll(',', '.'));
     if (erro == null && (orcamento == null || orcamento < 0)) {
       erro = lang.translate('formViagem.invalidBudget');
+    }
+    if(participantes == null || participantes < 0){
+      erro = lang.translate('formViagem.invalidInfo');
     }
     if (erro == null) {
       final hoje = _hoje;
