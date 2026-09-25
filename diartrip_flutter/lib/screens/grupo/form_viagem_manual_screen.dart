@@ -129,7 +129,9 @@ class _FormViagemManualScreenState extends State<FormViagemManualScreen> {
     if (erro == null && (orcamento == null || orcamento < 0)) {
       erro = lang.translate('formViagem.invalidBudget');
     }
-    if(participantes == null || participantes < 0){
+    // Participantes é opcional: só valida se a pessoa preencheu, e não
+    // sobrescreve um erro anterior (campos obrigatórios/orçamento).
+    if (erro == null && _partCtrl.text.trim().isNotEmpty && (participantes == null || participantes < 0)) {
       erro = lang.translate('formViagem.invalidInfo');
     }
     if (erro == null) {
