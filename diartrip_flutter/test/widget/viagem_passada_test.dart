@@ -100,6 +100,16 @@ Future<void> _abrir(WidgetTester tester, int id, String aba) async {
       ),
     ),
   );
+  // No Chrome (--platform chrome) o Dio só entrega a resposta da API simulada
+  // com o loop de eventos REAL: o relógio falso do testWidgets (que é só o que
+  // o pumpAndSettle avança) nunca a completa, a tela fica no spinner de
+  // carregamento e o pumpAndSettle estoura. Então, antes de assentar as
+  // animações, damos tempo real às requisições — mais de uma volta, porque a
+  // aba aberta faz as suas próprias requisições depois que a viagem carrega.
+  for (var i = 0; i < 4; i++) {
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+    await tester.pump();
+  }
   await tester.pumpAndSettle();
 }
 
