@@ -81,8 +81,18 @@
 
 
             <div class="field">
+                <label for="participantes"><span data-i18n="chatViagem.summary.participants">Participants</span> <span data-i18n="formViagem.optional">(optional)</span></label>
+                <input id="participantes" type="number" min="0" step="1" data-i18n-placeholder="chatViagem.ph.participantes" placeholder="ex: 4">
+            </div>
+
+            <div class="field">
                 <label for="orcamento" data-i18n="formViagem.budget">Your budget (R$)</label>
                 <input id="orcamento" type="number" min="0" step="0.01" placeholder="Ex: 3000.00">
+            </div>
+
+            <div class="field">
+                <label for="transporte"><span data-i18n="chatViagem.summary.transport">Transport</span> <span data-i18n="formViagem.optional">(optional)</span></label>
+                <input id="transporte" data-i18n-placeholder="chatViagem.ph.transporte" placeholder="ex: Carro">
             </div>
 
             <div class="field">
@@ -110,6 +120,11 @@
                 
             </div>
 
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; color:var(--text-muted); font-size:14px;">
+                <span data-i18n="formViagem.assistantHint">Prefer to be guided by questions?</span>
+                <a href="chat-viagem.html" data-i18n="formViagem.assistantBtn" style="color:var(--primary); font-weight:600; text-decoration:none;">Use the assistant</a>
+            </div>
+
             <button type="submit" data-i18n="formViagem.submit">Gerar Roteiro</button>
 
             <div id="result" class="result" style="display: none;" data-i18n="formViagem.generating">
@@ -120,6 +135,17 @@
     </div>
 
 <script>
+
+    // Monta o campo `preferencias` no formato "Participantes: N | Transporte: X | texto livre"
+    // (mesmo do app Flutter). O gerador de roteiro por IA (roteiro_ia_service) só reconhece
+    // esses rótulos EM PORTUGUÊS, por isso eles NÃO são traduzidos. Limite de 1000 caracteres.
+    function montarPreferenciasViagem(participantes, transporte, preferencias){
+        const partes = []
+        if((participantes || "").trim()) partes.push(`Participantes: ${participantes.trim()}`)
+        if((transporte || "").trim()) partes.push(`Transporte: ${transporte.trim()}`)
+        if((preferencias || "").trim()) partes.push(preferencias.trim())
+        return partes.join(" | ").slice(0, 1000)
+    }
 
     const viagem = {
         paisIng: "",
@@ -135,6 +161,8 @@
     const tipoViagem = document.querySelector("#tipo")
 
     const prefs = document.querySelector("#preferencias")
+    const inputParticipantes = document.querySelector("#participantes")
+    const inputTransporte = document.querySelector("#transporte")
 
     const divError = document.querySelector(".error")
     const divSucess = document.querySelector(".sucess")
@@ -145,7 +173,7 @@
 
             const sugestCidades = document.querySelector("#sug-cidade")
 
-            const cidades = [...sugestCidades.childNodes]
+            const cidades = [...sugestCidades.children]
 
             if(cidades.length > 0){
                 cidades[0].click()
@@ -253,6 +281,12 @@
             return
         }
 
+        const participantesTxt = inputParticipantes.value.trim()
+        if(participantesTxt !== "" && (!/^\d+$/.test(participantesTxt))){
+            divError.innerHTML = t('formViagem.invalidInfo')
+            return
+        }
+
         const hoje = new Date()
         hoje.setHours(0, 0, 0, 0)
         const dtInicio = new Date(inputDataInicio.value + "T00:00:00")
@@ -286,7 +320,7 @@
 
                     tipo_viagem: tipoViagem.value,
 
-                    preferencias: prefs.value
+                    preferencias: montarPreferenciasViagem(participantesTxt, inputTransporte.value, prefs.value)
                 })
             })
 

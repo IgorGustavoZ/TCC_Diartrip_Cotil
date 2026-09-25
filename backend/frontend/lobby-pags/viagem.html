@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diartrip - Trip</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../static/style.css?v=4">
+<link rel="stylesheet" href="../static/style.css?v=5">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="../static/i18n.js"></script>
 <script src="../static/confirm-modal.js"></script>
+<script src="../static/viagem-status.js"></script>
 </head>
 <body>
 
@@ -182,7 +183,7 @@
                     <div id="adminMembroLista" style="display:flex;flex-direction:column;gap:10px;"></div>
                 </div>
 
-                <div class="trip-card-expanded">
+                <div class="trip-card-expanded" id="cardExplorarViagem">
                     <h2 data-i18n="viagem.explore.panel">✈️ Explorar Viagens</h2>
                     <p style="color:var(--text-muted); font-size:14px; margin:0 0 12px;" id="explorarStatusTexto" data-i18n="viagem.explore.notPublished">Esta viagem ainda não está pública em Explorar Viagens.</p>
                     <div style="display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
@@ -198,7 +199,7 @@
                     <span class="msg-erro-gasto" id="explorarErro" style="display:block; margin-top:8px;"></span>
                 </div>
 
-                <div class="trip-card-expanded">
+                <div class="trip-card-expanded" id="cardSolicitacoes">
                     <h2 data-i18n="viagem.explore.requests">📥 Solicitações de participação</h2>
                     <div id="listaSolicitacoes"><p style="color:var(--text-muted); font-size:14px; text-align:center;" data-i18n="viagem.explore.noRequests">Nenhuma solicitação pendente.</p></div>
                 </div>
@@ -206,10 +207,10 @@
 
             <div id="tab-gastos" class="tab-content">
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.registerExpense">💸 Registrar Gasto</h2>
-                    <div class="gastos-layout">
+                    <h2 id="tituloRegistrarGasto" data-i18n="viagem.registerExpense">💸 Registrar Gasto</h2>
+                    <div class="gastos-layout" id="gastosLayout">
 
-                        <div class="form-gasto">
+                        <div class="form-gasto" id="formGastoBox">
                             <div>
                                 <label data-i18n="viagem.value">Valor (R$)</label>
                                 <input id="gastoValor" type="number" min="0.01" step="0.01" data-i18n-placeholder="viagem.value.placeholder" placeholder="Ex: 150.00">
@@ -323,6 +324,7 @@
 
                 <div class="trip-card-expanded" id="cardConfigViagem" style="display:none;">
                     <h2 data-i18n="viagem.settings.title">⚙️ Configurações da viagem</h2>
+                    <p id="avisoViagemPassada" style="display:none; margin:8px 0 0; font-size:13px; color:var(--text-muted);" data-i18n="viagem.pastReadOnly">Esta viagem já terminou: as configurações estão travadas e não podem mais ser alteradas.</p>
                     <div style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
                         <div>
                             <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;" data-i18n="viagem.settings.name">Nome</label>
@@ -352,7 +354,7 @@
                             <textarea id="configPreferencias" maxlength="1000" style="width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; resize:vertical; min-height:70px; outline:none;"></textarea>
                         </div>
                     </div>
-                    <button onclick="salvarConfigViagem()" style="margin-top:14px; background:var(--gradient); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.settings.save">Salvar alterações</button>
+                    <button id="btnSalvarConfigViagem" onclick="salvarConfigViagem()" style="margin-top:14px; background:var(--gradient); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.settings.save">Salvar alterações</button>
                     <span id="erroConfigViagem" style="display:none; color:var(--danger); font-size:12px; margin-top:8px;"></span>
                     <span id="sucessoConfigViagem" style="display:none; color:var(--success); font-size:12px; margin-top:8px;"></span>
                 </div>
@@ -378,6 +380,9 @@ let isAdmin = false
 let chatWS = null
 let ultimaMsgId = 0
 let grupoAtual = null
+// Viagem que já terminou: vira só consulta (regra única em ../static/viagem-status.js,
+// a mesma do Lobby e do app Flutter). Definida em carregarGrupo().
+let viagemPassada = false
 let _wsRetryTimer = null
 let _wsRetryDelay = 1000
 const _msgIdsRendered = new Set()
@@ -399,13 +404,14 @@ async function carregarGrupo() {
 
     grupoAtual = await resp.json()
     const grupo = grupoAtual
+    viagemPassada = viagemJaPassou(grupo)
 
     document.getElementById("nomeViagem").innerText = grupo.nome_grupo
     document.getElementById("destinoViagem").innerText = `${grupo.destino_principal}`
     document.getElementById("datasViagem").innerText = `${grupo.data_inicio} → ${grupo.data_fim}`
     document.getElementById("infoDestino").innerText = grupo.destino_principal
     document.getElementById("infoPeriodo").innerText = `${grupo.data_inicio} ${t('common.at')} ${grupo.data_fim}`
-    if (grupo.codigo_convite) {
+    if (grupo.codigo_convite && !viagemPassada) {
         document.getElementById("codigoConvite").innerText = grupo.codigo_convite
         document.getElementById("inviteInput").value = grupo.codigo_convite
         document.querySelector('.btn-convite').style.display = ""
@@ -420,8 +426,44 @@ async function carregarGrupo() {
     }
 
     atualizarZonaPerigo()
+    aplicarSomenteLeitura()
     carregarDashboard()
     carregarGastos()
+}
+
+// Aplica (ou desfaz) o modo somente leitura das partes ESTÁTICAS da página. As partes
+// geradas dinamicamente (botões de gasto/roteiro) consultam viagemPassada na hora de
+// desenhar. Idempotente: é chamada de novo quando o dashboard termina de carregar.
+function aplicarSomenteLeitura() {
+    const passada = viagemPassada
+    const mostrar = (id, visivel) => { const el = document.getElementById(id); if (el) el.style.display = visivel ? "" : "none" }
+
+    // Admin: Explorar Viagens e Solicitações dependem de viagem futura/ativa
+    // (Membros e Estatísticas continuam disponíveis).
+    mostrar("cardExplorarViagem", !passada)
+    mostrar("cardSolicitacoes", !passada)
+
+    // Gastos: some o formulário de registro; o histórico continua.
+    mostrar("tituloRegistrarGasto", !passada)
+    mostrar("formGastoBox", !passada)
+    const layout = document.getElementById("gastosLayout")
+    if (layout) layout.style.gridTemplateColumns = passada ? "1fr" : ""
+
+    // Roteiro (gerar por IA / adicionar) e orçamento pessoal: só escondem em viagem
+    // passada — quando é futura, quem decide é carregarDashboard() / a edição em curso.
+    if (passada) {
+        mostrar("roteiroIaBox", false)
+        mostrar("roteiroFormAdd", false)
+        mostrar("btnEditarOrcamento", false)
+        mostrar("formEditarOrcamento", false)
+    }
+
+    // Informações: configurações continuam visíveis, mas travadas.
+    ;["configNome", "configDestino", "configDataInicio", "configDataFim", "configTipo", "configPreferencias"]
+        .forEach(id => { const el = document.getElementById(id); if (el) el.disabled = passada })
+    mostrar("btnSalvarConfigViagem", !passada)
+    mostrar("avisoViagemPassada", passada)
+    if (passada) document.getElementById("configSugCidade").innerHTML = ""
 }
 
 function atualizarZonaPerigo() {
@@ -694,10 +736,12 @@ async function carregarDashboard() {
     if (data.admin) {
         isAdmin = true
         document.getElementById("adminTabBtn").style.display = "block"
-        document.getElementById("roteiroFormAdd").style.display = "block"
-        document.getElementById("roteiroIaBox").style.display = "flex"
+        if (!viagemPassada) {
+            document.getElementById("roteiroFormAdd").style.display = "block"
+            document.getElementById("roteiroIaBox").style.display = "flex"
+        }
         carregarMembrosAdmin()
-        carregarExplorarAdmin()
+        if (!viagemPassada) carregarExplorarAdmin()
         const a = data.admin
         document.getElementById("totalMembros").innerText = a.estatisticas.membros_ativos
         document.getElementById("totalRoteiros").innerText = a.estatisticas.itens_no_roteiro
@@ -708,6 +752,7 @@ async function carregarDashboard() {
             </div>
         `).join('')
     }
+    aplicarSomenteLeitura()
 }
 
 function iniciarEdicaoOrcamento() {
@@ -782,7 +827,7 @@ async function carregarGastos() {
                 <div class="meta">${t('viagem.cat.' + catKey) || escapeHtml(g.categoria)} · ${escapeHtml(g.nome)} · ${escapeHtml(g.data_gasto || '')}</div>
             </div>
             <span class="gasto-valor">R$ ${parseFloat(g.valor).toLocaleString(getLang(), {minimumFractionDigits:2})}</span>
-            ${g.id_usuario == meuId ? `<button class="btn-del-gasto" onclick="deletarGasto(${g.id_gasto})">${t('common.delete')}</button>` : ''}
+            ${g.id_usuario == meuId && !viagemPassada ? `<button class="btn-del-gasto" onclick="deletarGasto(${g.id_gasto})">${t('common.delete')}</button>` : ''}
         </div>
     `
     }).join('')
@@ -1006,7 +1051,7 @@ async function carregarRoteiro() {
                     </div>
                     <div style="font-size:13px;color:var(--text-muted);white-space:pre-wrap;">${escapeHtml(r.descricao)}</div>
                 </div>
-                ${isAdmin ? `
+                ${isAdmin && !viagemPassada ? `
                 <div style="display:flex;gap:6px;flex-shrink:0;">
                     <button onclick="iniciarEdicaoRoteiro(${r.id_roteiro},'${escapeAtr(r.titulo)}','${escapeAtr(r.descricao)}')" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text-secondary);font-size:12px;cursor:pointer;">${t('viagem.itinerary.edit')}</button>
                     <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:var(--danger-soft);border:none;border-radius:6px;padding:6px 10px;color:var(--danger);font-size:12px;cursor:pointer;">🗑</button>

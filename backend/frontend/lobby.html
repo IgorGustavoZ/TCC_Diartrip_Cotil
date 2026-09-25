@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diartrip</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../static/style.css?v=4">
+<link rel="stylesheet" href="../static/style.css?v=5">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="static/i18n.js"></script>
+<script src="static/viagem-status.js"></script>
 </head>
 <body>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
@@ -63,7 +64,18 @@
     <div id="nextTripWrap"></div>
     <h3 data-i18n="lobby.trips.section">Your trips</h3>
 
-    <div class="trip-grid">
+    <div class="trip-grid" id="gridAtivas">
+    </div>
+
+    <div class="past-trips" id="viagensPassadas" style="display:none;">
+        <button type="button" class="past-trips-toggle" onclick="document.getElementById('viagensPassadas').classList.toggle('open')">
+            <span data-i18n="lobby.pastTrips">Past trips</span>
+            <span class="past-trips-count" id="pastTripsCount"></span>
+            <span class="past-trips-arrow">▾</span>
+        </button>
+        <div class="past-trips-body">
+            <div class="trip-grid" id="gridPassadas"></div>
+        </div>
     </div>
 
     </div>
@@ -169,6 +181,64 @@
         } catch (e) { /* enriquecimento best-effort: falha silenciosa */ }
     }
 
+    // Um card de viagem (usado tanto na lista principal quanto na seção de
+    // passadas — o mesmo card, o mesmo clique/duplo clique).
+    function criarCardViagem(viagem, passada) {
+        const card = document.createElement("div")
+
+        card.className = "trip-card" + (passada ? " past" : "")
+
+        card.dataset.id = viagem.id_grupo
+
+        card.innerHTML = `
+            <div class="trip-cover" style="background:${capaPara(viagem.destino_principal)}">
+                <span class="trip-cover-emoji">✈︎</span>
+            </div>
+            <div class="trip-card-body">
+                <strong>${escapeHtml(viagem.nome_grupo)}</strong>
+
+                <div class="trip-date">
+                    ${escapeHtml(viagem.destino_principal || "")}
+                </div>
+
+                <div class="trip-date">
+                    🗓 ${escapeHtml(viagem.data_inicio || "")} — ${escapeHtml(viagem.data_fim || "")}
+                </div>
+
+                <div class="trip-budget" id="budget-${viagem.id_grupo}"></div>
+            </div>
+        `
+
+        card.addEventListener("click", () => {
+
+            document
+                .querySelectorAll(".trip-card")
+                .forEach(c => c.classList.remove("ativo"))
+
+            card.classList.add("ativo")
+
+            grupoSelecionado = viagem.id_grupo
+
+            const messages = document.getElementById("chatMessages")
+
+            messages.innerHTML = `
+                <div class="message">
+                    <strong>AI:</strong>
+                    <em>${escapeHtml(viagem.nome_grupo)}</em> ${t('lobby.chat.selected') || 'selected! How can I help?'}
+                </div>
+            `
+        })
+
+        card.addEventListener("dblclick", () => {
+
+            window.location.href =
+                `lobby-pags/viagem.html?id=${viagem.id_grupo}`
+
+        })
+
+        return card
+    }
+
     const carregarViagens = async () => {
         const resp = await fetch(`/grupos`, {
             method: 'GET',
@@ -179,8 +249,12 @@
         if (!resp.ok) return
 
         const viagens = await resp.json()
-        const grid = document.querySelector(".trip-grid")
+        const grid = document.getElementById("gridAtivas")
+        const gridPassadas = document.getElementById("gridPassadas")
+        const secaoPassadas = document.getElementById("viagensPassadas")
         grid.innerHTML = ""
+        gridPassadas.innerHTML = ""
+        secaoPassadas.style.display = "none"
 
         if (viagens.length === 0) {
             grid.innerHTML = `<p>${t('lobby.trips.empty') || 'No trips found.'}</p>`
@@ -190,64 +264,28 @@
 
         renderNextTrip(viagens)
 
-        viagens.forEach(viagem => {
+        // Cada viagem cai em exatamente uma das duas listas (regra única em
+        // static/viagem-status.js, a mesma do app Flutter).
+        const ativas = viagens.filter(v => !viagemJaPassou(v))
+        const passadas = viagens.filter(v => viagemJaPassou(v))
 
-    const card = document.createElement("div")
+        if (ativas.length === 0) {
+            grid.innerHTML = `<p class="trip-date">${t('lobby.noUpcoming')}</p>`
+        }
 
-    card.className = "trip-card"
+        ativas.forEach(viagem => {
+            grid.appendChild(criarCardViagem(viagem, false))
+            enriquecerOrcamento(viagem.id_grupo)
+        })
 
-    card.dataset.id = viagem.id_grupo
-
-    card.innerHTML = `
-        <div class="trip-cover" style="background:${capaPara(viagem.destino_principal)}">
-            <span class="trip-cover-emoji">✈︎</span>
-        </div>
-        <div class="trip-card-body">
-            <strong>${escapeHtml(viagem.nome_grupo)}</strong>
-
-            <div class="trip-date">
-                ${escapeHtml(viagem.destino_principal || "")}
-            </div>
-
-            <div class="trip-date">
-                🗓 ${escapeHtml(viagem.data_inicio || "")} — ${escapeHtml(viagem.data_fim || "")}
-            </div>
-
-            <div class="trip-budget" id="budget-${viagem.id_grupo}"></div>
-        </div>
-    `
-
-    card.addEventListener("click", () => {
-
-        document
-            .querySelectorAll(".trip-card")
-            .forEach(c => c.classList.remove("ativo"))
-
-        card.classList.add("ativo")
-
-        grupoSelecionado = viagem.id_grupo
-
-        const messages = document.getElementById("chatMessages")
-
-        messages.innerHTML = `
-            <div class="message">
-                <strong>AI:</strong>
-                <em>${escapeHtml(viagem.nome_grupo)}</em> ${t('lobby.chat.selected') || 'selected! How can I help?'}
-            </div>
-        `
-    })
-
-    card.addEventListener("dblclick", () => {
-
-        window.location.href =
-            `lobby-pags/viagem.html?id=${viagem.id_grupo}`
-
-    })
-
-    grid.appendChild(card)
-
-    enriquecerOrcamento(viagem.id_grupo)
-})
+        if (passadas.length > 0) {
+            secaoPassadas.style.display = ""
+            document.getElementById("pastTripsCount").textContent = passadas.length
+            passadas.forEach(viagem => {
+                gridPassadas.appendChild(criarCardViagem(viagem, true))
+                enriquecerOrcamento(viagem.id_grupo)
+            })
+        }
     }
 
     async function sendMessage() {

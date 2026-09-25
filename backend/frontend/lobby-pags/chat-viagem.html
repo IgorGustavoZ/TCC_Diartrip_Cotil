@@ -108,6 +108,11 @@
 
         <h1 style="display: flex; align-items: center;"><img src="../imagens/lontra-globo.png" class="emoji-custom" alt="Lontra abraçando a Terra"> <span data-i18n="chatViagem.title"data-i18n="chatViagem.title">Chat IA AI Trip Chat</span></h1>
 
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; color:var(--text-muted); font-size:14px;">
+            <span data-i18n="formViagem.manualHint">Prefer to fill everything at once?</span>
+            <a href="form-viagem.html" data-i18n="formViagem.manualBtn" style="color:var(--primary); font-weight:600; text-decoration:none;">Fill in manually</a>
+        </div>
+
         <div class="container" style="display:flex; flex-direction:column; gap:20px;">
             <div class="chat chat-wizard">
                 <div class="chat-header" style="display: flex; align-items: center;"><img src="../imagens/lontra-globo.png" class="emoji-custom" alt="Lontra abraçando a Terra"> <span data-i18n="chatViagem.header">Diartrip Assistant</span></div>
@@ -432,8 +437,8 @@ async function confirmarCriacao() {
     addBotBubble(escapeHtml(t('chatViagem.creating')))
 
     const preferenciasPartes = []
-    if (dados.participantes) preferenciasPartes.push(`${t('chatViagem.summary.participants')}: ${dados.participantes}`)
-    if (dados.transporte) preferenciasPartes.push(`${t('chatViagem.summary.transport')}: ${dados.transporte}`)
+    if (dados.participantes) preferenciasPartes.push(`Participantes: ${dados.participantes}`)
+    if (dados.transporte) preferenciasPartes.push(`Transporte: ${dados.transporte}`)
     if (dados.preferencias) preferenciasPartes.push(dados.preferencias)
     const preferenciasFinal = preferenciasPartes.join(" | ").slice(0, 1000)
 
