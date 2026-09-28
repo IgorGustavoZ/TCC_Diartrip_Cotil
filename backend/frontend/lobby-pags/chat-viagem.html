@@ -213,9 +213,12 @@ function perguntarTexto(campo, askKey, phKey, maxLen, opcional) {
     const errKeyMap = { nome: "chatViagem.errNome", destino: "chatViagem.errDestino" }
 
     const enviar = () => {
-        const valor = input.value.trim()
-        if (!opcional && !valor) {
+        const valor = input.value.trim()      
+        if ((!opcional && !valor)) {
             mostrarErro(errKeyMap[campo] || "chatViagem.errNome")
+            return
+        }else if((parseInt(valor) <= 0)){
+            mostrarErro(errKeyMap[campo] || "chatViagem.errParticipantes")
             return
         }
         dados[campo] = valor
@@ -254,22 +257,27 @@ function perguntarDestino() {
     `
     const input = document.getElementById("stepInput")
     const sugEl = document.getElementById("sugCidade")
+    let primeiraCidade = ""
 
     input.addEventListener("input", () => {
         setTimeout(async () => {
+            console.log(input.value.trim())
             if (input.value.trim() === "") { sugEl.innerHTML = ""; return }
             try {
                 const resp = await fetch(`/geocode/autocomplete?text=${encodeURIComponent(input.value)}`, { method: "GET", credentials: "include" })
                 if (!resp.ok) return
                 const dadosResp = await resp.json()
                 mostrarCidades(dadosResp.features || [])
-            } catch (e) {}
+            } catch (e) { console.log(e) }
         }, 300)
     })
 
     function mostrarCidades(array) {
         sugEl.innerHTML = ""
+        
+         console.log(array)
         array.forEach(item => {
+            
             const props = item.properties
             const cidade = props.city || props.town || props.village || props.name || ""
             if (!cidade) return
@@ -282,10 +290,11 @@ function perguntarDestino() {
             })
             sugEl.appendChild(div)
         })
+        primeiraCidade = array[0].properties.formatted
     }
 
     const enviar = () => {
-        const valor = input.value.trim()
+        const valor = primeiraCidade
         if (!valor) { mostrarErro("chatViagem.errDestino"); return }
         dados.destino = valor
         sugEl.innerHTML = ""

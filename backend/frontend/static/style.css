@@ -1246,6 +1246,7 @@ option{
     backdrop-filter: blur(14px);
     padding: 18px;
     animation: fadeIn 0.3s ease;
+    margin-bottom: 10px;
 }
 
 .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }

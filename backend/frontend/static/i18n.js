@@ -206,7 +206,7 @@ const TRANSLATIONS = {
     'chatViagem.ph.participantes': 'e.g. 4',
     'chatViagem.ask.orcamento': "What's the total budget for the trip? (R$)",
     'chatViagem.ask.transporte': 'How will you get there? (optional — plane, car, bus...)',
-    'chatViagem.ph.transporte': 'e.g. Plane',
+    'chatViagem.ph.transporte': 'e.g. Car',
     'chatViagem.ask.tipo': 'What style fits this trip best?',
     'chatViagem.ask.preferencias': 'Any other preferences or interests? (optional — beach, food, nature, adventure...)',
     'chatViagem.skip': 'Skip',
@@ -219,6 +219,7 @@ const TRANSLATIONS = {
     'chatViagem.editPick': 'Which field would you like to change?',
     'chatViagem.creating': 'Creating your trip...',
     'chatViagem.errNome': 'Please enter a name for the trip.',
+    'chatViagem.errParticipantes': 'Please enter a name for the trip.',
     'chatViagem.errDestino': 'Please enter a destination.',
     'chatViagem.errData': 'Enter a valid date (not in the past).',
     'chatViagem.errDataFim': 'The end date must be after the start date.',
@@ -693,7 +694,7 @@ const TRANSLATIONS = {
     'chatViagem.ph.participantes': 'ex: 4',
     'chatViagem.ask.orcamento': 'Qual o orçamento total da viagem? (R$)',
     'chatViagem.ask.transporte': 'Como vocês vão se deslocar? (opcional — avião, carro, ônibus...)',
-    'chatViagem.ph.transporte': 'ex: Avião',
+    'chatViagem.ph.transporte': 'ex: Carro',
     'chatViagem.ask.tipo': 'Qual estilo combina mais com essa viagem?',
     'chatViagem.ask.preferencias': 'Mais alguma preferência ou interesse? (opcional — praia, gastronomia, natureza, aventura...)',
     'chatViagem.skip': 'Pular',
@@ -706,6 +707,7 @@ const TRANSLATIONS = {
     'chatViagem.editPick': 'Qual campo você quer corrigir?',
     'chatViagem.creating': 'Criando sua viagem...',
     'chatViagem.errNome': 'Digite um nome para a viagem.',
+    'chatViagem.errParticipantes': 'Please enter a valid number of participants.',
     'chatViagem.errDestino': 'Digite um destino.',
     'chatViagem.errData': 'Informe uma data válida (não pode ser no passado).',
     'chatViagem.errDataFim': 'A data de fim deve ser depois da data de início.',
@@ -1150,10 +1152,8 @@ function injectSelector() {
 
 function highlightActiveNav() {
   const aqui = location.pathname.split('/').pop() || 'lobby.html'
-  console.log(aqui)
   document.querySelectorAll('.sidebar a[href]').forEach(a => {
     const alvo = a.getAttribute('href').split('/').pop()
-    console.log(alvo)
     const item = a.querySelector('.menu-item')
     if (item) item.classList.toggle('nav-active', alvo === aqui)
   })

@@ -1,355 +1,385 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diartrip</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=arrow_back" />
-<link rel="stylesheet" href="../static/style.css?v=4">
-<link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
-<script src="../static/i18n.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diartrip</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=arrow_back" />
+    <link rel="stylesheet" href="../static/style.css?v=4">
+    <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
+    <script src="../static/i18n.js"></script>
 </head>
+
 <body>
     <div class="app">
 
-    <div class="sidebar">
+        <div class="sidebar">
 
-    <a href="../lobby.html">
-        <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
-    </a>
+            <a href="../lobby.html">
+                <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
+            </a>
 
-    <a href="../lobby.html">
-        <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
-    </a>
-    <a href="grupos.html">
-        <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
-    </a>
-    <a href="explorar-viagens.html">
-        <div class="menu-item" data-i18n="nav.explore">✈️ Explore Trips</div>
-    </a>
-    <a href="feed.html">
-            <div class="menu-item" data-i18n="nav.community">🌎 Feed</div>
-    </a>
-    <a href="perfil.html">
-        <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
-    </a>
-    <!-- <a href="chat-viagem.html">
+            <a href="../lobby.html">
+                <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
+            </a>
+            <a href="grupos.html">
+                <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
+            </a>
+            <a href="explorar-viagens.html">
+                <div class="menu-item" data-i18n="nav.explore">✈️ Explore Trips</div>
+            </a>
+            <a href="feed.html">
+                <div class="menu-item" data-i18n="nav.community">🌎 Feed</div>
+            </a>
+            <a href="perfil.html">
+                <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
+            </a>
+            <!-- <a href="chat-viagem.html">
         <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
     </a> -->
-    <a href="chat-viagem.html">
-        <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
-    </a>
+            <a href="chat-viagem.html">
+                <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
+            </a>
 
-    <div class="sidebar-spacer"></div>
-    <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Sair</div>
+            <div class="sidebar-spacer"></div>
+            <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Sair</div>
 
-    </div>
-        
-    <div class="main">
+        </div>
 
-        <h1 data-i18n="formViagem.title">+ New Trip</h1>
+        <div class="main">
 
-        <div class="container" style="display: flex;flex-direction: column;gap: 20px;">
+            <h1 data-i18n="formViagem.title">+ New Trip</h1>
 
-            <h2 data-i18n="formViagem.plan">Plan Trip ✈️</h2>
+            <div class="container" style="display: flex;flex-direction: column;gap: 20px;">
 
-            <div class="field">
-                <label for="nomeViagem" data-i18n="formViagem.name">Trip name</label>
-                <input id="nomeViagem" data-i18n-placeholder="formViagem.name.placeholder" placeholder="e.g. Europe Summer 2025" required>
-            </div>
+                <h2 data-i18n="formViagem.plan">Plan Trip ✈️</h2>
 
-            <div class="field">
-                <label for="cidade" data-i18n="formViagem.city">City</label>
-
-                <input id="cidade" data-i18n-placeholder="formViagem.cityPlaceholder" placeholder="Ex: Paris" required>
-
-                <div class="sugestoes" id="sug-cidade">
-                    
+                <div class="field">
+                    <label for="nomeViagem" data-i18n="formViagem.name">Trip name</label>
+                    <input id="nomeViagem" data-i18n-placeholder="formViagem.name.placeholder"
+                        placeholder="e.g. Europe Summer 2025" required>
                 </div>
+
+                <div class="field">
+                    <label for="cidade" data-i18n="formViagem.city">City</label>
+
+                    <input id="cidade" data-i18n-placeholder="formViagem.cityPlaceholder" placeholder="Ex: Paris"
+                        required>
+
+                    <div class="sugestoes" id="sug-cidade">
+
+                    </div>
+                </div>
+
+                <div class="field" style="flex:1">
+                    <label for="inicio" data-i18n="formViagem.start">Start date</label>
+                    <input id="inicio" type="date" required>
+                </div>
+
+                <div class="field" style="flex:1">
+                    <label for="fim" data-i18n="formViagem.end">End date</label>
+                    <input id="fim" type="date" required>
+                </div>
+
+
+                <div class="field">
+                    <label for="participantes"><span data-i18n="chatViagem.summary.participants">Participants</span>
+                        <span data-i18n="formViagem.optional">(optional)</span></label>
+                    <input id="participantes" type="number" min="1" step="1"
+                        data-i18n-placeholder="chatViagem.ph.participantes" placeholder="ex: 4">
+                </div>
+
+                <div class="field">
+                    <label for="orcamento" data-i18n="formViagem.budget">Your budget (R$)</label>
+                    <input id="orcamento" type="number" min="100" step="1" placeholder="Ex: 3000.00">
+                </div>
+
+                <div class="field">
+                    <label for="transporte"><span data-i18n="chatViagem.summary.transport">Transport</span> <span
+                            data-i18n="formViagem.optional">(optional)</span></label>
+                    <input id="transporte" data-i18n-placeholder="chatViagem.ph.transporte" placeholder="ex: Carro">
+                </div>
+
+                <div class="field">
+                    <label for="tipo" data-i18n="formViagem.type">Trip type</label>
+
+                    <select id="tipo">
+                        <option value="gastronomico" data-i18n="formViagem.type.gastronomic">Gastronômico</option>
+                        <option value="aventura" data-i18n="formViagem.type.adventure">Aventura</option>
+                        <option value="cultural" data-i18n="formViagem.type.cultural">Cultural</option>
+                        <option value="relax" data-i18n="formViagem.type.relax">Relaxamento</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="preferencias" data-i18n="formViagem.prefs.label">Preferências</label>
+
+                    <input id="preferencias" data-i18n-placeholder="formViagem.prefs.placeholder"
+                        placeholder="Ex: museus, restaurantes...">
+                </div>
+
+                <div class="error" style="margin-bottom: 20px;">
+
+                </div>
+
+                <div class="sucess">
+
+                </div>
+
+                <div
+                    style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; color:var(--text-muted); font-size:14px;">
+                    <span data-i18n="formViagem.assistantHint">Prefer to be guided by questions?</span>
+                    <a href="chat-viagem.html" data-i18n="formViagem.assistantBtn"
+                        style="color:var(--primary); font-weight:600; text-decoration:none;">Use the assistant</a>
+                </div>
+
+                <button type="submit" data-i18n="formViagem.submit">Gerar Roteiro</button>
+
+                <div id="result" class="result" style="display: none;" data-i18n="formViagem.generating">
+                    Roteiro sendo gerado...
+                </div>
+
             </div>
+        </div>
 
-            <div class="field" style="flex:1">
-                <label for="inicio" data-i18n="formViagem.start">Start date</label>
-                <input id="inicio" type="date" required>
-            </div>
+        <script>
 
-            <div class="field" style="flex:1">
-                <label for="fim" data-i18n="formViagem.end">End date</label>
-                <input id="fim" type="date" required>
-            </div>
-
-
-            <div class="field">
-                <label for="participantes"><span data-i18n="chatViagem.summary.participants">Participants</span> <span data-i18n="formViagem.optional">(optional)</span></label>
-                <input id="participantes" type="number" min="0" step="1" data-i18n-placeholder="chatViagem.ph.participantes" placeholder="ex: 4">
-            </div>
-
-            <div class="field">
-                <label for="orcamento" data-i18n="formViagem.budget">Your budget (R$)</label>
-                <input id="orcamento" type="number" min="0" step="0.01" placeholder="Ex: 3000.00">
-            </div>
-
-            <div class="field">
-                <label for="transporte"><span data-i18n="chatViagem.summary.transport">Transport</span> <span data-i18n="formViagem.optional">(optional)</span></label>
-                <input id="transporte" data-i18n-placeholder="chatViagem.ph.transporte" placeholder="ex: Carro">
-            </div>
-
-            <div class="field">
-                <label for="tipo" data-i18n="formViagem.type">Trip type</label>
-
-                <select id="tipo">
-                    <option value="gastronomico" data-i18n="formViagem.type.gastronomic">Gastronômico</option>
-                    <option value="aventura" data-i18n="formViagem.type.adventure">Aventura</option>
-                    <option value="cultural" data-i18n="formViagem.type.cultural">Cultural</option>
-                    <option value="relax" data-i18n="formViagem.type.relax">Relaxamento</option>
-                </select>
-            </div>
-
-            <div class="field">
-                <label for="preferencias" data-i18n="formViagem.prefs.label">Preferências</label>
-
-                <input id="preferencias" data-i18n-placeholder="formViagem.prefs.placeholder" placeholder="Ex: museus, restaurantes...">
-            </div>
-
-            <div class="error" style="margin-bottom: 20px;">
-                
-            </div>
-
-            <div class="sucess">
-                
-            </div>
-
-            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; color:var(--text-muted); font-size:14px;">
-                <span data-i18n="formViagem.assistantHint">Prefer to be guided by questions?</span>
-                <a href="chat-viagem.html" data-i18n="formViagem.assistantBtn" style="color:var(--primary); font-weight:600; text-decoration:none;">Use the assistant</a>
-            </div>
-
-            <button type="submit" data-i18n="formViagem.submit">Gerar Roteiro</button>
-
-            <div id="result" class="result" style="display: none;" data-i18n="formViagem.generating">
-                Roteiro sendo gerado...
-            </div>
-
-        </div>       
-    </div>
-
-<script>
-
-    // Monta o campo `preferencias` no formato "Participantes: N | Transporte: X | texto livre"
-    // (mesmo do app Flutter). O gerador de roteiro por IA (roteiro_ia_service) só reconhece
-    // esses rótulos EM PORTUGUÊS, por isso eles NÃO são traduzidos. Limite de 1000 caracteres.
-    function montarPreferenciasViagem(participantes, transporte, preferencias){
-        const partes = []
-        if((participantes || "").trim()) partes.push(`Participantes: ${participantes.trim()}`)
-        if((transporte || "").trim()) partes.push(`Transporte: ${transporte.trim()}`)
-        if((preferencias || "").trim()) partes.push(preferencias.trim())
-        return partes.join(" | ").slice(0, 1000)
-    }
-
-    const viagem = {
-        paisIng: "",
-        cidade: ""
-    }
-
-    const inputNomeViagem = document.querySelector("#nomeViagem")
-    const inputCidade = document.querySelector("#cidade")
-    const inputDataInicio = document.querySelector("#inicio")
-    const inputDataFim = document.querySelector("#fim")
-
-    const orcamento = document.querySelector("#orcamento")
-    const tipoViagem = document.querySelector("#tipo")
-
-    const prefs = document.querySelector("#preferencias")
-    const inputParticipantes = document.querySelector("#participantes")
-    const inputTransporte = document.querySelector("#transporte")
-
-    const divError = document.querySelector(".error")
-    const divSucess = document.querySelector(".sucess")
-
-    document.addEventListener("click", (e)=>{
-
-        if(!e.target.closest("#cidade")){
-
-            const sugestCidades = document.querySelector("#sug-cidade")
-
-            const cidades = [...sugestCidades.children]
-
-            if(cidades.length > 0){
-                cidades[0].click()
+            // Monta o campo `preferencias` no formato "Participantes: N | Transporte: X | texto livre"
+            // (mesmo do app Flutter). O gerador de roteiro por IA (roteiro_ia_service) só reconhece
+            // esses rótulos EM PORTUGUÊS, por isso eles NÃO são traduzidos. Limite de 1000 caracteres.
+            function montarPreferenciasViagem(participantes, transporte, preferencias) {
+                const partes = []
+                if ((participantes || "").trim()) partes.push(`Participantes: ${participantes.trim()}`)
+                if ((transporte || "").trim()) partes.push(`Transporte: ${transporte.trim()}`)
+                if ((preferencias || "").trim()) partes.push(preferencias.trim())
+                return partes.join(" | ").slice(0, 1000)
             }
 
-            sugestCidades.innerHTML = ''
-        }
-    })
-
-    inputCidade.addEventListener("input", ()=>{
-
-        setTimeout(async ()=>{
-
-            if(inputCidade.value.trim() == ""){
-                document.querySelector("#sug-cidade").innerHTML = ""
-                return
+            function analisarDestino(cidade) {
+                console.log(cidade)
+                console.log(cidade.length)
+                if (cidade.length > 0) return true
+                else return false
             }
 
-            const resp = await fetch(`/geocode/autocomplete?text=${encodeURIComponent(inputCidade.value)}`, {
-                method: 'GET',
-                credentials: 'include',
+            const viagem = {
+                paisIng: "",
+                cidade: ""
+            }
+
+            const inputNomeViagem = document.querySelector("#nomeViagem")
+            const inputCidade = document.querySelector("#cidade")
+
+            const inputDataInicio = document.querySelector("#inicio")
+            const inputDataFim = document.querySelector("#fim")
+
+            const orcamento = document.querySelector("#orcamento")
+            const tipoViagem = document.querySelector("#tipo")
+
+            const prefs = document.querySelector("#preferencias")
+            const inputParticipantes = document.querySelector("#participantes")
+            const inputTransporte = document.querySelector("#transporte")
+
+            const divError = document.querySelector(".error")
+            const divSucess = document.querySelector(".sucess")
+
+            document.addEventListener("click", (e) => {
+
+                if (!e.target.closest("#cidade")) {
+
+                    const sugestCidades = document.querySelector("#sug-cidade")
+
+                    const cidades = [...sugestCidades.children]
+
+                    if (cidades.length > 0) {
+                        cidades[0].click()
+                    }
+
+                    sugestCidades.innerHTML = ''
+                }
             })
 
-            if(!resp.ok){
-                return
+            inputCidade.addEventListener("input", () => {
+                setTimeout(async () => {
+
+                    if (inputCidade.value.trim() == "") {
+                        document.querySelector("#sug-cidade").innerHTML = ""
+                        return
+                    }
+
+                    const resp = await fetch(`/geocode/autocomplete?text=${encodeURIComponent(inputCidade.value)}`, {
+                        method: 'GET',
+                        credentials: 'include',
+                    })
+
+                    if (!resp.ok) {
+                        return
+                    }
+
+                    const dados = await resp.json()
+
+                    mostrarCidades(dados['features'])
+
+                }, 300)
+
+            })
+
+            const mostrarCidades = (array) => {
+
+                const sugestCidades = document.querySelector("#sug-cidade")
+
+                sugestCidades.innerHTML = ''
+
+                array.forEach(item => {
+
+                    const props = item.properties
+
+                    const cidade =
+                        props.city ||
+                        props.town ||
+                        props.village ||
+                        props.name ||
+                        ""
+
+                    const estado = props.state || ""
+                    const pais = props.country || ""
+
+                    if (cidade != "") {
+
+                        const div = document.createElement('div')
+
+                        div.innerHTML = props.formatted
+
+                        div.classList.add("item-sugest")
+
+                        div.addEventListener("click", () => {
+
+                            if (cidade == "") {
+
+                                return
+                            }
+
+                            inputCidade.value = props.formatted
+
+                            viagem.cidade = cidade
+                            viagem.paisIng = pais
+
+                            sugestCidades.innerHTML = ''
+
+                        })
+
+                        sugestCidades.append(div)
+                    }
+
+                })
+
+                inputCidade.addEventListener("keydown", function (event) {
+                    console.log(event.key)
+                    if (event.key === "Enter" || event.key === "Tab") {
+                        event.preventDefault()
+
+                        inputCidade.value = array[0].properties.formatted
+                        sugestCidades.innerHTML = ""
+                    }
+                })
+
             }
 
-            const dados = await resp.json()
+            document.querySelector("button[type='submit']").addEventListener('click', async () => {
 
-            mostrarCidades(dados['features'])
+                divError.innerHTML = ""
+                divSucess.innerHTML = ""
 
-        },300)
+                if (
+                    inputNomeViagem.value.trim() == "" ||
+                    inputCidade.value.trim() == "" ||
+                    inputDataInicio.value == "" ||
+                    inputDataFim.value == "" ||
+                    inputCidade.value == ""
+                ) {
+                    divError.innerHTML = t('formViagem.fillAll')
+                    return
+                }
 
-    })
+                const orcamentoValor = parseFloat(orcamento.value)
+                if (isNaN(orcamentoValor) || orcamentoValor < 0) {
+                    divError.innerHTML = t('formViagem.invalidBudget')
+                    return
+                }
 
-    const mostrarCidades = (array)=>{
+                const participantesTxt = inputParticipantes.value.trim()
+                if (participantesTxt !== "" && (!/^\d+$/.test(participantesTxt)) && parseInt(participantesTxt) > 0) {
+                    divError.innerHTML = t('formViagem.invalidInfo')
+                    return
+                }
 
-        const sugestCidades = document.querySelector("#sug-cidade")
+                const hoje = new Date()
+                hoje.setHours(0, 0, 0, 0)
+                const dtInicio = new Date(inputDataInicio.value + "T00:00:00")
+                const dtFim = new Date(inputDataFim.value + "T00:00:00")
 
-        sugestCidades.innerHTML = ''
+                if (dtInicio < hoje || dtFim < hoje || dtFim <= dtInicio) {
+                    divError.innerHTML = t('formViagem.invalidInfo')
+                    return
+                }
 
-        array.forEach(item => {
+                try {
 
-            const props = item.properties
+                    const resp = await fetch("/grupos", {
 
-            const cidade =
-                props.city ||
-                props.town ||
-                props.village ||
-                props.name ||
-                ""
+                        method: "POST",
 
-            const estado = props.state || ""
-            const pais = props.country || ""
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
 
-            if(cidade != ""){
+                        body: JSON.stringify({
 
-                const div = document.createElement('div')
+                            nome_grupo: inputNomeViagem.value.trim(),
 
-                div.innerHTML = props.formatted
+                            destino_principal: inputCidade.value,
 
-                div.classList.add("item-sugest")
+                            data_inicio: inputDataInicio.value,
 
-                div.addEventListener("click", ()=>{
+                            data_fim: inputDataFim.value,
 
-                    if(cidade == ""){
+                            orcamento: orcamentoValor,
+
+                            tipo_viagem: tipoViagem.value,
+
+                            preferencias: montarPreferenciasViagem(participantesTxt, inputTransporte.value, prefs.value)
+                        })
+                    })
+
+                    const dados = await resp.json()
+
+                    if (!resp.ok) {
+
+                        divError.innerHTML =
+                            dados.detail || t('formViagem.error')
 
                         return
                     }
 
-                    inputCidade.value = props.formatted
+                    divSucess.innerHTML = t('formViagem.success')
 
-                    viagem.cidade = cidade
-                    viagem.paisIng = pais
+                    setTimeout(() => {
 
-                    sugestCidades.innerHTML = ''
+                        window.location.href = "../lobby.html"
 
-                })
+                    }, 1200)
 
-                sugestCidades.append(div)
-            }
+                } catch (e) {
 
-        })
+                    divError.innerHTML =
+                        t('formViagem.serverError')
+                }
 
-    }
-
-    document.querySelector("button[type='submit']").addEventListener('click', async ()=>{
-
-        divError.innerHTML = ""
-        divSucess.innerHTML = ""
-
-        if(
-            inputNomeViagem.value.trim() == "" ||
-            inputCidade.value.trim() == "" ||
-            inputDataInicio.value == "" ||
-            inputDataFim.value == ""
-        ){
-            divError.innerHTML = t('formViagem.fillAll')
-            return
-        }
-
-        const orcamentoValor = parseFloat(orcamento.value)
-        if(isNaN(orcamentoValor) || orcamentoValor < 0){
-            divError.innerHTML = t('formViagem.invalidBudget')
-            return
-        }
-
-        const participantesTxt = inputParticipantes.value.trim()
-        if(participantesTxt !== "" && (!/^\d+$/.test(participantesTxt))){
-            divError.innerHTML = t('formViagem.invalidInfo')
-            return
-        }
-
-        const hoje = new Date()
-        hoje.setHours(0, 0, 0, 0)
-        const dtInicio = new Date(inputDataInicio.value + "T00:00:00")
-        const dtFim    = new Date(inputDataFim.value    + "T00:00:00")
-
-        if(dtInicio < hoje || dtFim < hoje || dtFim <= dtInicio){
-            divError.innerHTML = t('formViagem.invalidInfo')
-            return
-        }
-
-        try {
-
-            const resp = await fetch("/grupos", {
-
-                method: "POST",
-
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-
-                body: JSON.stringify({
-
-                    nome_grupo: inputNomeViagem.value.trim(),
-
-                    destino_principal: inputCidade.value,
-
-                    data_inicio: inputDataInicio.value,
-
-                    data_fim: inputDataFim.value,
-
-                    orcamento: orcamentoValor,
-
-                    tipo_viagem: tipoViagem.value,
-
-                    preferencias: montarPreferenciasViagem(participantesTxt, inputTransporte.value, prefs.value)
-                })
             })
 
-            const dados = await resp.json()
-
-            if(!resp.ok){
-
-                divError.innerHTML =
-                    dados.detail || t('formViagem.error')
-
-                return
-            }
-
-            divSucess.innerHTML = t('formViagem.success')
-
-            setTimeout(()=>{
-
-                window.location.href = "../lobby.html"
-
-            },1200)
-
-        } catch(e){
-
-            divError.innerHTML =
-                t('formViagem.serverError')
-        }
-
-    })
-
-</script>
+        </script>
 </body>
+
 </html>
