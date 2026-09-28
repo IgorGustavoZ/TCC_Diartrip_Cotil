@@ -279,6 +279,9 @@ def deletar(id_grupo: int, usuario_id: int) -> dict:
             cursor.execute("SELECT caminho_arquivo FROM fotos WHERE id_grupo=%s", (id_grupo,))
             fotos = [r[0] for r in cursor.fetchall()]
 
+            cursor.execute("SELECT imagem FROM posts WHERE id_grupo=%s AND imagem IS NOT NULL", (id_grupo,))
+            imagens_posts = [r[0] for r in cursor.fetchall()]
+
             # Apaga explicitamente os registros dependentes antes do grupo.
             # Não confiar apenas em ON DELETE CASCADE: o banco real tem ao
             # menos uma FK (gastos -> grupos_viagem) configurada como
@@ -294,13 +297,14 @@ def deletar(id_grupo: int, usuario_id: int) -> dict:
             cursor.execute("DELETE FROM gastos WHERE id_grupo=%s", (id_grupo,))
             cursor.execute("DELETE FROM roteiros WHERE id_grupo=%s", (id_grupo,))
             cursor.execute("DELETE FROM fotos WHERE id_grupo=%s", (id_grupo,))
+            cursor.execute("DELETE FROM posts WHERE id_grupo=%s", (id_grupo,))
             cursor.execute("DELETE FROM chat_ia WHERE id_grupo=%s", (id_grupo,))
             cursor.execute("DELETE FROM mensagens_grupo WHERE id_grupo=%s", (id_grupo,))
             cursor.execute("DELETE FROM viagem_solicitacoes WHERE id_grupo=%s", (id_grupo,))
             cursor.execute("DELETE FROM grupo_membros WHERE id_grupo=%s", (id_grupo,))
             cursor.execute("DELETE FROM grupos_viagem WHERE id_grupo=%s", (id_grupo,))
 
-            for url in fotos:
+            for url in fotos + imagens_posts:
                 deletar_imagem(url)
 
             return {"mensagem": "Grupo deletado"}

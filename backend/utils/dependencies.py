@@ -30,3 +30,14 @@ def verificar_admin_do_grupo(cargo: str = Depends(verificar_pertence_ao_grupo)) 
             status_code=403, detail="Apenas administradores podem realizar esta ação"
         )
     return True
+
+
+def checar_membro_comunidade(cursor, id_comunidade: int, usuario_id: int) -> str:
+    cursor.execute(
+        "SELECT cargo FROM comunidade_membros WHERE id_comunidade=%s AND id_usuario=%s",
+        (id_comunidade, usuario_id),
+    )
+    row = cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=403, detail="Você não pertence a esta comunidade")
+    return row["cargo"]

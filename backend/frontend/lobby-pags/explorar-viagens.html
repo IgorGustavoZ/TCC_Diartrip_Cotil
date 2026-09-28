@@ -117,7 +117,7 @@
 
         <div class="explorar-wrap">
 
-            <div class="busca-card">
+            <div class="busca-card" id="buscaCard">
                 <div class="busca-row">
                     <input id="destinoInput" data-i18n-placeholder="explorar.searchPlaceholder" placeholder="🔎 Search destination...">
                     <button class="btn-buscar" onclick="carregarExplorar()" data-i18n="explorar.searchBtn">Search</button>
@@ -144,7 +144,63 @@ document.getElementById("destinoInput").addEventListener("keydown", e => {
     if (e.key === "Enter") carregarExplorar()
 })
 
+function montarCardExplorar(v) {
+    const periodo = (v.data_inicio && v.data_fim) ? `${v.data_inicio} → ${v.data_fim}` : ""
+    const cheia = v.vagas_ocupadas >= v.limite_participantes
+    const minhaViagem = v.id_criador === meuId
+    const btnLabel = cheia ? t('explorar.full') : t('explorar.viewTrip')
+
+    const acoes = minhaViagem
+        ? `<span class="explorar-own-badge">${t('explorar.ownTrip')}</span>`
+        : `<button class="btn-ver-viagem" ${cheia ? "disabled" : ""} onclick="toggleSolicitar(${v.id_grupo})">${btnLabel}</button>`
+
+    return `
+    <div class="explorar-card" id="explorar-${v.id_grupo}">
+        <p class="explorar-nome">✈︎ ${escapeHtml(v.nome_grupo)}</p>
+        <p class="explorar-criador">${t('explorar.createdBy')} ${escapeHtml(v.criador)}</p>
+        <div class="explorar-meta">
+            ${v.destino_principal ? `<span>✈︎ ${escapeHtml(v.destino_principal)}</span>` : ""}
+            ${periodo ? `<span>${periodo}</span>` : ""}
+            <span class="explorar-vagas${cheia ? " cheia" : ""}">${v.vagas_ocupadas}/${v.limite_participantes} ${t('explorar.participants')}</span>
+            ${v.orcamento_total != null ? `<span>$ ${t('explorar.budgetTotal')}: R$ ${v.orcamento_total.toLocaleString(getLang(), {minimumFractionDigits:2})}</span>` : ""}
+        </div>
+        <div class="explorar-acoes">
+            ${acoes}
+        </div>
+        ${minhaViagem ? "" : `
+        <div class="explorar-solicitar-form" id="solicitarForm-${v.id_grupo}">
+            <textarea id="solicitarMsg-${v.id_grupo}" data-i18n-placeholder="explorar.requestMessagePlaceholder" placeholder="${t('explorar.requestMessagePlaceholder')}"></textarea>
+            <label for="solicitarOrcamento-${v.id_grupo}" data-i18n="explorar.myBudget">${t('explorar.myBudget')}</label>
+            <input type="number" min="0" step="0.01" id="solicitarOrcamento-${v.id_grupo}" data-i18n-placeholder="explorar.myBudgetPlaceholder" placeholder="R$ 0,00">
+            <button class="btn-buscar" onclick="enviarSolicitacao(${v.id_grupo})">${t('explorar.requestSend')}</button>
+            <div class="msg" id="solicitarMsgFeedback-${v.id_grupo}"></div>
+        </div>`}
+    </div>`
+}
+
+// Link "Ver viagem" de uma publicação do Feed (?id=X): mostra só aquela
+// viagem, com um jeito de voltar à busca geral — sem segunda listagem, é a
+// mesma tela/lógica de sempre, só focada num id específico.
+const _idFoco = new URLSearchParams(window.location.search).get("id")
+if (_idFoco) document.getElementById("buscaCard").style.display = "none"
+
+async function carregarViagemFoco(idGrupo) {
+    const resp = await fetch(`/explorar/${idGrupo}`, { credentials: "include" })
+    const lista = document.getElementById("explorarLista")
+    if (!resp.ok) {
+        lista.innerHTML = `<p class="explorar-vazio">${t('explorar.empty')}</p>`
+        return
+    }
+    const viagem = await resp.json()
+    lista.innerHTML = `
+        <button class="btn-buscar" style="margin-bottom:14px;" onclick="window.location.href='explorar-viagens.html'">${t('explorar.backToAll')}</button>
+        ${montarCardExplorar(viagem)}
+    `
+}
+
 async function carregarExplorar() {
+    if (_idFoco) { await carregarViagemFoco(_idFoco); return }
+
     const destino = document.getElementById("destinoInput").value.trim()
     const url = destino ? `/explorar?destino=${encodeURIComponent(destino)}` : "/explorar"
     const resp = await fetch(url, { credentials: "include" })
@@ -158,39 +214,7 @@ async function carregarExplorar() {
         return
     }
 
-    lista.innerHTML = viagens.map(v => {
-        const periodo = (v.data_inicio && v.data_fim) ? `${v.data_inicio} → ${v.data_fim}` : ""
-        const cheia = v.vagas_ocupadas >= v.limite_participantes
-        const minhaViagem = v.id_criador === meuId
-        const btnLabel = cheia ? t('explorar.full') : t('explorar.viewTrip')
-
-        const acoes = minhaViagem
-            ? `<span class="explorar-own-badge">${t('explorar.ownTrip')}</span>`
-            : `<button class="btn-ver-viagem" ${cheia ? "disabled" : ""} onclick="toggleSolicitar(${v.id_grupo})">${btnLabel}</button>`
-
-        return `
-        <div class="explorar-card" id="explorar-${v.id_grupo}">
-            <p class="explorar-nome">✈︎ ${escapeHtml(v.nome_grupo)}</p>
-            <p class="explorar-criador">${t('explorar.createdBy')} ${escapeHtml(v.criador)}</p>
-            <div class="explorar-meta">
-                ${v.destino_principal ? `<span>✈︎ ${escapeHtml(v.destino_principal)}</span>` : ""}
-                ${periodo ? `<span>${periodo}</span>` : ""}
-                <span class="explorar-vagas${cheia ? " cheia" : ""}">${v.vagas_ocupadas}/${v.limite_participantes} ${t('explorar.participants')}</span>
-                ${v.orcamento_total != null ? `<span>$ ${t('explorar.budgetTotal')}: R$ ${v.orcamento_total.toLocaleString(getLang(), {minimumFractionDigits:2})}</span>` : ""}
-            </div>
-            <div class="explorar-acoes">
-                ${acoes}
-            </div>
-            ${minhaViagem ? "" : `
-            <div class="explorar-solicitar-form" id="solicitarForm-${v.id_grupo}">
-                <textarea id="solicitarMsg-${v.id_grupo}" data-i18n-placeholder="explorar.requestMessagePlaceholder" placeholder="${t('explorar.requestMessagePlaceholder')}"></textarea>
-                <label for="solicitarOrcamento-${v.id_grupo}" data-i18n="explorar.myBudget">${t('explorar.myBudget')}</label>
-                <input type="number" min="0" step="0.01" id="solicitarOrcamento-${v.id_grupo}" data-i18n-placeholder="explorar.myBudgetPlaceholder" placeholder="R$ 0,00">
-                <button class="btn-buscar" onclick="enviarSolicitacao(${v.id_grupo})">${t('explorar.requestSend')}</button>
-                <div class="msg" id="solicitarMsgFeedback-${v.id_grupo}"></div>
-            </div>`}
-        </div>`
-    }).join("")
+    lista.innerHTML = viagens.map(montarCardExplorar).join("")
 }
 
 function toggleSolicitar(idGrupo) {

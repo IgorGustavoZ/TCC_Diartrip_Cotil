@@ -30,6 +30,11 @@ def listar_posts(
 async def criar_post(
     conteudo: str = Form("", max_length=5000),
     imagem: Optional[UploadFile] = File(None),
+    id_grupo: Optional[int] = Form(None),
+    id_comunidade: Optional[int] = Form(None),
+    tipo: str = Form("texto"),
+    ref_id_grupo: Optional[int] = Form(None),
+    ref_id_roteiro: Optional[int] = Form(None),
     usuario_id: int = Depends(get_usuario_logado),
 ):
     verificar_rate_limit(f"criar_post:{usuario_id}", limite=20)
@@ -42,7 +47,20 @@ async def criar_post(
         if len(imagem_bytes) > _MAX_POST_FOTO_BYTES:
             raise HTTPException(status_code=413, detail="Imagem muito grande. Máximo 10 MB.")
 
-    return post_service.criar(usuario_id, conteudo, imagem_bytes, imagem_ext)
+    return post_service.criar(
+        usuario_id, conteudo, imagem_bytes, imagem_ext,
+        id_grupo, id_comunidade, tipo, ref_id_grupo, ref_id_roteiro,
+    )
+
+
+@router.get("/grupos/{id_grupo}/posts", response_model=list[PostResponse])
+def posts_do_grupo(id_grupo: int, usuario_id: int = Depends(get_usuario_logado)):
+    return post_service.listar_por_grupo(id_grupo, usuario_id)
+
+
+@router.get("/comunidades/{id_comunidade}/posts", response_model=list[PostResponse])
+def posts_da_comunidade(id_comunidade: int, usuario_id: int = Depends(get_usuario_logado)):
+    return post_service.listar_por_comunidade(id_comunidade, usuario_id)
 
 
 @router.post("/posts/{id_post}/curtir", response_model=CurtirResponse)

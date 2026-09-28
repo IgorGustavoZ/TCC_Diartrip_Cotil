@@ -45,6 +45,20 @@ class TestPublicarViagem:
             resp = client_admin.put("/grupos/10/publicar", json={"publica": False})
         assert resp.status_code == 200
 
+    def test_despublicar_remove_publicacoes_que_compartilharam_a_viagem(self, client_admin):
+        # invariante: nao pode sobrar no Feed uma publicacao "compartilhou
+        # esta viagem" de uma viagem que deixou de ser publica (o botao
+        # [Ver viagem] dependeria de algo que nao existe mais).
+        cur = _cur(fetchones=[(1,), {"cargo": "admin"}], rowcount=1)
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.put("/grupos/10/publicar", json={"publica": False})
+        assert resp.status_code == 200
+        assert any(
+            "DELETE FROM posts" in c.args[0] and "tipo='viagem'" in c.args[0]
+            for c in cur.execute.call_args_list
+        )
+
     def test_membro_comum_nao_pode_publicar(self, client_usuario):
         cur = _cur(fetchones=[(1,), {"cargo": "membro"}])
         conn = make_connection(cur)

@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diartrip - Feed</title>
+<title>Diartrip - Explorar</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../static/style.css?v=4">
+<link rel="stylesheet" href="../static/style.css?v=5">
 <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
 <script src="../static/i18n.js"></script>
 <script src="../static/confirm-modal.js"></script>
@@ -53,6 +53,69 @@
     flex-shrink: 0; white-space: nowrap;
 }
 .feed-coment-input button:hover { color: var(--accent); }
+
+/* Post-referência (compartilhou uma viagem/roteiro) — um cartão dentro do
+   post, com os dados ATUAIS do que foi compartilhado (a API já entrega isso
+   pronto em ref_grupo/ref_roteiro; nunca é texto copiado no momento do
+   compartilhamento). */
+.post-ref-selo { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; }
+.post-ref-card {
+    border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+    background: var(--surface-2); margin-top: 8px;
+}
+.post-ref-titulo { font-size: 15px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+.post-ref-sub { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; }
+.post-ref-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--text-secondary); }
+.post-ref-desc { font-size: 13px; color: var(--text-secondary); white-space: pre-wrap; line-height: 1.5; margin-top: 6px; }
+.post-ref-btn {
+    display: inline-block; margin-top: 10px; background: var(--gradient); color: #fff;
+    border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+}
+
+/* Comunidades */
+.explorar-wrap { max-width: 720px; margin: 0 auto; }
+.busca-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px; margin-bottom: 24px; box-shadow: var(--shadow-sm); backdrop-filter: blur(14px);
+    display: flex; flex-direction: column; gap: 12px;
+}
+.busca-row { display: flex; gap: 10px; }
+.busca-row input {
+    flex: 1; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 14px; color: var(--text); font-size: 15px; outline: none;
+}
+.busca-row input:focus { border-color: var(--primary); background: var(--surface); }
+.btn-buscar {
+    background: var(--gradient); color: #fff; border: none; border-radius: 8px; padding: 10px 20px;
+    font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.btn-buscar:hover { opacity: 0.9; }
+.btn-nova-comunidade {
+    align-self: flex-start; background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.btn-nova-comunidade:hover { background: var(--surface); }
+
+.form-comunidade { display: none; flex-direction: column; gap: 10px; margin-top: 4px; }
+.form-comunidade.aberto { display: flex; }
+.form-comunidade input, .form-comunidade textarea {
+    width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; outline: none; font-family: inherit;
+}
+.form-comunidade textarea { resize: vertical; min-height: 60px; }
+.form-comunidade label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+.form-comunidade .msg { font-size: 12px; color: var(--danger); }
+
+.comunidade-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px 20px; margin-bottom: 14px; box-shadow: var(--shadow-sm); backdrop-filter: blur(14px);
+}
+.comunidade-nome { font-size: 16px; font-weight: 700; color: var(--text); margin: 0 0 4px; cursor: pointer; }
+.comunidade-nome:hover { text-decoration: underline; }
+.comunidade-meta { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; }
+.comunidade-desc { font-size: 13px; color: var(--text-secondary); margin: 0 0 12px; }
+.explorar-vazio { color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 0; }
 </style>
 </head>
 <body>
@@ -89,33 +152,62 @@
 
     <div class="main">
         <div class="header">
-            <h2 data-i18n="feed.header">Feed</h2>
+            <h2 data-i18n="explorar.tabsHeader">Explorar</h2>
             <a href="perfil.html" id="userChip" style="display:flex;align-items:center;background:var(--surface-2);border:1px solid var(--border);padding:4px;border-radius:50%;cursor:pointer;transition:background 0.2s;text-decoration:none;color:inherit;">
                 <div id="avatarMini" style="width:36px;height:36px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">?</div>
             </a>
         </div>
-        <div class="feed-wrap">
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTabExplorar(this, 'publicacoes')" data-i18n="explorar.tab.posts">📰 Publicações</button>
+            <button class="tab-btn" onclick="switchTabExplorar(this, 'comunidades')" data-i18n="explorar.tab.comunidades">👥 Comunidades</button>
+        </div>
 
-            <div class="create-card">
-                <div class="av" id="avCreate">?</div>
-                <div class="create-right">
-                    <textarea id="postTexto" data-i18n-placeholder="feed.placeholder" placeholder="Share something about your trip..."></textarea>
-                    <div class="img-preview-wrap" id="imgPreviewWrap">
-                        <img id="imgPreview" src="" alt="">
-                        <button class="btn-rm-img" onclick="removerImagem()">✕</button>
-                    </div>
-                    <div class="create-actions">
-                        <label class="btn-foto-post">
-                            <span data-i18n="feed.photo">📷 Foto</span>
-                            <input type="file" id="postFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
-                        </label>
-                        <button class="btn-publicar" id="btnPublicar" onclick="publicar()" data-i18n="feed.publish">Publicar</button>
+        <div id="tabExplorar-publicacoes" class="tab-content active">
+            <div class="feed-wrap">
+
+                <div class="create-card">
+                    <div class="av" id="avCreate">?</div>
+                    <div class="create-right">
+                        <textarea id="postTexto" data-i18n-placeholder="feed.placeholder" placeholder="Share something about your trip..."></textarea>
+                        <div class="img-preview-wrap" id="imgPreviewWrap">
+                            <img id="imgPreview" src="" alt="">
+                            <button class="btn-rm-img" onclick="removerImagem()">✕</button>
+                        </div>
+                        <div class="create-actions">
+                            <label class="btn-foto-post">
+                                <span data-i18n="feed.photo">📷 Foto</span>
+                                <input type="file" id="postFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+                            </label>
+                            <button class="btn-publicar" id="btnPublicar" onclick="publicar()" data-i18n="feed.publish">Publicar</button>
+                        </div>
                     </div>
                 </div>
+
+                <div id="feedLista"></div>
+
             </div>
+        </div>
 
-            <div id="feedLista"></div>
-
+        <div id="tabExplorar-comunidades" class="tab-content">
+            <div class="explorar-wrap">
+                <div class="busca-card">
+                    <div class="busca-row">
+                        <input id="comunidadeBuscaInput" data-i18n-placeholder="comunidades.searchPlaceholder" placeholder="🔎 Search communities...">
+                        <button class="btn-buscar" onclick="carregarComunidades()" data-i18n="explorar.searchBtn">Search</button>
+                    </div>
+                    <button class="btn-nova-comunidade" onclick="toggleFormComunidade()" data-i18n="comunidades.newBtn">+ Criar comunidade</button>
+                    <div class="form-comunidade" id="formComunidade">
+                        <input id="comunidadeNome" maxlength="150" data-i18n-placeholder="comunidades.form.name" placeholder="Nome">
+                        <textarea id="comunidadeDescricao" maxlength="2000" data-i18n-placeholder="comunidades.form.desc" placeholder="Descrição"></textarea>
+                        <input id="comunidadeCategoria" maxlength="100" data-i18n-placeholder="comunidades.form.category" placeholder="Categoria/destino (ex: Japão, Mochilão)">
+                        <label><input type="radio" name="comunidadePriv" value="publica" checked> <span data-i18n="comunidades.form.public">Pública</span></label>
+                        <label><input type="radio" name="comunidadePriv" value="privada"> <span data-i18n="comunidades.form.private">Privada</span></label>
+                        <span class="msg" id="comunidadeFormErro" style="display:none;"></span>
+                        <button class="btn-buscar" onclick="criarComunidade()" data-i18n="comunidades.form.submit">Criar comunidade</button>
+                    </div>
+                </div>
+                <div id="comunidadesLista"><p class="explorar-vazio" data-i18n="common.loading">Carregando...</p></div>
+            </div>
         </div>
     </div>
 </div>
@@ -126,8 +218,103 @@ if (!sessionStorage.getItem("logado")) window.location.href = "../login.html"
 
 document.addEventListener('languageChanged', () => {
     applyTranslations()
-    carregarFeed()
+    if (_abaExplorarAtiva === 'publicacoes') carregarFeed()
+    else carregarComunidades()
 })
+
+// ── Abas: Publicações (feed baseado em compartilhamento) / Comunidades ──
+// "Viagens públicas" NÃO tem uma segunda listagem aqui — quem cuida disso é
+// explorar-viagens.html, como sempre foi. O Feed só mostra o que alguém
+// decidiu compartilhar (texto, ou uma referência a uma viagem/roteiro).
+let _abaExplorarAtiva = 'publicacoes'
+const _abasExplorarCarregadas = new Set(['publicacoes'])
+
+function switchTabExplorar(btn, aba) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+    document.getElementById(`tabExplorar-${aba}`).classList.add('active')
+    btn.classList.add('active')
+    _abaExplorarAtiva = aba
+
+    if (_abasExplorarCarregadas.has(aba)) return
+    _abasExplorarCarregadas.add(aba)
+    if (aba === 'comunidades') carregarComunidades()
+}
+
+document.getElementById("comunidadeBuscaInput")?.addEventListener("keydown", e => {
+    if (e.key === "Enter") carregarComunidades()
+})
+
+function toggleFormComunidade() {
+    document.getElementById("formComunidade").classList.toggle("aberto")
+}
+
+async function criarComunidade() {
+    const nome = document.getElementById("comunidadeNome").value.trim()
+    const descricao = document.getElementById("comunidadeDescricao").value.trim()
+    const categoria = document.getElementById("comunidadeCategoria").value.trim()
+    const privacidade = document.querySelector('input[name="comunidadePriv"]:checked').value
+    const erro = document.getElementById("comunidadeFormErro")
+    erro.style.display = "none"
+
+    if (nome.length < 3) {
+        erro.textContent = t('comunidades.form.nameError')
+        erro.style.display = "inline"
+        return
+    }
+
+    try {
+        const resp = await fetch("/comunidades", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nome, descricao, categoria, privacidade })
+        })
+        const dados = await resp.json()
+        if (!resp.ok) {
+            erro.textContent = dados.detail || t('comunidades.form.error')
+            erro.style.display = "inline"
+            return
+        }
+        document.getElementById("comunidadeNome").value = ""
+        document.getElementById("comunidadeDescricao").value = ""
+        document.getElementById("comunidadeCategoria").value = ""
+        toggleFormComunidade()
+        window.location.href = `comunidade.html?id=${dados.id_comunidade}`
+    } catch (e) {
+        erro.textContent = t('comunidades.form.error')
+        erro.style.display = "inline"
+    }
+}
+
+async function carregarComunidades() {
+    const busca = document.getElementById("comunidadeBuscaInput").value.trim()
+    const url = busca ? `/comunidades?busca=${encodeURIComponent(busca)}` : "/comunidades"
+    const resp = await fetch(url, { credentials: "include" })
+    if (!resp.ok) return
+
+    const comunidades = await resp.json()
+    const lista = document.getElementById("comunidadesLista")
+
+    if (comunidades.length === 0) {
+        lista.innerHTML = `<p class="explorar-vazio">${t('comunidades.empty')}</p>`
+        return
+    }
+
+    lista.innerHTML = comunidades.map(c => `
+        <div class="comunidade-card">
+            <p class="comunidade-nome" onclick="window.location.href='comunidade.html?id=${c.id_comunidade}'">
+                ${c.privacidade === 'privada' ? '🔒' : '👥'} ${escapeHtml(c.nome)}
+            </p>
+            <p class="comunidade-meta">
+                ${c.total_membros} ${t('comunidades.members')}${c.categoria ? ` · ${escapeHtml(c.categoria)}` : ''}
+                ${c.sou_membro ? ` · ${t('comunidades.youAreMember')}` : ''}
+            </p>
+            ${c.descricao ? `<p class="comunidade-desc">${escapeHtml(c.descricao)}</p>` : ''}
+            <button class="post-ref-btn" onclick="window.location.href='comunidade.html?id=${c.id_comunidade}'">${t('comunidades.viewBtn')}</button>
+        </div>
+    `).join("")
+}
 
 let arquivoSelecionado = null
 
@@ -200,6 +387,40 @@ document.getElementById("postTexto").addEventListener("keydown", (e) => {
     if (e.key === "Enter" && e.ctrlKey) publicar()
 })
 
+// Card de referência dentro de um post: tipo='viagem' mostra os dados ATUAIS
+// da viagem (ref_grupo, já lidos ao vivo pela API) com um link pra seção de
+// Viagens Públicas existente — nunca uma segunda listagem aqui, só uma porta
+// de entrada pra ela. tipo='roteiro' mostra o conteúdo do roteiro (ref_roteiro)
+// direto no card, sem precisar navegar pra lugar nenhum.
+function montarCardReferencia(p) {
+    if (p.tipo === 'viagem' && p.ref_grupo) {
+        const g = p.ref_grupo
+        const periodo = (g.data_inicio && g.data_fim) ? `${g.data_inicio} → ${g.data_fim}` : ""
+        return `
+        <p class="post-ref-selo">🧳 ${t('feed.ref.sharedTrip')}</p>
+        <div class="post-ref-card">
+            <p class="post-ref-titulo">${escapeHtml(g.nome_grupo)}</p>
+            <div class="post-ref-meta">
+                ${g.destino_principal ? `<span>📍 ${escapeHtml(g.destino_principal)}</span>` : ""}
+                ${periodo ? `<span>${periodo}</span>` : ""}
+                ${g.limite_participantes != null ? `<span>👥 ${g.vagas_ocupadas}/${g.limite_participantes}</span>` : ""}
+            </div>
+            <a class="post-ref-btn" href="explorar-viagens.html?id=${g.id_grupo}">${t('feed.ref.viewTrip')}</a>
+        </div>`
+    }
+    if (p.tipo === 'roteiro' && p.ref_roteiro) {
+        const r = p.ref_roteiro
+        return `
+        <p class="post-ref-selo">📍 ${t('feed.ref.sharedItinerary')}</p>
+        <div class="post-ref-card">
+            <p class="post-ref-titulo">${escapeHtml(r.titulo)}</p>
+            <p class="post-ref-sub">${escapeHtml(r.nome_grupo)}</p>
+            <div class="post-ref-desc">${escapeHtml(r.descricao || "")}</div>
+        </div>`
+    }
+    return ""
+}
+
 async function carregarFeed() {
     const resp = await fetch("/posts", {
         credentials: "include"
@@ -256,6 +477,7 @@ async function carregarFeed() {
             </div>
             ${p.conteudo ? `<p class="post-texto">${escapeHtml(p.conteudo)}</p>` : ''}
             ${imgHtml}
+            ${montarCardReferencia(p)}
             <div class="post-acoes">
                 ${curtBtn}
                 <button class="btn-comentar" onclick="toggleComentarios(${p.id_post})">

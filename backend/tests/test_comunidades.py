@@ -1,0 +1,219 @@
+"""test_comunidades.py — Comunidades (grupos temáticos, não são viagens)."""
+from unittest.mock import MagicMock, patch
+
+from tests.conftest import fake_get_db, make_connection, make_cursor
+
+COMUNIDADE_PAYLOAD = {
+    "nome": "Amantes do Japão",
+    "descricao": "Para quem ama viajar para o Japão",
+    "categoria": "Japão",
+    "privacidade": "publica",
+}
+
+
+class TestCriarComunidade:
+    def test_usuario_pode_criar_comunidade(self, client_usuario):
+        cur = make_cursor(rows=[(1,)], lastrowid=7)
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.post("/comunidades", json=COMUNIDADE_PAYLOAD)
+        assert resp.status_code == 201
+        assert resp.json()["id_comunidade"] == 7
+
+    def test_criador_vira_admin_da_comunidade(self, client_usuario):
+        cur = make_cursor(rows=[(1,)], lastrowid=7)
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.post("/comunidades", json=COMUNIDADE_PAYLOAD)
+        assert resp.status_code == 201
+        insert_membro = next(
+            c for c in cur.execute.call_args_list if "INSERT INTO comunidade_membros" in c.args[0]
+        )
+        assert "'admin'" in insert_membro.args[0]
+        assert insert_membro.args[1] == (7, 1)
+
+    def test_nome_muito_curto_retorna_422(self, client_usuario):
+        payload = dict(COMUNIDADE_PAYLOAD, nome="Ja")
+        resp = client_usuario.post("/comunidades", json=payload)
+        assert resp.status_code == 422
+
+    def test_privacidade_invalida_retorna_422(self, client_usuario):
+        payload = dict(COMUNIDADE_PAYLOAD, privacidade="secreta")
+        resp = client_usuario.post("/comunidades", json=payload)
+        assert resp.status_code == 422
+
+    def test_criar_sem_autenticacao_retorna_401(self, client):
+        resp = client.post("/comunidades", json=COMUNIDADE_PAYLOAD)
+        assert resp.status_code == 401
+
+
+class TestListarComunidades:
+    def test_lista_comunidades(self, client_usuario):
+        comunidade = {
+            "id_comunidade": 1, "nome": "Amantes do Japão", "descricao": "desc",
+            "categoria": "Japão", "privacidade": "publica", "criado_por": 5,
+            "criador": "Maria", "total_membros": 3, "sou_membro": 0,
+        }
+        cur = MagicMock()
+        cur.fetchone.return_value = (1,)
+        cur.fetchall.return_value = [comunidade]
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/comunidades")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]["sou_membro"] is False
+
+    def test_listar_sem_autenticacao_retorna_401(self, client):
+        resp = client.get("/comunidades")
+        assert resp.status_code == 401
+
+
+class TestDetalharComunidade:
+    def test_comunidade_publica_qualquer_um_ve(self, client_usuario):
+        cur = make_cursor(rows=[
+            (1,),
+            {"id_comunidade": 1, "nome": "Amantes do Japão", "descricao": None,
+             "categoria": "Japão", "privacidade": "publica", "criado_por": 5,
+             "criador": "Maria", "total_membros": 3},
+            None,  # nao e' membro
+        ])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/comunidades/1")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["sou_membro"] is False
+        assert data["meu_cargo"] is None
+
+    def test_comunidade_privada_nao_membro_recebe_403(self, client_usuario):
+        cur = make_cursor(rows=[
+            (1,),
+            {"id_comunidade": 1, "nome": "Clube fechado", "descricao": None,
+             "categoria": None, "privacidade": "privada", "criado_por": 5,
+             "criador": "Maria", "total_membros": 3},
+            None,
+        ])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/comunidades/1")
+        assert resp.status_code == 403
+
+    def test_comunidade_privada_membro_ve_normalmente(self, client_usuario):
+        cur = make_cursor(rows=[
+            (1,),
+            {"id_comunidade": 1, "nome": "Clube fechado", "descricao": None,
+             "categoria": None, "privacidade": "privada", "criado_por": 5,
+             "criador": "Maria", "total_membros": 3},
+            {"cargo": "membro"},
+        ])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/comunidades/1")
+        assert resp.status_code == 200
+        assert resp.json()["sou_membro"] is True
+
+    def test_comunidade_inexistente_retorna_404(self, client_usuario):
+        cur = make_cursor(rows=[(1,), None])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/comunidades/999")
+        assert resp.status_code == 404
+
+
+class TestEntrarComunidade:
+    def test_entra_em_comunidade_publica(self, client_usuario):
+        cur = make_cursor(rows=[(1,), {"privacidade": "publica"}, None])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.post("/comunidades/1/entrar")
+        assert resp.status_code == 200
+
+    def test_nao_pode_entrar_em_comunidade_privada_sozinho(self, client_usuario):
+        cur = make_cursor(rows=[(1,), {"privacidade": "privada"}])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.post("/comunidades/1/entrar")
+        assert resp.status_code == 403
+
+    def test_ja_e_membro_retorna_400(self, client_usuario):
+        cur = make_cursor(rows=[(1,), {"privacidade": "publica"}, (1,)])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.post("/comunidades/1/entrar")
+        assert resp.status_code == 400
+
+    def test_comunidade_inexistente_retorna_404(self, client_usuario):
+        cur = make_cursor(rows=[(1,), None])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.post("/comunidades/999/entrar")
+        assert resp.status_code == 404
+
+    def test_entrar_sem_autenticacao_retorna_401(self, client):
+        resp = client.post("/comunidades/1/entrar")
+        assert resp.status_code == 401
+
+
+class TestSairComunidade:
+    def test_membro_sai_da_comunidade(self, client_usuario):
+        cur = make_cursor(rows=[(1,), {"criado_por": 5}], rowcount=1)
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.delete("/comunidades/1/sair")
+        assert resp.status_code == 200
+
+    def test_criador_nao_pode_sair(self, client_usuario):
+        cur = make_cursor(rows=[(1,), {"criado_por": 1}])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.delete("/comunidades/1/sair")
+        assert resp.status_code == 400
+
+    def test_nao_membro_recebe_400(self, client_usuario):
+        cur = make_cursor(rows=[(1,), {"criado_por": 5}], rowcount=0)
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.delete("/comunidades/1/sair")
+        assert resp.status_code == 400
+
+    def test_comunidade_inexistente_retorna_404(self, client_usuario):
+        cur = make_cursor(rows=[(1,), None])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.delete("/comunidades/999/sair")
+        assert resp.status_code == 404
+
+
+class TestPostsDaComunidade:
+    def test_membro_pode_listar_posts(self, client_usuario):
+        cur = MagicMock()
+        cur.fetchone.side_effect = [(1,), {"cargo": "membro"}]
+        cur.fetchall.return_value = []
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/comunidades/1/posts")
+        assert resp.status_code == 200
+        assert resp.json() == []
+
+    def test_nao_membro_nao_pode_listar_posts(self, client_usuario):
+        cur = make_cursor(rows=[(1,), None])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/comunidades/1/posts")
+        assert resp.status_code == 403
+
+    def test_membro_pode_publicar_na_comunidade(self, client_usuario):
+        cur = make_cursor(rows=[(1,), {"cargo": "membro"}])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.post("/posts", data={"conteudo": "Alguém já foi a Osaka?", "id_comunidade": 1})
+        assert resp.status_code == 201
+
+    def test_nao_membro_nao_pode_publicar_na_comunidade(self, client_usuario):
+        cur = make_cursor(rows=[(1,), None])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.post("/posts", data={"conteudo": "Intruso", "id_comunidade": 1})
+        assert resp.status_code == 403

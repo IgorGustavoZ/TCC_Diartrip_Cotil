@@ -176,8 +176,33 @@ class ComentarioResponse(BaseModel):
     foto_perfil: Optional[str] = None
 
 
+class PostRefGrupo(BaseModel):
+    """Dados ATUAIS da viagem referenciada por uma publicação tipo='viagem'
+    — lidos ao vivo de grupos_viagem, nunca copiados para o post."""
+    id_grupo: int
+    nome_grupo: str
+    destino_principal: Optional[str] = None
+    data_inicio: Optional[date] = None
+    data_fim: Optional[date] = None
+    vagas_ocupadas: int = 0
+    limite_participantes: Optional[int] = None
+
+
+class PostRefRoteiro(BaseModel):
+    """Dados ATUAIS do roteiro referenciado por uma publicação tipo='roteiro'
+    — lidos ao vivo de roteiros, nunca copiados para o post."""
+    id_roteiro: int
+    id_grupo: int
+    titulo: str
+    descricao: Optional[str] = None
+    nome_grupo: str
+
+
 class PostResponse(BaseModel):
     id_post: int
+    id_grupo: Optional[int] = None
+    id_comunidade: Optional[int] = None
+    tipo: str = "texto"
     conteudo: str
     imagem: Optional[str] = None
     data_criacao: datetime
@@ -187,6 +212,10 @@ class PostResponse(BaseModel):
     curtidas: int = 0
     ja_curtiu: int = 0
     comentarios: list[ComentarioResponse] = []
+    ref_id_grupo: Optional[int] = None
+    ref_id_roteiro: Optional[int] = None
+    ref_grupo: Optional[PostRefGrupo] = None
+    ref_roteiro: Optional[PostRefRoteiro] = None
 
 
 class PostCriado(BaseModel):
@@ -312,3 +341,24 @@ class SolicitacaoResponse(BaseModel):
 class SolicitacaoCriada(BaseModel):
     mensagem: str
     id_solicitacao: int
+
+
+class ComunidadeResponse(BaseModel):
+    """Uma comunidade NÃO é uma viagem: sem datas, sem roteiro — é um grupo
+    temático (ex.: "Amantes do Japão"), reaproveitando o mesmo molde de
+    grupos_viagem/grupo_membros (cargo admin/membro) como entidade própria."""
+    id_comunidade: int
+    nome: str
+    descricao: Optional[str] = None
+    categoria: Optional[str] = None
+    privacidade: str
+    criado_por: int
+    criador: str
+    total_membros: int = 0
+    sou_membro: bool = False
+    meu_cargo: Optional[str] = None
+
+
+class ComunidadeCriada(BaseModel):
+    mensagem: str
+    id_comunidade: int

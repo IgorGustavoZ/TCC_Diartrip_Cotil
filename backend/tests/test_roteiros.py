@@ -149,3 +149,5 @@ class TestDeletarRoteiro:
         with patch("database.get_db", fake_get_db(conn)):
             resp = client_usuario.delete("/roteiros/1")
         assert resp.status_code == 403
+
+

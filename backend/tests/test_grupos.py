@@ -452,9 +452,48 @@ class TestAdminGrupo:
         idx_divisao = next(i for i, s in enumerate(sqls) if "DELETE dg FROM divisao_gastos" in s)
         idx_grupo = next(i for i, s in enumerate(sqls) if s.strip().startswith("DELETE FROM grupos_viagem"))
 
+        idx_posts = next(i for i, s in enumerate(sqls) if s.strip().startswith("DELETE FROM posts"))
+
         assert idx_divisao < idx_gastos < idx_grupo
+        assert idx_posts < idx_grupo
         assert any("DELETE FROM grupo_membros" in s for s in sqls)
         assert any("DELETE FROM viagem_solicitacoes" in s for s in sqls)
+
+    def test_deletar_grupo_remove_imagens_do_mini_feed(self, client_admin):
+        call_count = [0]
+        cursor_service = MagicMock()
+        cursor_service.rowcount = 1
+        cursor_service.fetchone.return_value = (99,)  # criado_por
+
+        def fetchall_por_chamada():
+            sql = cursor_service.execute.call_args.args[0]
+            if "FROM fotos" in sql:
+                return []
+            if "FROM posts" in sql:
+                return [("https://res.cloudinary.com/x/post1.jpg",)]
+            return []
+        cursor_service.fetchall.side_effect = fetchall_por_chamada
+
+        def factory(**kw):
+            call_count[0] += 1
+            if call_count[0] == 1:
+                c = MagicMock()
+                c.fetchone.return_value = (1,)
+                return c
+            return cursor_service
+
+        conn = MagicMock()
+        conn.cursor.side_effect = factory
+        conn.commit = MagicMock()
+        conn.rollback = MagicMock()
+        conn.close = MagicMock()
+
+        with patch("database.get_db", fake_get_db(conn)), \
+             patch("services.grupo_service.deletar_imagem") as mock_deletar_imagem:
+            resp = client_admin.delete("/grupos/10")
+
+        assert resp.status_code == 200
+        mock_deletar_imagem.assert_any_call("https://res.cloudinary.com/x/post1.jpg")
 
     def test_admin_nao_criador_nao_pode_deletar_grupo(self, client_admin):
         # client_admin autentica como usuario_id=99, mas quem criou o grupo foi o usuario 1.

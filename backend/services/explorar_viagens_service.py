@@ -49,6 +49,15 @@ def publicar(id_grupo: int, publica: bool, limite_participantes: int | None) -> 
                     "UPDATE grupos_viagem SET publica=0 WHERE id_grupo=%s",
                     (id_grupo,),
                 )
+                # Uma publicação "compartilhou esta viagem" só faz sentido
+                # enquanto ela é pública — o botão [Ver viagem] depende disso
+                # (mesma regra de explorar_viagens_service.detalhar_publica).
+                # Despublicar remove essas publicações; não mexe no mini feed
+                # privado do grupo (posts.id_grupo), que é outra coisa.
+                cursor.execute(
+                    "DELETE FROM posts WHERE tipo='viagem' AND ref_id_grupo=%s",
+                    (id_grupo,),
+                )
                 mensagem = "Viagem removida de Explorar Viagens"
 
             if cursor.rowcount == 0:
@@ -240,6 +249,32 @@ def aceitar_solicitacao(id_solicitacao: int, usuario_id: int) -> dict:
                 (usuario_id, id_solicitacao),
             )
             return {"mensagem": "Solicitação aceita. Usuário adicionado à viagem."}
+        finally:
+            cursor.close()
+
+
+def listar_roteiros_compartilhados(limite: int = 20, offset: int = 0) -> list:
+    """Roteiros que os próprios admins marcaram como compartilhados, de
+    viagens que continuam públicas. É sempre uma referência ao roteiro/viagem
+    originais (JOIN direto) — nunca uma cópia do conteúdo."""
+    with get_db() as conexao:
+        cursor = conexao.cursor(dictionary=True)
+        try:
+            cursor.execute(
+                """
+                SELECT r.id_roteiro, r.id_grupo, r.titulo, r.descricao, r.data_criacao,
+                       g.nome_grupo, g.destino_principal,
+                       g.criado_por AS id_criador, u.nome AS criador
+                FROM roteiros r
+                JOIN grupos_viagem g ON g.id_grupo = r.id_grupo
+                JOIN usuarios u ON u.id_usuario = g.criado_por
+                WHERE r.compartilhado_explorar = 1 AND g.publica = 1
+                ORDER BY r.data_criacao DESC
+                LIMIT %s OFFSET %s
+                """,
+                (limite, offset),
+            )
+            return cursor.fetchall()
         finally:
             cursor.close()
 

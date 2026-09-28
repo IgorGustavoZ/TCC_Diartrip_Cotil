@@ -10,6 +10,43 @@
 <script src="../static/i18n.js"></script>
 <script src="../static/confirm-modal.js"></script>
 <script src="../static/viagem-status.js"></script>
+<style>
+/* Mini feed (aba Momentos) — mesmas classes de curtir/comentar do Feed
+   global (backend/frontend/lobby-pags/feed.html), reaproveitadas aqui pra
+   não duplicar a UI de post/curtida/comentário em dois lugares. */
+.post-acoes { display: flex; gap: 8px; margin-top: 10px; }
+.btn-curtir, .btn-comentar {
+    display: flex; align-items: center; gap: 5px;
+    background: none; border: 1px solid var(--border); border-radius: 20px;
+    color: var(--text-muted); font-size: 13px; padding: 5px 12px !important; height: auto !important;
+    cursor: pointer; font-family: inherit; transition: background 0.2s, border-color 0.2s;
+}
+.btn-curtir:hover, .btn-comentar:hover { background: var(--surface-2); border-color: var(--border-strong); }
+.btn-curtir.curtido { color: var(--danger); border-color: rgba(var(--danger-rgb),0.35); }
+.btn-curtir:disabled { opacity: 0.6; cursor: not-allowed; }
+.feed-comentarios { margin-top: 10px; }
+.feed-coments-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.feed-coment { display: flex; gap: 8px; align-items: flex-start; }
+.feed-cav {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    background: var(--gradient); display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff;
+}
+.feed-cav img { width: 100%; height: 100%; object-fit: cover; }
+.feed-ctxt { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.feed-cnome { font-weight: 700; color: var(--text); margin-right: 4px; }
+.feed-coment-input { display: flex; gap: 6px; align-items: flex-end; margin-top: 4px; }
+.feed-coment-input input {
+    flex: 1; padding: 8px 14px; border-radius: 20px; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text); font-size: 13px; font-family: inherit; transition: border 0.2s;
+}
+.feed-coment-input input:focus { outline: none; border-color: var(--primary); background: var(--surface); }
+.feed-coment-input button {
+    background: none; border: none; padding: 0 4px !important; height: auto !important;
+    color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0; white-space: nowrap;
+}
+.feed-coment-input button:hover { color: var(--accent); }
+</style>
 </head>
 <body>
 
@@ -67,6 +104,7 @@
             <button class="tab-btn"        data-tab="admin"    id="adminTabBtn" style="display:none;" onclick="switchTab(this, 'admin')" data-i18n="viagem.tab.admin">👑 Admin</button>
             <button class="tab-btn"        data-tab="gastos"   onclick="switchTab(this, 'gastos')"  data-i18n="viagem.tab.expenses">💸 Expenses</button>
             <button class="tab-btn"        data-tab="roteiro"  onclick="switchTab(this, 'roteiro')" data-i18n="viagem.tab.itinerary">📋 Itinerary</button>
+            <button class="tab-btn"        data-tab="momentos" onclick="switchTab(this, 'momentos')" data-i18n="viagem.tab.moments">📸 Moments</button>
             <button class="tab-btn"        data-tab="chat"     onclick="switchTab(this, 'chat')"    data-i18n="viagem.tab.chat">💬 Chat</button>
             <button class="tab-btn"        data-tab="info"     onclick="switchTab(this, 'info')"    data-i18n="viagem.tab.info">📌 Info</button>
         </div>
@@ -273,6 +311,33 @@
                 </div>
             </div>
 
+            <div id="tab-momentos" class="tab-content">
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.momentsTitle">📸 Momentos da Viagem</h2>
+                    <p style="color:var(--text-muted); font-size:13px; margin:-8px 0 16px;" data-i18n="viagem.momentsDesc">Só quem participa desta viagem vê e publica aqui.</p>
+
+                    <div class="create-card" style="margin-bottom:20px;">
+                        <div class="av" id="momentoAvCreate">?</div>
+                        <div class="create-right">
+                            <textarea id="momentoTexto" data-i18n-placeholder="viagem.moments.placeholder" placeholder="Compartilhe um momento desta viagem..."></textarea>
+                            <div class="img-preview-wrap" id="momentoImgPreviewWrap">
+                                <img id="momentoImgPreview" src="" alt="">
+                                <button class="btn-rm-img" onclick="removerImagemMomento()">✕</button>
+                            </div>
+                            <div class="create-actions">
+                                <label class="btn-foto-post">
+                                    <span data-i18n="feed.photo">📷 Foto</span>
+                                    <input type="file" id="momentoFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+                                </label>
+                                <button class="btn-publicar" id="btnPublicarMomento" onclick="publicarMomento()" data-i18n="feed.publish">Publicar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="momentosLista"><p style="color:var(--text-muted); font-size:14px; text-align:center; padding:30px 0;" data-i18n="viagem.moments.empty">Nenhum momento compartilhado ainda.</p></div>
+                </div>
+            </div>
+
             <div id="tab-chat" class="tab-content">
                 <div class="trip-card-expanded" style="display:flex; flex-direction:column; height:520px; padding:20px;">
                     <h2 style="margin:0 0 16px; flex-shrink:0;" data-i18n="viagem.groupChat">💬 Chat do Grupo</h2>
@@ -357,6 +422,16 @@
                     <button id="btnSalvarConfigViagem" onclick="salvarConfigViagem()" style="margin-top:14px; background:var(--gradient); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.settings.save">Salvar alterações</button>
                     <span id="erroConfigViagem" style="display:none; color:var(--danger); font-size:12px; margin-top:8px;"></span>
                     <span id="sucessoConfigViagem" style="display:none; color:var(--success); font-size:12px; margin-top:8px;"></span>
+                </div>
+
+                <div class="trip-card-expanded" id="cardCompartilharViagem" style="display:none;">
+                    <h2 data-i18n="viagem.shareTrip.title">🧳 Compartilhar viagem no Feed</h2>
+                    <p id="compartilharViagemAviso" style="color:var(--text-muted); font-size:13px; margin:0 0 12px;" data-i18n="viagem.shareTrip.needsPublic">Torne a viagem pública em Explorar Viagens para poder compartilhá-la no Feed.</p>
+                    <div id="compartilharViagemBox" style="display:none;">
+                        <textarea id="compartilharViagemTexto" data-i18n-placeholder="viagem.shareTrip.placeholder" placeholder="Conte um pouco sobre a viagem (opcional)..." style="width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; resize:vertical; min-height:70px; outline:none;"></textarea>
+                        <button onclick="compartilharViagem()" style="margin-top:10px; background:var(--gradient); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.shareTrip.submit">Compartilhar viagem</button>
+                        <span id="compartilharViagemMsg" style="display:none; color:var(--danger); font-size:12px; margin-left:10px;"></span>
+                    </div>
                 </div>
 
                 <div class="trip-card-expanded" style="border:1px solid rgba(var(--danger-rgb),0.3);">
@@ -557,6 +632,36 @@ function validarDatasConfig(dataInicio, dataFim, dataMudou) {
     return null
 }
 
+async function compartilharViagem() {
+    const texto = document.getElementById("compartilharViagemTexto").value.trim()
+    const msg = document.getElementById("compartilharViagemMsg")
+    msg.style.display = "none"
+
+    const form = new FormData()
+    form.append("conteudo", texto)
+    form.append("tipo", "viagem")
+    form.append("ref_id_grupo", idGrupo)
+
+    try {
+        const resp = await fetch("/posts", { method: "POST", credentials: "include", body: form })
+        if (resp.ok) {
+            document.getElementById("compartilharViagemTexto").value = ""
+            msg.style.color = "var(--success)"
+            msg.textContent = t('viagem.shareTrip.success')
+            msg.style.display = "inline"
+        } else {
+            const e = await resp.json().catch(() => ({}))
+            msg.style.color = "var(--danger)"
+            msg.textContent = e.detail || t('viagem.shareTrip.error')
+            msg.style.display = "inline"
+        }
+    } catch (e) {
+        msg.style.color = "var(--danger)"
+        msg.textContent = t('viagem.shareTrip.error')
+        msg.style.display = "inline"
+    }
+}
+
 async function salvarConfigViagem() {
     const erro = document.getElementById("erroConfigViagem")
     const sucesso = document.getElementById("sucessoConfigViagem")
@@ -739,6 +844,17 @@ async function carregarDashboard() {
         if (!viagemPassada) {
             document.getElementById("roteiroFormAdd").style.display = "block"
             document.getElementById("roteiroIaBox").style.display = "flex"
+        }
+        // "Compartilhar viagem" cria uma publicação no Feed que referencia
+        // esta viagem — só faz sentido pro admin, com a viagem pública (o
+        // botão [Ver viagem] da publicação depende disso) e ainda ativa.
+        const cardShare = document.getElementById("cardCompartilharViagem")
+        if (!viagemPassada) {
+            cardShare.style.display = ""
+            document.getElementById("compartilharViagemAviso").style.display = grupoAtual?.publica ? "none" : ""
+            document.getElementById("compartilharViagemBox").style.display = grupoAtual?.publica ? "block" : "none"
+        } else {
+            cardShare.style.display = "none"
         }
         carregarMembrosAdmin()
         if (!viagemPassada) carregarExplorarAdmin()
@@ -960,6 +1076,7 @@ function switchTab(btn, tabName) {
         conectarChatWS()
     }
     if (tabName === 'roteiro') carregarRoteiro()
+    if (tabName === 'momentos') carregarMomentos()
 }
 
 function _renderMsgHtml(m) {
@@ -1052,7 +1169,8 @@ async function carregarRoteiro() {
                     <div style="font-size:13px;color:var(--text-muted);white-space:pre-wrap;">${escapeHtml(r.descricao)}</div>
                 </div>
                 ${isAdmin && !viagemPassada ? `
-                <div style="display:flex;gap:6px;flex-shrink:0;">
+                <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;">
+                    <button onclick="toggleCompartilharRoteiro(${r.id_roteiro})" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text-secondary);font-size:12px;cursor:pointer;">${t('viagem.itinerary.shareBtn')}</button>
                     <button onclick="iniciarEdicaoRoteiro(${r.id_roteiro},'${escapeAtr(r.titulo)}','${escapeAtr(r.descricao)}')" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text-secondary);font-size:12px;cursor:pointer;">${t('viagem.itinerary.edit')}</button>
                     <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:var(--danger-soft);border:none;border-radius:6px;padding:6px 10px;color:var(--danger);font-size:12px;cursor:pointer;">🗑</button>
                 </div>` : ""}
@@ -1065,6 +1183,15 @@ async function carregarRoteiro() {
                     <button onclick="cancelarEdicaoRoteiro(${r.id_roteiro})" style="background:var(--surface);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;">${t('viagem.itinerary.cancel')}</button>
                 </div>
             </div>
+            ${isAdmin && !viagemPassada ? `
+            <div id="rshare-${r.id_roteiro}" style="display:none;margin-top:12px;">
+                <textarea id="rshareTexto-${r.id_roteiro}" data-i18n-placeholder="viagem.itinerary.shareCaption" placeholder="Escreva uma legenda (opcional)..." style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;resize:vertical;min-height:50px;outline:none;"></textarea>
+                <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+                    <button onclick="publicarCompartilharRoteiro(${r.id_roteiro})" style="background:var(--gradient);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">${t('viagem.itinerary.shareConfirm')}</button>
+                    <button onclick="document.getElementById('rshare-${r.id_roteiro}').style.display='none'" style="background:var(--surface);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;">${t('viagem.itinerary.cancel')}</button>
+                    <span id="rshareMsg-${r.id_roteiro}" style="font-size:12px;color:var(--danger);display:none;"></span>
+                </div>
+            </div>` : ""}
         </div>
     `).join("")
 }
@@ -1172,6 +1299,238 @@ function deletarRoteiroItem(id) {
             if (resp.ok) carregarRoteiro()
         }
     })
+}
+
+// Compartilhar roteiro cria uma PUBLICAÇÃO no Feed (POST /posts, tipo=
+// 'roteiro') que referencia este roteiro — não é mais um flag liga/desliga.
+// Não depende da viagem ser pública: o conteúdo do roteiro já vai embutido
+// na publicação.
+function toggleCompartilharRoteiro(id) {
+    const painel = document.getElementById(`rshare-${id}`)
+    if (!painel) return
+    const aberto = painel.style.display !== "none"
+    painel.style.display = aberto ? "none" : "block"
+    if (!aberto) document.getElementById(`rshareTexto-${id}`)?.focus()
+}
+
+async function publicarCompartilharRoteiro(id) {
+    const texto = document.getElementById(`rshareTexto-${id}`).value.trim()
+    const msg = document.getElementById(`rshareMsg-${id}`)
+    msg.style.display = "none"
+
+    const form = new FormData()
+    form.append("conteudo", texto)
+    form.append("tipo", "roteiro")
+    form.append("ref_id_roteiro", id)
+
+    try {
+        const resp = await fetch("/posts", { method: "POST", credentials: "include", body: form })
+        if (resp.ok) {
+            document.getElementById(`rshare-${id}`).style.display = "none"
+            document.getElementById(`rshareTexto-${id}`).value = ""
+        } else {
+            const e = await resp.json().catch(() => ({}))
+            msg.textContent = e.detail || t('viagem.itinerary.shareError')
+            msg.style.display = "inline"
+        }
+    } catch (e) {
+        msg.textContent = t('viagem.itinerary.shareError')
+        msg.style.display = "inline"
+    }
+}
+
+// ── Momentos (mini feed do grupo) ──
+// Mesmo modelo/endpoints de backend/frontend/lobby-pags/feed.html (POST/GET
+// /posts com id_grupo), só que escopado à viagem — visível apenas aos
+// membros. Sem vídeo, de propósito: só texto e 1 foto, igual ao Feed global.
+async function carregarAvatarMomento() {
+    const resp = await fetch("/usuarios/me", { credentials: "include" })
+    if (!resp.ok) return
+    const u = await resp.json()
+    const el = document.getElementById("momentoAvCreate")
+    if (u.foto_perfil) el.innerHTML = `<img src="${u.foto_perfil}">`
+    else el.textContent = u.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+}
+carregarAvatarMomento()
+
+let arquivoMomentoSelecionado = null
+
+document.getElementById("momentoFotoInput").addEventListener("change", (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    arquivoMomentoSelecionado = file
+    document.getElementById("momentoImgPreview").src = URL.createObjectURL(file)
+    document.getElementById("momentoImgPreviewWrap").style.display = "block"
+})
+
+function removerImagemMomento() {
+    arquivoMomentoSelecionado = null
+    document.getElementById("momentoFotoInput").value = ""
+    document.getElementById("momentoImgPreview").src = ""
+    document.getElementById("momentoImgPreviewWrap").style.display = "none"
+}
+
+async function publicarMomento() {
+    const texto = document.getElementById("momentoTexto").value.trim()
+    if (!texto && !arquivoMomentoSelecionado) return
+
+    const btn = document.getElementById("btnPublicarMomento")
+    btn.disabled = true
+
+    const form = new FormData()
+    form.append("conteudo", texto)
+    form.append("id_grupo", idGrupo)
+    if (arquivoMomentoSelecionado) form.append("imagem", arquivoMomentoSelecionado)
+
+    try {
+        const resp = await fetch("/posts", { method: "POST", credentials: "include", body: form })
+        if (resp.ok) {
+            document.getElementById("momentoTexto").value = ""
+            removerImagemMomento()
+            carregarMomentos()
+        }
+    } finally {
+        btn.disabled = false
+    }
+}
+
+async function carregarMomentos() {
+    const resp = await fetch(`/grupos/${idGrupo}/posts`, { credentials: "include" })
+    if (!resp.ok) return
+    const posts = await resp.json()
+    const lista = document.getElementById("momentosLista")
+
+    if (posts.length === 0) {
+        lista.innerHTML = `<p style="color:var(--text-muted); font-size:14px; text-align:center; padding:30px 0;">${t('viagem.moments.empty')}</p>`
+        return
+    }
+
+    lista.innerHTML = posts.map(p => {
+        const iniciais = p.nome.trim().split(" ").map(x => x[0]).slice(0, 2).join("").toUpperCase()
+        const av = p.foto_perfil ? `<div class="av"><img src="${p.foto_perfil}"></div>` : `<div class="av">${iniciais}</div>`
+        const delBtn = p.id_usuario === meuId
+            ? `<button class="btn-del-post" onclick="deletarMomento(${p.id_post})">${t('common.delete')}</button>`
+            : ""
+        const imgHtml = p.imagem ? `<img class="post-img" src="${p.imagem}" alt="">` : ""
+        const jaCurtiu = p.ja_curtiu === 1
+        const curtBtn = `<button class="btn-curtir${jaCurtiu ? " curtido" : ""}" onclick="curtirMomento(${p.id_post}, this)">
+            <span class="curtir-icon">${jaCurtiu ? "❤️" : "🤍"}</span>
+            <span class="curtir-count">${p.curtidas ?? 0}</span>
+        </button>`
+        const nComents = p.comentarios?.length ?? 0
+        const comentHtml = p.comentarios?.length ? p.comentarios.map(c => {
+            const ini = (c.nome||"?").trim().split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase()
+            const cAv = c.foto_perfil ? `<img src="${escapeAtr(c.foto_perfil)}" alt="">` : ini
+            return `<div class="feed-coment">
+                <div class="feed-cav">${cAv}</div>
+                <div class="feed-ctxt"><span class="feed-cnome">${escapeHtml(c.nome)}</span> ${escapeHtml(c.conteudo)}</div>
+            </div>`
+        }).join("") : ""
+
+        return `
+        <div class="post-card" id="momento-${p.id_post}">
+            <div class="post-header">
+                ${av}
+                <div class="post-meta">
+                    <span class="post-autor" onclick="window.location.href='perfil.html?id=${p.id_usuario}'">${escapeHtml(p.nome)}</span>
+                    <span class="post-data">${formatarDataMomento(p.data_criacao)}</span>
+                </div>
+                ${delBtn}
+            </div>
+            ${p.conteudo ? `<p class="post-texto">${escapeHtml(p.conteudo)}</p>` : ''}
+            ${imgHtml}
+            <div class="post-acoes">
+                ${curtBtn}
+                <button class="btn-comentar" onclick="toggleComentariosMomento(${p.id_post})">💬 <span>${nComents}</span></button>
+            </div>
+            <div class="feed-comentarios" id="momentoComents-${p.id_post}" style="display:none">
+                <div class="feed-coments-lista" id="momentoListaComents-${p.id_post}">${comentHtml}</div>
+                <div class="feed-coment-input">
+                    <input type="text" id="momentoInputComent-${p.id_post}" placeholder="${t('feed.addComment')}"
+                           onkeydown="if(event.key==='Enter'){event.preventDefault();enviarComentarioMomento(${p.id_post})}">
+                    <button onclick="enviarComentarioMomento(${p.id_post})">${t('feed.publish')}</button>
+                </div>
+            </div>
+        </div>`
+    }).join("")
+}
+
+function deletarMomento(id) {
+    abrirModalConfirmacao({
+        titulo: t('feed.confirmDelete'),
+        mensagem: t('feed.confirmDeleteBody'),
+        textoConfirmar: t('common.delete'),
+        tipo: 'perigo',
+        onConfirmar: async () => {
+            const resp = await fetch(`/posts/${id}`, { method: "DELETE", credentials: "include" })
+            if (resp.ok) document.getElementById(`momento-${id}`)?.remove()
+        }
+    })
+}
+
+async function curtirMomento(idPost, btn) {
+    btn.disabled = true
+    try {
+        const resp = await fetch(`/posts/${idPost}/curtir`, { method: "POST", credentials: "include" })
+        if (!resp.ok) return
+        const data = await resp.json()
+        const icon = btn.querySelector(".curtir-icon")
+        const count = btn.querySelector(".curtir-count")
+        btn.classList.toggle("curtido", data.curtiu)
+        icon.textContent = data.curtiu ? "❤️" : "🤍"
+        count.textContent = data.total_curtidas
+    } finally {
+        btn.disabled = false
+    }
+}
+
+function toggleComentariosMomento(idPost) {
+    const el = document.getElementById(`momentoComents-${idPost}`)
+    if (!el) return
+    const aberto = el.style.display !== "none"
+    el.style.display = aberto ? "none" : "block"
+    if (!aberto) document.getElementById(`momentoInputComent-${idPost}`)?.focus()
+}
+
+async function enviarComentarioMomento(idPost) {
+    const input = document.getElementById(`momentoInputComent-${idPost}`)
+    const texto = input?.value.trim()
+    if (!texto) return
+    input.disabled = true
+    try {
+        const resp = await fetch(`/posts/${idPost}/comentar`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ conteudo: texto })
+        })
+        if (!resp.ok) return
+        const c = await resp.json()
+        const lista = document.getElementById(`momentoListaComents-${idPost}`)
+        const ini = (c.nome||"?").trim().split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase()
+        const cAv = c.foto_perfil ? `<img src="${escapeAtr(c.foto_perfil)}" alt="">` : ini
+        lista.insertAdjacentHTML("beforeend", `
+            <div class="feed-coment">
+                <div class="feed-cav">${cAv}</div>
+                <div class="feed-ctxt"><span class="feed-cnome">${escapeHtml(c.nome)}</span> ${escapeHtml(c.conteudo)}</div>
+            </div>`)
+        const btnSpan = document.querySelector(`#momento-${idPost} .btn-comentar span`)
+        if (btnSpan) btnSpan.textContent = parseInt(btnSpan.textContent || "0") + 1
+        input.value = ""
+    } finally {
+        input.disabled = false
+        input.focus()
+    }
+}
+
+function formatarDataMomento(iso) {
+    const d = new Date(iso)
+    const diff = Math.floor((new Date() - d) / 1000)
+    if (diff < 60) return t('feed.date.now')
+    if (diff < 3600) return `há ${Math.floor(diff / 60)}${t('feed.date.min')}`
+    if (diff < 86400) return `há ${Math.floor(diff / 3600)}${t('feed.date.hour')}`
+    if (diff < 604800) return `há ${Math.floor(diff / 86400)}${t('feed.date.days')}`
+    return d.toLocaleDateString(getLang())
 }
 
 async function carregarMembrosAdmin() {
@@ -1409,7 +1768,7 @@ function escapeAtr(txt) {
     return String(txt).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\n/g,"\\n")
 }
 
-const TABS_VALIDAS = ["geral", "pessoal", "admin", "gastos", "roteiro", "chat", "info"]
+const TABS_VALIDAS = ["geral", "pessoal", "admin", "gastos", "roteiro", "momentos", "chat", "info"]
 const tabInicial = params.get("tab")
 if (tabInicial && TABS_VALIDAS.includes(tabInicial)) {
     const btn = document.querySelector(`.tab-btn[data-tab="${tabInicial}"]`)

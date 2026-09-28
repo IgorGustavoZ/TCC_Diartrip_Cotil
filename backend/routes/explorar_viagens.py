@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from typing import Optional
-from schemas import ExplorarViagemResponse, SolicitacaoResponse, SolicitacaoCriada, MensagemResponse
+from schemas import (
+    ExplorarViagemResponse, SolicitacaoResponse, SolicitacaoCriada, MensagemResponse,
+)
 from utils.auth import get_usuario_logado
 from utils.dependencies import verificar_admin_do_grupo
 from utils.rate_limiter import verificar_rate_limit
