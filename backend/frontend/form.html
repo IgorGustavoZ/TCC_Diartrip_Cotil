@@ -3,11 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="static/style.css?v=4">
+    <link rel="stylesheet" href="static/style.css?v=5">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <title>Diartrip - Sign Up</title>
     <link rel="shortcut icon" href="imagens/favicon-diartrip.png" type="image/x-icon">
     <script src="static/i18n.js"></script>
+    <style>
+        .signup-secao-titulo {
+            font-size: 13px; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.04em; margin: 0;
+        }
+        .signup-divisor { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+        .signup-foto-row { display: flex; align-items: center; gap: 16px; }
+        .signup-foto-av {
+            width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+            background: var(--surface-2); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; color: var(--text-muted);
+        }
+        .signup-foto-av img { width: 100%; height: 100%; object-fit: cover; }
+        .signup-foto-av.tem-foto { background: var(--gradient); }
+        .signup-foto-btn {
+            background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+            padding: 9px 16px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer;
+        }
+        .signup-foto-btn:hover { background: var(--surface); }
+        .signup-upload-status { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+    </style>
 </head>
 <body>
     <header>
@@ -16,6 +38,8 @@
     <section style="padding:100px 20px; max-width:600px; margin:auto; position: relative;">
         <h2 class="section-title titulo" style="margin-bottom:20px;" data-i18n="register.title">Sign Up</h2>
         <form id="signupForm" style="display:flex; flex-direction:column; gap:22px; background:var(--surface); padding:40px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow-md); position:relative;">
+
+        <p class="signup-secao-titulo" data-i18n="register.section.personal">Personal information</p>
 
         <div class="field">
         <label data-i18n="register.name.label">Name</label>
@@ -38,7 +62,33 @@
         </span>
         <span class="error" id="passwordError"></span>
         </div>
+
+        <div class="field" style="position:relative">
+        <label data-i18n="register.pass.confirmLabel">Confirm password</label>
+        <input id="passwordConfirm" type="password" data-i18n-placeholder="register.pass.confirmPlaceholder" placeholder="Repeat your password" required>
+        <span id="toggleConfirmPassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);">⌣</span>
+        <span class="error" id="passwordConfirmError"></span>
+        </div>
+
+        <hr class="signup-divisor">
+
+        <p class="signup-secao-titulo" data-i18n="register.section.photo">Profile photo (optional)</p>
+
+        <div class="field">
+        <div class="signup-foto-row">
+            <div class="signup-foto-av" id="signupFotoAv">👤</div>
+            <div>
+                <label class="signup-foto-btn" id="signupFotoBtnLabel">
+                    <span id="signupFotoBtnTexto" data-i18n="register.photo.add">Add photo</span>
+                    <input type="file" id="signupFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+                </label>
+                <div class="signup-upload-status" id="signupFotoErro" style="display:none; color:var(--danger);"></div>
+            </div>
+        </div>
+        </div>
+
         <input class="cta" id="submit" type="submit" data-i18n-value="register.submit" value="Create Account">
+        <div class="signup-upload-status" id="uploadStatus" style="display:none; text-align:center;"></div>
         <div class="login"><a href="login.html" data-i18n="register.hasAccount">Already have an account? Click here.</a></div>
 
     </form>
@@ -51,21 +101,54 @@
     const nameInput = document.getElementById("name")
     const emailInput = document.getElementById("email")
     const passwordInput = document.getElementById("password")
+    const passwordConfirmInput = document.getElementById("passwordConfirm")
     const togglePassword = document.getElementById("togglePassword")
+    const toggleConfirmPassword = document.getElementById("toggleConfirmPassword")
 
     const nameError = document.getElementById("nameError")
     const emailError = document.getElementById("emailError")
     const passwordError = document.getElementById("passwordError")
+    const passwordConfirmError = document.getElementById("passwordConfirmError")
     const submitBtn = document.getElementById("submit")
+    const uploadStatus = document.getElementById("uploadStatus")
 
-    togglePassword.addEventListener("click", () => {
-        if (passwordInput.type === "password") {
-            passwordInput.type = "text"
-            togglePassword.textContent = "👁"
+    function toggleVer(input, botao) {
+        if (input.type === "password") {
+            input.type = "text"
+            botao.textContent = "👁"
         } else {
-            passwordInput.type = "password"
-            togglePassword.textContent = "⌣"
+            input.type = "password"
+            botao.textContent = "⌣"
         }
+    }
+    togglePassword.addEventListener("click", () => toggleVer(passwordInput, togglePassword))
+    toggleConfirmPassword.addEventListener("click", () => toggleVer(passwordConfirmInput, toggleConfirmPassword))
+
+    // ── Foto de perfil (opcional) ──
+    // Reaproveita o mesmo endpoint de upload já usado em perfil.html
+    // (PATCH /usuarios/{id}/foto) — só que aqui a conta ainda não existe no
+    // momento da escolha da foto, então o upload de fato só acontece DEPOIS
+    // de criar a conta e fazer login, logo antes de ir para o lobby.
+    let fotoSelecionada = null
+    const fotoInput = document.getElementById("signupFotoInput")
+    const fotoAv = document.getElementById("signupFotoAv")
+    const fotoBtnTexto = document.getElementById("signupFotoBtnTexto")
+    const fotoErro = document.getElementById("signupFotoErro")
+
+    fotoInput.addEventListener("change", (e) => {
+        const file = e.target.files[0]
+        fotoErro.style.display = "none"
+        if (!file) return
+        if (file.size > 5 * 1024 * 1024) {
+            fotoErro.textContent = t("register.photo.tooLarge")
+            fotoErro.style.display = "block"
+            fotoInput.value = ""
+            return
+        }
+        fotoSelecionada = file
+        fotoAv.classList.add("tem-foto")
+        fotoAv.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="">`
+        fotoBtnTexto.textContent = t("register.photo.change")
     })
 
     form.addEventListener("submit", async function(e) {
@@ -74,6 +157,7 @@
         nameError.textContent = ""
         emailError.textContent = ""
         passwordError.textContent = ""
+        passwordConfirmError.textContent = ""
 
         let valid = true
 
@@ -96,6 +180,11 @@
             valid = false
         } else if (!/[0-9]/.test(senha)) {
             passwordError.textContent = t("register.err.passNum")
+            valid = false
+        }
+
+        if (passwordConfirmInput.value !== senha) {
+            passwordConfirmError.textContent = t("register.err.passMismatch")
             valid = false
         }
 
@@ -157,6 +246,22 @@
             const respJson = await respLogin.json()
             sessionStorage.setItem("id", respJson.usuario_id)
             sessionStorage.setItem("logado", "1")
+
+            if (fotoSelecionada) {
+                uploadStatus.textContent = t("register.photo.uploading")
+                uploadStatus.style.display = "block"
+                try {
+                    const fotoForm = new FormData()
+                    fotoForm.append("foto", fotoSelecionada)
+                    await fetch(`/usuarios/${respJson.usuario_id}/foto`, {
+                        method: "PATCH", credentials: "include", body: fotoForm
+                    })
+                    // Conta já foi criada com sucesso — se o upload da foto
+                    // falhar por qualquer motivo, não bloqueia o cadastro;
+                    // a pessoa pode adicionar a foto depois no perfil.
+                } catch (e) { /* best-effort */ }
+            }
+
             window.location.href = "lobby.html"
 
         } catch (err) {

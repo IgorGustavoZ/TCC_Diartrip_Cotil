@@ -418,6 +418,10 @@ function selecionarViagem(indice) {
     fecharSeletor()
 }
 
+// A unidade de compartilhamento é o ROTEIRO COMPLETO da viagem — não um dia
+// nem um item isolado. Não existe um "id de roteiro" separado: o conjunto de
+// itens de uma viagem já É o roteiro dela, então 1 clique na viagem já
+// seleciona o roteiro inteiro (sem uma segunda etapa de escolher item).
 async function abrirSeletorRoteiro() {
     abrirSeletor(t('feed.shareItinerary.pickerTitle'))
     const corpo = document.getElementById("seletorCorpo")
@@ -425,50 +429,27 @@ async function abrirSeletorRoteiro() {
 
     const resp = await fetch("/grupos/administradas", { credentials: "include" })
     if (!resp.ok) { corpo.innerHTML = `<p class="seletor-vazio">${t('feed.shareTrip.pickerError')}</p>`; return }
-    const viagens = await resp.json()
+    const viagens = (await resp.json()).filter(v => v.total_itens_roteiro > 0)
 
     if (viagens.length === 0) {
         corpo.innerHTML = `<p class="seletor-vazio">${t('feed.shareItinerary.pickerEmpty')}</p>`
         return
     }
 
-    corpo.innerHTML = `
-        <select class="seletor-select" id="seletorRoteiroViagem" onchange="carregarRoteirosDoSeletor(this.value)">
-            <option value="" disabled selected>${t('feed.shareItinerary.chooseTrip')}</option>
-            ${viagens.map(v => `<option value="${v.id_grupo}">${escapeHtml(v.nome_grupo)}</option>`).join("")}
-        </select>
-        <div id="seletorRoteiroLista"></div>
-    `
-    window._viagensAdministradas = Object.fromEntries(viagens.map(v => [v.id_grupo, v]))
-}
-
-async function carregarRoteirosDoSeletor(idGrupo) {
-    const lista = document.getElementById("seletorRoteiroLista")
-    lista.innerHTML = `<p class="seletor-vazio">${t('common.loading')}</p>`
-    const resp = await fetch(`/grupos/${idGrupo}/roteiros`, { credentials: "include" })
-    if (!resp.ok) { lista.innerHTML = `<p class="seletor-vazio">${t('feed.shareTrip.pickerError')}</p>`; return }
-    const roteiros = await resp.json()
-
-    if (roteiros.length === 0) {
-        lista.innerHTML = `<p class="seletor-vazio">${t('feed.shareItinerary.noItineraries')}</p>`
-        return
-    }
-
-    const nomeGrupo = window._viagensAdministradas[idGrupo]?.nome_grupo || ""
-    lista.innerHTML = roteiros.map((r, i) => `
+    corpo.innerHTML = viagens.map((v, i) => `
         <div class="seletor-item" onclick="selecionarRoteiro(${i})">
-            <p class="seletor-item-nome">📍 ${escapeHtml(r.titulo)}</p>
-            <p class="seletor-item-meta">${escapeHtml(nomeGrupo)}</p>
+            <p class="seletor-item-nome">📍 ${escapeHtml(v.nome_grupo)}</p>
+            <p class="seletor-item-meta">${v.destino_principal ? escapeHtml(v.destino_principal) + " · " : ""}${v.total_itens_roteiro} ${t('feed.shareItinerary.items')}</p>
         </div>
     `).join("")
-    window._roteirosSelecionaveis = roteiros.map(r => ({ ...r, nome_grupo: nomeGrupo }))
+    window._viagensRoteiro = viagens
 }
 
 function selecionarRoteiro(indice) {
-    const r = window._roteirosSelecionaveis[indice]
+    const v = window._viagensRoteiro[indice]
     _refSelecionada = {
-        tipo: "roteiro", ref_id_roteiro: r.id_roteiro,
-        titulo: r.titulo, sub: r.nome_grupo,
+        tipo: "roteiro", ref_id_grupo: v.id_grupo,
+        titulo: v.nome_grupo, sub: `${v.total_itens_roteiro} ${t('feed.shareItinerary.items')}`,
     }
     renderRefPreview()
     fecharSeletor()
@@ -538,17 +519,33 @@ function montarCardReferencia(p) {
     }
     if (p.tipo === 'roteiro' && p.ref_roteiro) {
         const r = p.ref_roteiro
+        const preview = r.itens.slice(0, 3)
+        const resto = r.itens.slice(3)
+        const linhaItem = it => `<p style="font-size:13px; color:var(--text-secondary); margin:4px 0 0;">• ${escapeHtml(it.titulo)}</p>`
         return `
         <p class="post-ref-selo" style="font-size:12px; color:var(--text-muted); margin:0 0 8px;">📍 ${t('feed.ref.sharedItinerary')}</p>
         <div class="ref-preview" style="margin-top:0; align-items:flex-start;">
             <div class="ref-preview-info">
-                <p class="ref-preview-titulo">${escapeHtml(r.titulo)}</p>
-                <p class="ref-preview-sub">${escapeHtml(r.nome_grupo)}</p>
-                <p style="font-size:13px; color:var(--text-secondary); white-space:pre-wrap; margin:6px 0 0;">${escapeHtml(r.descricao || "")}</p>
+                <p class="ref-preview-titulo">${t('feed.ref.fullItinerary')}</p>
+                <p class="ref-preview-sub">${escapeHtml(r.nome_grupo)}${r.destino_principal ? " · " + escapeHtml(r.destino_principal) : ""} · ${r.total_itens} ${t('feed.shareItinerary.items')}</p>
+                <div id="roteiro-preview-${p.id_post}">${preview.map(linhaItem).join("")}</div>
+                ${resto.length ? `
+                <div id="roteiro-resto-${p.id_post}" style="display:none;">${resto.map(linhaItem).join("")}</div>
+                <button type="button" class="btn-foto-post" style="margin-top:8px;" onclick="toggleRoteiroCompleto(${p.id_post})" id="roteiro-btn-${p.id_post}">${t('feed.ref.viewFullItinerary')}</button>
+                ` : ""}
             </div>
         </div>`
     }
     return ""
+}
+
+function toggleRoteiroCompleto(idPost) {
+    const resto = document.getElementById(`roteiro-resto-${idPost}`)
+    const btn = document.getElementById(`roteiro-btn-${idPost}`)
+    if (!resto) return
+    const aberto = resto.style.display !== "none"
+    resto.style.display = aberto ? "none" : "block"
+    btn.textContent = aberto ? t('feed.ref.viewFullItinerary') : t('feed.ref.viewLess')
 }
 
 async function carregarPosts() {

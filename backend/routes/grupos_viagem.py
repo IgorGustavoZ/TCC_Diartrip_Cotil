@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, field_validator, Field
 from datetime import datetime, date
 from schemas import (
-    GrupoLista, GrupoDetalhe, GrupoCriado, EntrarGrupoResponse,
+    GrupoLista, GrupoAdministradaResponse, GrupoDetalhe, GrupoCriado, EntrarGrupoResponse,
     CodigoConviteResponse, MensagemResponse, ExplorarViagemResponse,
 )
 from utils.auth import get_usuario_logado
@@ -118,7 +118,7 @@ def listar_grupos_compartilhaveis(usuario_id: int = Depends(get_usuario_logado))
     return grupo_service.listar_compartilhaveis(usuario_id)
 
 
-@router.get("/grupos/administradas", response_model=list[GrupoLista])
+@router.get("/grupos/administradas", response_model=list[GrupoAdministradaResponse])
 def listar_grupos_administradas(usuario_id: int = Depends(get_usuario_logado)):
     return grupo_service.listar_administradas(usuario_id)
 

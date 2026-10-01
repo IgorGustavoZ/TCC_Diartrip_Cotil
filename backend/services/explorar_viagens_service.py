@@ -49,6 +49,12 @@ def publicar(id_grupo: int, publica: bool, limite_participantes: int | None) -> 
                     "UPDATE grupos_viagem SET publica=0 WHERE id_grupo=%s",
                     (id_grupo,),
                 )
+                # cursor.rowcount precisa ser lido AQUI, logo após o UPDATE —
+                # o DELETE abaixo roda no mesmo cursor e, se não apagar nada
+                # (caso comum: a viagem não tinha publicação nenhuma no
+                # Feed), sobrescreveria rowcount com 0 e faria o "if
+                # rowcount == 0" abaixo lançar 404 mesmo a viagem existindo.
+                linhas_afetadas = cursor.rowcount
                 # Uma publicação "compartilhou esta viagem" só faz sentido
                 # enquanto ela é pública — o botão [Ver viagem] depende disso
                 # (mesma regra de explorar_viagens_service.detalhar_publica).
@@ -60,7 +66,10 @@ def publicar(id_grupo: int, publica: bool, limite_participantes: int | None) -> 
                 )
                 mensagem = "Viagem removida de Explorar Viagens"
 
-            if cursor.rowcount == 0:
+            if publica:
+                linhas_afetadas = cursor.rowcount
+
+            if linhas_afetadas == 0:
                 raise HTTPException(status_code=404, detail="Grupo não encontrado")
             return {"mensagem": mensagem}
         finally:

@@ -50,16 +50,20 @@ def _anexar_comentarios(cursor, posts: list[dict]) -> None:
 
 
 def _anexar_referencias(cursor, posts: list[dict]) -> None:
-    """Preenche ref_grupo/ref_roteiro com os dados ATUAIS da viagem/roteiro
-    referenciados por posts tipo='viagem'/'roteiro' — sempre lidos ao vivo
-    (2 buscas em lote, mesmo padrão de _anexar_comentarios), nunca copiados
-    para dentro do post."""
-    ids_grupo = {p["ref_id_grupo"] for p in posts if p.get("ref_id_grupo")}
-    ids_roteiro = {p["ref_id_roteiro"] for p in posts if p.get("ref_id_roteiro")}
+    """Preenche ref_grupo (tipo='viagem') / ref_roteiro (tipo='roteiro') com
+    dados ATUAIS, sempre lidos ao vivo — nunca copiados para dentro do post.
+
+    Não existe um ID separado para "o roteiro completo" de uma viagem: o
+    conjunto de itens em `roteiros` com aquele id_grupo JÁ É o roteiro
+    completo. Por isso tipo='roteiro' também usa ref_id_grupo (mesma coluna
+    de tipo='viagem') — o que muda é o que é buscado: para 'viagem', os
+    dados da viagem; para 'roteiro', a viagem + TODOS os itens dela."""
+    ids_grupo_viagem = {p["ref_id_grupo"] for p in posts if p.get("tipo") == "viagem" and p.get("ref_id_grupo")}
+    ids_grupo_roteiro = {p["ref_id_grupo"] for p in posts if p.get("tipo") == "roteiro" and p.get("ref_id_grupo")}
 
     grupos_map: dict = {}
-    if ids_grupo:
-        fmt = ",".join(["%s"] * len(ids_grupo))
+    if ids_grupo_viagem:
+        fmt = ",".join(["%s"] * len(ids_grupo_viagem))
         cursor.execute(
             f"""
             SELECT g.id_grupo, g.nome_grupo, g.destino_principal, g.data_inicio, g.data_fim,
@@ -67,26 +71,52 @@ def _anexar_referencias(cursor, posts: list[dict]) -> None:
                    (SELECT COUNT(*) FROM grupo_membros gm WHERE gm.id_grupo = g.id_grupo) AS vagas_ocupadas
             FROM grupos_viagem g WHERE g.id_grupo IN ({fmt})
             """,
-            list(ids_grupo),
+            list(ids_grupo_viagem),
         )
         grupos_map = {g["id_grupo"]: g for g in cursor.fetchall()}
 
     roteiros_map: dict = {}
-    if ids_roteiro:
-        fmt = ",".join(["%s"] * len(ids_roteiro))
+    if ids_grupo_roteiro:
+        fmt = ",".join(["%s"] * len(ids_grupo_roteiro))
+        cursor.execute(
+            f"SELECT id_grupo, nome_grupo, destino_principal FROM grupos_viagem WHERE id_grupo IN ({fmt})",
+            list(ids_grupo_roteiro),
+        )
+        info_grupos = {g["id_grupo"]: g for g in cursor.fetchall()}
+
         cursor.execute(
             f"""
-            SELECT r.id_roteiro, r.id_grupo, r.titulo, r.descricao, g.nome_grupo
-            FROM roteiros r JOIN grupos_viagem g ON g.id_grupo = r.id_grupo
-            WHERE r.id_roteiro IN ({fmt})
+            SELECT id_grupo, titulo, descricao FROM roteiros
+            WHERE id_grupo IN ({fmt}) ORDER BY id_grupo, data_criacao ASC
             """,
-            list(ids_roteiro),
+            list(ids_grupo_roteiro),
         )
-        roteiros_map = {r["id_roteiro"]: r for r in cursor.fetchall()}
+        itens_por_grupo: dict = {}
+        for r in cursor.fetchall():
+            itens_por_grupo.setdefault(r["id_grupo"], []).append(
+                {"titulo": r["titulo"], "descricao": r["descricao"]}
+            )
+
+        for id_grupo, info in info_grupos.items():
+            itens = itens_por_grupo.get(id_grupo, [])
+            roteiros_map[id_grupo] = {
+                "id_grupo": id_grupo,
+                "nome_grupo": info["nome_grupo"],
+                "destino_principal": info["destino_principal"],
+                "total_itens": len(itens),
+                "itens": itens,
+            }
 
     for p in posts:
-        p["ref_grupo"] = grupos_map.get(p.get("ref_id_grupo"))
-        p["ref_roteiro"] = roteiros_map.get(p.get("ref_id_roteiro"))
+        if p.get("tipo") == "viagem":
+            p["ref_grupo"] = grupos_map.get(p.get("ref_id_grupo"))
+            p["ref_roteiro"] = None
+        elif p.get("tipo") == "roteiro":
+            p["ref_grupo"] = None
+            p["ref_roteiro"] = roteiros_map.get(p.get("ref_id_grupo"))
+        else:
+            p["ref_grupo"] = None
+            p["ref_roteiro"] = None
 
 
 def listar_todos(usuario_id: int, limite: int = 50, offset: int = 0) -> list:
@@ -197,8 +227,8 @@ def criar(
         raise HTTPException(status_code=400, detail="Tipo de publicação inválido")
     if tipo == "viagem" and not ref_id_grupo:
         raise HTTPException(status_code=400, detail="Informe a viagem que será compartilhada")
-    if tipo == "roteiro" and not ref_id_roteiro:
-        raise HTTPException(status_code=400, detail="Informe o roteiro que será compartilhado")
+    if tipo == "roteiro" and not ref_id_grupo:
+        raise HTTPException(status_code=400, detail="Informe a viagem cujo roteiro será compartilhado")
     if tipo == "texto" and not conteudo.strip() and imagem_bytes is None:
         raise HTTPException(status_code=400, detail="O post deve ter texto ou imagem")
 
@@ -232,17 +262,28 @@ def criar(
                     )
 
             if tipo == "roteiro":
+                # O roteiro COMPLETO da viagem é o conjunto de itens com este
+                # id_grupo — não há um "id de roteiro" separado para
+                # referenciar (ver _anexar_referencias). Não exige a viagem
+                # ser pública: o conteúdo já vai embutido na publicação.
                 cursor.execute(
-                    "SELECT id_grupo FROM roteiros WHERE id_roteiro=%s", (ref_id_roteiro,)
+                    "SELECT 1 FROM grupos_viagem WHERE id_grupo=%s", (ref_id_grupo,)
                 )
-                roteiro = cursor.fetchone()
-                if not roteiro:
-                    raise HTTPException(status_code=404, detail="Roteiro não encontrado")
-                cargo = checar_membro_grupo(cursor, roteiro["id_grupo"], usuario_id)
+                if not cursor.fetchone():
+                    raise HTTPException(status_code=404, detail="Viagem não encontrada")
+                cargo = checar_membro_grupo(cursor, ref_id_grupo, usuario_id)
                 if cargo != "admin":
                     raise HTTPException(
                         status_code=403,
                         detail="Apenas administradores podem compartilhar o roteiro",
+                    )
+                cursor.execute(
+                    "SELECT COUNT(*) AS total FROM roteiros WHERE id_grupo=%s", (ref_id_grupo,)
+                )
+                if cursor.fetchone()["total"] == 0:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Esta viagem ainda não tem nenhum item no roteiro",
                     )
         finally:
             cursor.close()

@@ -469,9 +469,10 @@
         <img id="cropImg" src="" alt="">
     </div>
     <div class="crop-actions">
-        <button class="btn-crop-ok" onclick="confirmarCrop()" data-i18n="perfil.usePhoto">✓ Usar esta foto</button>
-        <button class="btn-crop-cancel" onclick="sairCrop()" data-i18n="perfil.cancel">Cancelar</button>
+        <button class="btn-crop-ok" id="btnCropOk" onclick="confirmarCrop()" data-i18n="perfil.usePhoto">✓ Usar esta foto</button>
+        <button class="btn-crop-cancel" id="btnCropCancel" onclick="sairCrop()" data-i18n="perfil.cancel">Cancelar</button>
     </div>
+    <div class="p-msg-err" id="cropErro" style="display:none; text-align:center; margin-top:8px;"></div>
 </div>
 
 <div class="modal-ov" id="modalOvPost" onclick="fecharModalPost(event)">
@@ -876,28 +877,50 @@ function sairCrop() {
 async function confirmarCrop() {
     if (!cropperInstance) return
     const canvas = cropperInstance.getCroppedCanvas({ width: 400, height: 400 })
+    const btnOk = document.getElementById("btnCropOk")
+    const btnCancel = document.getElementById("btnCropCancel")
+    const erroEl = document.getElementById("cropErro")
+    erroEl.style.display = "none"
+
     canvas.toBlob(async (blob) => {
-        sairCrop()
-        const form = new FormData()
-        form.append("foto", blob, "perfil.jpg")
-        const resp = await fetch(`/usuarios/${meuId}/foto`, { method: "PATCH", credentials: "include", body: form })
-        if (resp.ok) {
-            const data = await resp.json()
-            const src  = `${data.foto_perfil}?t=${Date.now()}`
-            let img = document.getElementById("pAvImg")
-            if (!img) {
-                img = document.createElement("img")
-                img.className = "p-av-img"; img.id = "pAvImg"
-                const ini = document.getElementById("pAvIniciais")
-                if (ini) ini.replaceWith(img)
+        const textoOriginal = btnOk.textContent
+        btnOk.disabled = true
+        btnCancel.disabled = true
+        btnOk.textContent = t('perfil.uploadingPhoto') || 'Enviando...'
+
+        try {
+            const form = new FormData()
+            form.append("foto", blob, "perfil.jpg")
+            const resp = await fetch(`/usuarios/${meuId}/foto`, { method: "PATCH", credentials: "include", body: form })
+
+            if (resp.ok) {
+                const data = await resp.json()
+                const src  = `${data.foto_perfil}?t=${Date.now()}`
+                let img = document.getElementById("pAvImg")
+                if (!img) {
+                    img = document.createElement("img")
+                    img.className = "p-av-img"; img.id = "pAvImg"
+                    const ini = document.getElementById("pAvIniciais")
+                    if (ini) ini.replaceWith(img)
+                }
+                img.src = src
+                sairCrop()
+            } else if (resp.status === 401 || resp.status === 403) {
+                sessionStorage.removeItem("id")
+                sessionStorage.removeItem("logado")
+                window.location.href = "../login.html"
+            } else {
+                const err = await resp.json().catch(() => ({}))
+                erroEl.textContent = err.detail || t('perfil.photoError') || 'Erro ao enviar foto. Tente novamente.'
+                erroEl.style.display = "block"
             }
-            img.src = src
-        } else if (resp.status === 401 || resp.status === 403) {
-            sessionStorage.removeItem("id")
-            sessionStorage.removeItem("logado")
-            window.location.href = "../login.html"
-        } else {
-            alert(t('perfil.photoError') || 'Erro ao enviar foto. Tente novamente.')
+        } catch (e) {
+            erroEl.textContent = t('perfil.photoError') || 'Erro ao enviar foto. Tente novamente.'
+            erroEl.style.display = "block"
+        } finally {
+            btnOk.disabled = false
+            btnCancel.disabled = false
+            btnOk.textContent = textoOriginal
         }
     }, "image/jpeg", 0.92)
 }

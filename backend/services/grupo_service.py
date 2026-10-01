@@ -52,14 +52,18 @@ def listar_administradas(usuario_id: int) -> list:
     """Viagens onde o usuário é admin, de QUALQUER privacidade — usada pelo
     seletor de "compartilhar roteiro", que (diferente de "compartilhar
     viagem") não exige a viagem ser pública, porque o conteúdo do roteiro já
-    vai embutido na publicação (ver post_service.criar)."""
+    vai embutido na publicação (ver post_service.criar). total_itens_roteiro
+    é a contagem de itens em `roteiros` — o "roteiro completo" da viagem é
+    sempre o CONJUNTO desses itens; não existe um ID separado pra ele, a
+    própria viagem (id_grupo) já é essa referência."""
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:
             cursor.execute(
                 """
                 SELECT g.id_grupo, g.nome_grupo, g.destino_principal, g.data_inicio, g.data_fim,
-                       u.nome AS criador
+                       u.nome AS criador,
+                       (SELECT COUNT(*) FROM roteiros r WHERE r.id_grupo = g.id_grupo) AS total_itens_roteiro
                 FROM grupos_viagem g
                 JOIN usuarios u ON g.criado_por = u.id_usuario
                 JOIN grupo_membros gm ON gm.id_grupo = g.id_grupo

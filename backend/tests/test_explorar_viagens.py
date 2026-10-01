@@ -45,6 +45,22 @@ class TestPublicarViagem:
             resp = client_admin.put("/grupos/10/publicar", json={"publica": False})
         assert resp.status_code == 200
 
+    def test_despublicar_nao_falha_quando_nao_ha_post_para_apagar(self, client_admin):
+        # Regressão: cursor.rowcount reflete a ÚLTIMA instrução executada no
+        # cursor. O UPDATE (afeta 1 linha) é seguido de um DELETE FROM posts
+        # que, no caso comum (viagem sem publicação associada no Feed), afeta
+        # 0 linhas — rowcount==0 não pode ser lido como "grupo não encontrado".
+        cur = _cur(fetchones=[(1,), {"cargo": "admin"}], rowcount=1)
+
+        def executar(sql, params=None):
+            cur.rowcount = 1 if "UPDATE grupos_viagem" in sql else 0
+        cur.execute.side_effect = executar
+
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.put("/grupos/10/publicar", json={"publica": False})
+        assert resp.status_code == 200
+
     def test_despublicar_remove_publicacoes_que_compartilharam_a_viagem(self, client_admin):
         # invariante: nao pode sobrar no Feed uma publicacao "compartilhou
         # esta viagem" de uma viagem que deixou de ser publica (o botao

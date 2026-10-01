@@ -318,30 +318,38 @@ class TestCompartilharViagemNoFeed:
 
 
 class TestCompartilharRoteiroNoFeed:
+    # O roteiro COMPLETO de uma viagem é o conjunto de itens com aquele
+    # id_grupo — não existe um "id de roteiro" separado pra selecionar só um
+    # item. Por isso compartilhar roteiro usa ref_id_grupo (mesmo campo de
+    # "compartilhar viagem"), e exige que a viagem já tenha ao menos 1 item.
     def test_admin_compartilha_roteiro_mesmo_de_viagem_privada(self, client_admin):
-        # decisao de produto: roteiro compartilhado nao depende da viagem
-        # estar publica, porque o conteudo ja fica embutido no post.
         conn = _por_bloco([
             [(99,)],
-            [{"id_grupo": 10}, {"cargo": "admin"}],
+            [(1,), {"cargo": "admin"}, {"total": 3}],
         ])
         with patch("database.get_db", fake_get_db(conn)):
-            resp = client_admin.post("/posts", data={"tipo": "roteiro", "ref_id_roteiro": 5})
+            resp = client_admin.post("/posts", data={"tipo": "roteiro", "ref_id_grupo": 10})
         assert resp.status_code == 201
 
     def test_membro_comum_nao_pode_compartilhar_roteiro(self, client_usuario):
-        conn = _por_bloco([[(1,)], [{"id_grupo": 10}, {"cargo": "membro"}]])
+        conn = _por_bloco([[(1,)], [(1,), {"cargo": "membro"}]])
         with patch("database.get_db", fake_get_db(conn)):
-            resp = client_usuario.post("/posts", data={"tipo": "roteiro", "ref_id_roteiro": 5})
+            resp = client_usuario.post("/posts", data={"tipo": "roteiro", "ref_id_grupo": 10})
         assert resp.status_code == 403
 
-    def test_roteiro_inexistente_retorna_404(self, client_usuario):
+    def test_viagem_inexistente_retorna_404(self, client_usuario):
         conn = _por_bloco([[(1,)], [None]])
         with patch("database.get_db", fake_get_db(conn)):
-            resp = client_usuario.post("/posts", data={"tipo": "roteiro", "ref_id_roteiro": 999})
+            resp = client_usuario.post("/posts", data={"tipo": "roteiro", "ref_id_grupo": 999})
         assert resp.status_code == 404
 
-    def test_sem_ref_id_roteiro_retorna_400(self, client_usuario):
+    def test_viagem_sem_itens_no_roteiro_retorna_400(self, client_admin):
+        conn = _por_bloco([[(99,)], [(1,), {"cargo": "admin"}, {"total": 0}]])
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_admin.post("/posts", data={"tipo": "roteiro", "ref_id_grupo": 10})
+        assert resp.status_code == 400
+
+    def test_sem_ref_id_grupo_retorna_400(self, client_usuario):
         conn = _conn_seq([(1,)])
         with patch("database.get_db", fake_get_db(conn)):
             resp = client_usuario.post("/posts", data={"tipo": "roteiro"})
@@ -391,3 +399,44 @@ class TestFeedComReferencias:
         assert data[0]["ref_grupo"] is None
         assert data[1]["ref_grupo"]["nome_grupo"] == "Japão"
         assert data[1]["ref_grupo"]["vagas_ocupadas"] == 3
+
+    def test_feed_traz_todos_os_itens_do_roteiro_compartilhado(self, client_usuario):
+        # tipo='roteiro' usa ref_id_grupo (mesmo campo de tipo='viagem') — o
+        # roteiro completo e' o CONJUNTO de itens daquele grupo, nunca so 1.
+        posts = [
+            {"id_post": 3, "id_grupo": None, "id_comunidade": None, "tipo": "roteiro",
+             "conteudo": "Nosso roteiro!", "imagem": None, "data_criacao": "2026-06-03T10:00:00",
+             "id_usuario": 1, "nome": "K", "foto_perfil": None, "curtidas": 0, "ja_curtiu": 0,
+             "ref_id_grupo": 10, "ref_id_roteiro": None},
+        ]
+        info_grupo = {"id_grupo": 10, "nome_grupo": "Japão", "destino_principal": "Tóquio"}
+        itens = [
+            {"id_grupo": 10, "titulo": "Dia 1 - Shibuya", "descricao": "manhã"},
+            {"id_grupo": 10, "titulo": "Dia 1 - Shinjuku", "descricao": "tarde"},
+            {"id_grupo": 10, "titulo": "Dia 2 - Asakusa", "descricao": "manhã"},
+        ]
+
+        call_count = [0]
+
+        def factory(**kw):
+            call_count[0] += 1
+            c = MagicMock()
+            if call_count[0] == 1:
+                c.fetchone.return_value = (1,)
+            else:
+                # base, comentarios, info_grupos (roteiro), itens (roteiro)
+                c.fetchall.side_effect = [posts, [], [info_grupo], itens]
+            return c
+
+        conn = MagicMock()
+        conn.cursor.side_effect = factory
+        conn.commit = MagicMock(); conn.rollback = MagicMock(); conn.close = MagicMock()
+
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/posts")
+
+        assert resp.status_code == 200
+        ref = resp.json()[0]["ref_roteiro"]
+        assert ref["nome_grupo"] == "Japão"
+        assert ref["total_itens"] == 3
+        assert [i["titulo"] for i in ref["itens"]] == ["Dia 1 - Shibuya", "Dia 1 - Shinjuku", "Dia 2 - Asakusa"]

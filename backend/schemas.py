@@ -75,6 +75,12 @@ class GrupoLista(BaseModel):
     criador: str
 
 
+class GrupoAdministradaResponse(GrupoLista):
+    """Usado pelo seletor de "compartilhar roteiro" — além dos dados da
+    viagem, diz quantos itens o roteiro dela já tem."""
+    total_itens_roteiro: int = 0
+
+
 class GrupoDetalhe(BaseModel):
     id_grupo: int
     nome_grupo: str
@@ -188,14 +194,21 @@ class PostRefGrupo(BaseModel):
     limite_participantes: Optional[int] = None
 
 
-class PostRefRoteiro(BaseModel):
-    """Dados ATUAIS do roteiro referenciado por uma publicação tipo='roteiro'
-    — lidos ao vivo de roteiros, nunca copiados para o post."""
-    id_roteiro: int
-    id_grupo: int
+class RoteiroItemResumo(BaseModel):
     titulo: str
     descricao: Optional[str] = None
+
+
+class PostRefRoteiro(BaseModel):
+    """O ROTEIRO COMPLETO da viagem referenciada por uma publicação
+    tipo='roteiro' — não existe um ID separado de "roteiro"; o conjunto de
+    itens com este id_grupo JÁ É o roteiro completo, então a referência é a
+    própria viagem. Itens lidos ao vivo de `roteiros`, nunca copiados."""
+    id_grupo: int
     nome_grupo: str
+    destino_principal: Optional[str] = None
+    total_itens: int = 0
+    itens: list[RoteiroItemResumo] = []
 
 
 class PostResponse(BaseModel):
