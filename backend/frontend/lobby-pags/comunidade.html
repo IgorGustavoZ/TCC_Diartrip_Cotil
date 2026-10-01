@@ -48,17 +48,81 @@
 .comunidade-wrap { max-width: 720px; margin: 0 auto; }
 .comunidade-header {
     background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-    padding: 22px 24px; margin-bottom: 20px; box-shadow: var(--shadow-sm); backdrop-filter: blur(14px);
+    overflow: hidden; margin-bottom: 20px; box-shadow: var(--shadow-sm); backdrop-filter: blur(14px);
 }
-.comunidade-header h1 { font-size: 20px; margin: 0 0 6px; color: var(--text); }
-.comunidade-header .meta { font-size: 13px; color: var(--text-muted); margin: 0 0 12px; }
-.comunidade-header .desc { font-size: 14px; color: var(--text-secondary); margin: 0 0 14px; }
-.btn-entrar-comunidade, .btn-sair-comunidade {
+.comunidade-capa {
+    width: 100%; height: 160px; background: var(--gradient); position: relative;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px; color: rgba(255,255,255,0.85); overflow: hidden;
+}
+.comunidade-capa img { width: 100%; height: 100%; object-fit: cover; }
+.btn-alterar-foto-comunidade {
+    position: absolute; right: 12px; bottom: 12px; background: rgba(15,23,42,0.65);
+    color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px;
+    padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.comunidade-header-body { padding: 18px 24px 22px; }
+.comunidade-header-body h1 { font-size: 20px; margin: 0 0 6px; color: var(--text); }
+.comunidade-header-body .meta { font-size: 13px; color: var(--text-muted); margin: 0 0 12px; }
+.comunidade-header-body .desc { font-size: 14px; color: var(--text-secondary); margin: 0 0 14px; }
+.comunidade-acoes { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn-entrar-comunidade, .btn-sair-comunidade, .btn-editar-comunidade {
     border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
 }
 .btn-entrar-comunidade { background: var(--gradient); color: #fff; }
-.btn-sair-comunidade { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border) !important; }
+.btn-sair-comunidade, .btn-editar-comunidade { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border) !important; }
 .comunidade-vazio { color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 0; }
+
+.comunidade-privada-entrada { margin-top: 4px; display: flex; gap: 8px; flex-wrap: wrap; }
+.comunidade-privada-entrada input {
+    flex: 1; min-width: 160px; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 14px; outline: none;
+    text-transform: uppercase;
+}
+
+.trip-card-expanded { margin-bottom: 20px; }
+.codigo-convite-box {
+    display: flex; align-items: center; gap: 12px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-top: 10px;
+}
+.codigo-convite-valor { font-size: 18px; font-weight: 700; letter-spacing: 2px; color: var(--text); flex: 1; }
+
+.form-editar-comunidade { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.form-editar-comunidade input, .form-editar-comunidade textarea {
+    width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 14px; outline: none; font-family: inherit;
+}
+.form-editar-comunidade textarea { resize: vertical; min-height: 60px; }
+.form-editar-comunidade label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+
+/* Seletor de "compartilhar viagem/roteiro" — idêntico ao do Feed
+   (backend/frontend/lobby-pags/feed.html), reaproveita o overlay/cartão do
+   modal de confirmação genérico (.confirm-modal-ov / .confirm-modal). */
+.seletor-modal { max-width: 480px; text-align: left; max-height: 80vh; overflow-y: auto; }
+.seletor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.seletor-fechar { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 4px; }
+.seletor-fechar:hover { color: var(--text); }
+.seletor-item {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.2s;
+}
+.seletor-item:hover { border-color: var(--primary); }
+.seletor-item-nome { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+.seletor-item-meta { font-size: 12px; color: var(--text-muted); }
+.seletor-vazio { color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px 0; }
+.seletor-select {
+    width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 14px; outline: none; margin-bottom: 14px;
+}
+.ref-preview {
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+    background: var(--surface-2); margin-top: 8px; display: flex; align-items: center; gap: 10px;
+}
+.ref-preview-info { flex: 1; min-width: 0; }
+.ref-preview-titulo { font-size: 13px; font-weight: 700; color: var(--text); margin: 0; }
+.ref-preview-sub { font-size: 12px; color: var(--text-muted); margin: 0; }
+.ref-preview-rm { background: none; border: none; color: var(--text-muted); font-size: 15px; cursor: pointer; flex-shrink: 0; }
+.ref-preview-rm:hover { color: var(--danger); }
 </style>
 </head>
 <body>
@@ -85,15 +149,43 @@
 
         <div class="comunidade-wrap">
             <div class="comunidade-header" id="comunidadeHeader">
-                <p data-i18n="common.loading">Carregando...</p>
+                <div class="comunidade-header-body"><p data-i18n="common.loading">Carregando...</p></div>
+            </div>
+
+            <div id="painelAdmin" style="display:none;">
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="comunidades.admin.settingsTitle">⚙️ Configurações da comunidade</h2>
+                    <div class="form-editar-comunidade">
+                        <input id="editNome" maxlength="150" data-i18n-placeholder="comunidades.form.name" placeholder="Nome">
+                        <textarea id="editDescricao" maxlength="2000" data-i18n-placeholder="comunidades.form.desc" placeholder="Descrição"></textarea>
+                        <input id="editCategoria" maxlength="100" data-i18n-placeholder="comunidades.form.category" placeholder="Categoria/destino">
+                        <label><input type="radio" name="editPriv" value="publica"> <span data-i18n="comunidades.form.public">Pública</span></label>
+                        <label><input type="radio" name="editPriv" value="privada"> <span data-i18n="comunidades.form.private">Privada</span></label>
+                        <span class="msg" id="editComunidadeErro" style="display:none; color:var(--danger); font-size:12px;"></span>
+                        <button class="btn-publicar" style="align-self:flex-start;" onclick="salvarEdicaoComunidade()" data-i18n="comunidades.admin.save">Salvar alterações</button>
+                    </div>
+                </div>
+
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="comunidades.admin.inviteTitle">🔑 Código de convite</h2>
+                    <p style="color:var(--text-muted); font-size:13px; margin:0;" data-i18n="comunidades.admin.inviteDesc">Use este código para convidar pessoas quando a comunidade for privada.</p>
+                    <div class="codigo-convite-box">
+                        <span class="codigo-convite-valor" id="codigoConviteValor">······</span>
+                        <button class="btn-editar-comunidade" onclick="copiarCodigoConvite()" data-i18n="common.copy">Copiar</button>
+                    </div>
+                </div>
             </div>
 
             <div id="composerBox" class="create-card" style="display:none; margin-bottom:20px;">
                 <div class="av" id="avCreate">?</div>
                 <div class="create-right">
                     <textarea id="postTexto" data-i18n-placeholder="comunidades.postPlaceholder" placeholder="Compartilhe algo com a comunidade..."></textarea>
+                    <div id="refPreviewWrap"></div>
                     <div class="create-actions">
-                        <span></span>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <button type="button" class="btn-foto-post" onclick="abrirSeletorViagem()" data-i18n="feed.shareTrip">🧳 Viagem</button>
+                            <button type="button" class="btn-foto-post" onclick="abrirSeletorRoteiro()" data-i18n="feed.shareItinerary">📍 Roteiro</button>
+                        </div>
                         <button class="btn-publicar" id="btnPublicar" onclick="publicar()" data-i18n="feed.publish">Publicar</button>
                     </div>
                 </div>
@@ -104,6 +196,18 @@
     </div>
 </div>
 
+<div class="confirm-modal-ov" id="seletorOv" onclick="if(event.target===this) fecharSeletor()">
+    <div class="confirm-modal seletor-modal">
+        <div class="seletor-header">
+            <h3 id="seletorTitulo" style="margin:0;"></h3>
+            <button type="button" class="seletor-fechar" onclick="fecharSeletor()">✕</button>
+        </div>
+        <div id="seletorCorpo"></div>
+    </div>
+</div>
+
+<input type="file" id="fotoComunidadeInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+
 <script>
 const params = new URLSearchParams(window.location.search)
 const idComunidade = params.get("id")
@@ -112,6 +216,8 @@ const meuId = parseInt(sessionStorage.getItem("id"))
 if (!sessionStorage.getItem("logado")) window.location.href = "../login.html"
 
 let souMembro = false
+let souAdmin = false
+let comunidadeAtual = null
 
 document.addEventListener('languageChanged', async () => {
     applyTranslations()
@@ -119,34 +225,123 @@ document.addEventListener('languageChanged', async () => {
     await carregarPosts()
 })
 
+function avatarComunidadeHtml(c) {
+    if (c.foto_capa) return `<img src="${c.foto_capa}" alt="">`
+    const iniciais = c.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+    return iniciais || "👥"
+}
+
 async function carregarComunidade() {
     const resp = await fetch(`/comunidades/${idComunidade}`, { credentials: "include" })
     const box = document.getElementById("comunidadeHeader")
     if (!resp.ok) {
-        box.innerHTML = `<p class="comunidade-vazio">${t('comunidades.notFound')}</p>`
+        box.innerHTML = `<div class="comunidade-header-body"><p class="comunidade-vazio">${t('comunidades.notFound')}</p></div>`
         return
     }
     const c = await resp.json()
+    comunidadeAtual = c
     document.title = `Diartrip - ${c.nome}`
     souMembro = c.sou_membro
+    souAdmin = c.meu_cargo === 'admin'
     document.getElementById("composerBox").style.display = souMembro ? "flex" : "none"
+    document.getElementById("painelAdmin").style.display = souAdmin ? "block" : "none"
 
-    const acao = c.criado_por === meuId
-        ? ""
-        : souMembro
-            ? `<button class="btn-sair-comunidade" onclick="sairComunidade()">${t('comunidades.leaveBtn')}</button>`
-            : `<button class="btn-entrar-comunidade" onclick="entrarComunidade()">${t('comunidades.joinBtn')}</button>`
+    if (souAdmin) {
+        document.getElementById("editNome").value = c.nome
+        document.getElementById("editDescricao").value = c.descricao || ""
+        document.getElementById("editCategoria").value = c.categoria || ""
+        document.querySelector(`input[name="editPriv"][value="${c.privacidade}"]`).checked = true
+        carregarCodigoConvite()
+    }
+
+    let acao = ""
+    if (souAdmin) {
+        acao = ""
+    } else if (souMembro) {
+        acao = `<button class="btn-sair-comunidade" onclick="sairComunidade()">${t('comunidades.leaveBtn')}</button>`
+    } else if (c.privacidade === 'privada') {
+        acao = `
+        <div class="comunidade-privada-entrada">
+            <input id="codigoEntradaInput" maxlength="10" data-i18n-placeholder="comunidades.invite.placeholder" placeholder="Código de convite">
+            <button class="btn-entrar-comunidade" onclick="entrarComunidade()">${t('comunidades.joinBtn')}</button>
+        </div>`
+    } else {
+        acao = `<button class="btn-entrar-comunidade" onclick="entrarComunidade()">${t('comunidades.joinBtn')}</button>`
+    }
+
+    const avatarGrande = c.foto_capa
+        ? `<img src="${c.foto_capa}" alt="">`
+        : `<span>${escapeHtml(avatarComunidadeHtml(c))}</span>`
 
     box.innerHTML = `
-        <h1>${c.privacidade === 'privada' ? '🔒' : '👥'} ${escapeHtml(c.nome)}</h1>
-        <p class="meta">${c.total_membros} ${t('comunidades.members')}${c.categoria ? ` · ${escapeHtml(c.categoria)}` : ''} · ${t('explorar.createdBy')} ${escapeHtml(c.criador)}</p>
-        ${c.descricao ? `<p class="desc">${escapeHtml(c.descricao)}</p>` : ''}
-        ${acao}
+        <div class="comunidade-capa">
+            ${avatarGrande}
+            ${souAdmin ? `<button class="btn-alterar-foto-comunidade" onclick="document.getElementById('fotoComunidadeInput').click()">${t('comunidades.changePhoto')}</button>` : ""}
+        </div>
+        <div class="comunidade-header-body">
+            <h1>${c.privacidade === 'privada' ? '🔒' : '👥'} ${escapeHtml(c.nome)}</h1>
+            <p class="meta">${c.total_membros} ${t('comunidades.members')}${c.categoria ? ` · ${escapeHtml(c.categoria)}` : ''} · ${t('explorar.createdBy')} ${escapeHtml(c.criador)}</p>
+            ${c.descricao ? `<p class="desc">${escapeHtml(c.descricao)}</p>` : ''}
+            <div class="comunidade-acoes">${acao}</div>
+        </div>
     `
 }
 
+document.getElementById("fotoComunidadeInput").addEventListener("change", async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const form = new FormData()
+    form.append("foto", file)
+    const resp = await fetch(`/comunidades/${idComunidade}/foto`, { method: "PATCH", credentials: "include", body: form })
+    if (resp.ok) await carregarComunidade()
+    else { const err = await resp.json().catch(() => ({})); alert(err.detail || t('comunidades.error')) }
+    e.target.value = ""
+})
+
+async function salvarEdicaoComunidade() {
+    const erro = document.getElementById("editComunidadeErro")
+    erro.style.display = "none"
+    const nome = document.getElementById("editNome").value.trim()
+    if (nome.length < 3) {
+        erro.textContent = t('comunidades.form.nameError')
+        erro.style.display = "inline"
+        return
+    }
+    const dados = {
+        nome,
+        descricao: document.getElementById("editDescricao").value.trim(),
+        categoria: document.getElementById("editCategoria").value.trim(),
+        privacidade: document.querySelector('input[name="editPriv"]:checked').value,
+    }
+    const resp = await fetch(`/comunidades/${idComunidade}`, {
+        method: "PUT", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados),
+    })
+    if (resp.ok) await carregarComunidade()
+    else { const e = await resp.json().catch(() => ({})); erro.textContent = e.detail || t('comunidades.error'); erro.style.display = "inline" }
+}
+
+async function carregarCodigoConvite() {
+    const resp = await fetch(`/comunidades/${idComunidade}/codigo-convite`, { credentials: "include" })
+    if (!resp.ok) return
+    const dados = await resp.json()
+    document.getElementById("codigoConviteValor").textContent = dados.codigo_convite
+}
+
+function copiarCodigoConvite() {
+    const codigo = document.getElementById("codigoConviteValor").textContent
+    navigator.clipboard?.writeText(codigo)
+}
+
 async function entrarComunidade() {
-    const resp = await fetch(`/comunidades/${idComunidade}/entrar`, { method: "POST", credentials: "include" })
+    const codigoInput = document.getElementById("codigoEntradaInput")
+    const codigo = codigoInput ? codigoInput.value.trim() : undefined
+    const resp = await fetch(`/comunidades/${idComunidade}/entrar`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigo }),
+    })
     if (resp.ok) { await carregarComunidade(); await carregarPosts() }
     else { const e = await resp.json().catch(() => ({})); alert(e.detail || t('comunidades.error')) }
 }
@@ -173,23 +368,187 @@ async function carregarMeu() {
     else el.textContent = u.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
 }
 
+// ── Compartilhar viagem/roteiro no composer — mesmo mecanismo do Feed
+// (backend/frontend/lobby-pags/feed.html), só que o post nasce escopado a
+// esta comunidade (id_comunidade). ──
+let _refSelecionada = null
+
+function abrirSeletor(titulo) {
+    document.getElementById("seletorTitulo").textContent = titulo
+    document.getElementById("seletorOv").classList.add("ativo")
+}
+
+function fecharSeletor() {
+    document.getElementById("seletorOv").classList.remove("ativo")
+}
+
+async function abrirSeletorViagem() {
+    abrirSeletor(t('feed.shareTrip.pickerTitle'))
+    const corpo = document.getElementById("seletorCorpo")
+    corpo.innerHTML = `<p class="seletor-vazio">${t('common.loading')}</p>`
+
+    const resp = await fetch("/grupos/compartilhaveis", { credentials: "include" })
+    if (!resp.ok) { corpo.innerHTML = `<p class="seletor-vazio">${t('feed.shareTrip.pickerError')}</p>`; return }
+    const viagens = await resp.json()
+
+    if (viagens.length === 0) {
+        corpo.innerHTML = `<p class="seletor-vazio">${t('feed.shareTrip.pickerEmpty')}</p>`
+        return
+    }
+
+    corpo.innerHTML = viagens.map((v, i) => {
+        const periodo = (v.data_inicio && v.data_fim) ? `${v.data_inicio} → ${v.data_fim}` : ""
+        return `
+        <div class="seletor-item" onclick="selecionarViagem(${i})">
+            <p class="seletor-item-nome">🧳 ${escapeHtml(v.nome_grupo)}</p>
+            <p class="seletor-item-meta">${v.destino_principal ? escapeHtml(v.destino_principal) + " · " : ""}${periodo}${v.limite_participantes != null ? ` · ${v.vagas_ocupadas}/${v.limite_participantes}` : ""}</p>
+        </div>`
+    }).join("")
+    window._viagensSelecionaveis = viagens
+}
+
+function selecionarViagem(indice) {
+    const v = window._viagensSelecionaveis[indice]
+    const periodo = (v.data_inicio && v.data_fim) ? `${v.data_inicio} → ${v.data_fim}` : ""
+    _refSelecionada = {
+        tipo: "viagem", ref_id_grupo: v.id_grupo,
+        titulo: v.nome_grupo, sub: [v.destino_principal, periodo].filter(Boolean).join(" · "),
+    }
+    renderRefPreview()
+    fecharSeletor()
+}
+
+async function abrirSeletorRoteiro() {
+    abrirSeletor(t('feed.shareItinerary.pickerTitle'))
+    const corpo = document.getElementById("seletorCorpo")
+    corpo.innerHTML = `<p class="seletor-vazio">${t('common.loading')}</p>`
+
+    const resp = await fetch("/grupos/administradas", { credentials: "include" })
+    if (!resp.ok) { corpo.innerHTML = `<p class="seletor-vazio">${t('feed.shareTrip.pickerError')}</p>`; return }
+    const viagens = await resp.json()
+
+    if (viagens.length === 0) {
+        corpo.innerHTML = `<p class="seletor-vazio">${t('feed.shareItinerary.pickerEmpty')}</p>`
+        return
+    }
+
+    corpo.innerHTML = `
+        <select class="seletor-select" id="seletorRoteiroViagem" onchange="carregarRoteirosDoSeletor(this.value)">
+            <option value="" disabled selected>${t('feed.shareItinerary.chooseTrip')}</option>
+            ${viagens.map(v => `<option value="${v.id_grupo}">${escapeHtml(v.nome_grupo)}</option>`).join("")}
+        </select>
+        <div id="seletorRoteiroLista"></div>
+    `
+    window._viagensAdministradas = Object.fromEntries(viagens.map(v => [v.id_grupo, v]))
+}
+
+async function carregarRoteirosDoSeletor(idGrupo) {
+    const lista = document.getElementById("seletorRoteiroLista")
+    lista.innerHTML = `<p class="seletor-vazio">${t('common.loading')}</p>`
+    const resp = await fetch(`/grupos/${idGrupo}/roteiros`, { credentials: "include" })
+    if (!resp.ok) { lista.innerHTML = `<p class="seletor-vazio">${t('feed.shareTrip.pickerError')}</p>`; return }
+    const roteiros = await resp.json()
+
+    if (roteiros.length === 0) {
+        lista.innerHTML = `<p class="seletor-vazio">${t('feed.shareItinerary.noItineraries')}</p>`
+        return
+    }
+
+    const nomeGrupo = window._viagensAdministradas[idGrupo]?.nome_grupo || ""
+    lista.innerHTML = roteiros.map((r, i) => `
+        <div class="seletor-item" onclick="selecionarRoteiro(${i})">
+            <p class="seletor-item-nome">📍 ${escapeHtml(r.titulo)}</p>
+            <p class="seletor-item-meta">${escapeHtml(nomeGrupo)}</p>
+        </div>
+    `).join("")
+    window._roteirosSelecionaveis = roteiros.map(r => ({ ...r, nome_grupo: nomeGrupo }))
+}
+
+function selecionarRoteiro(indice) {
+    const r = window._roteirosSelecionaveis[indice]
+    _refSelecionada = {
+        tipo: "roteiro", ref_id_roteiro: r.id_roteiro,
+        titulo: r.titulo, sub: r.nome_grupo,
+    }
+    renderRefPreview()
+    fecharSeletor()
+}
+
+function removerReferencia() {
+    _refSelecionada = null
+    renderRefPreview()
+}
+
+function renderRefPreview() {
+    const wrap = document.getElementById("refPreviewWrap")
+    if (!_refSelecionada) { wrap.innerHTML = ""; return }
+    const emoji = _refSelecionada.tipo === "viagem" ? "🧳" : "📍"
+    wrap.innerHTML = `
+        <div class="ref-preview">
+            <div class="ref-preview-info">
+                <p class="ref-preview-titulo">${emoji} ${escapeHtml(_refSelecionada.titulo)}</p>
+                ${_refSelecionada.sub ? `<p class="ref-preview-sub">${escapeHtml(_refSelecionada.sub)}</p>` : ""}
+            </div>
+            <button type="button" class="ref-preview-rm" onclick="removerReferencia()">✕</button>
+        </div>
+    `
+}
+
 async function publicar() {
     const texto = document.getElementById("postTexto").value.trim()
-    if (!texto) return
+    if (!texto && !_refSelecionada) return
     const btn = document.getElementById("btnPublicar")
     btn.disabled = true
     const form = new FormData()
     form.append("conteudo", texto)
     form.append("id_comunidade", idComunidade)
+    if (_refSelecionada) {
+        form.append("tipo", _refSelecionada.tipo)
+        if (_refSelecionada.ref_id_grupo) form.append("ref_id_grupo", _refSelecionada.ref_id_grupo)
+        if (_refSelecionada.ref_id_roteiro) form.append("ref_id_roteiro", _refSelecionada.ref_id_roteiro)
+    }
     try {
         const resp = await fetch("/posts", { method: "POST", credentials: "include", body: form })
         if (resp.ok) {
             document.getElementById("postTexto").value = ""
+            removerReferencia()
             carregarPosts()
+        } else {
+            const e = await resp.json().catch(() => ({}))
+            alert(e.detail || t('feed.publishError'))
         }
     } finally {
         btn.disabled = false
     }
+}
+
+function montarCardReferencia(p) {
+    if (p.tipo === 'viagem' && p.ref_grupo) {
+        const g = p.ref_grupo
+        const periodo = (g.data_inicio && g.data_fim) ? `${g.data_inicio} → ${g.data_fim}` : ""
+        return `
+        <p class="post-ref-selo" style="font-size:12px; color:var(--text-muted); margin:0 0 8px;">🧳 ${t('feed.ref.sharedTrip')}</p>
+        <div class="ref-preview" style="margin-top:0;">
+            <div class="ref-preview-info">
+                <p class="ref-preview-titulo">${escapeHtml(g.nome_grupo)}</p>
+                <p class="ref-preview-sub">${g.destino_principal ? escapeHtml(g.destino_principal) + " · " : ""}${periodo}${g.limite_participantes != null ? ` · 👥 ${g.vagas_ocupadas}/${g.limite_participantes}` : ""}</p>
+            </div>
+            <a class="btn-foto-post" href="explorar-viagens.html?id=${g.id_grupo}">${t('feed.ref.viewTrip')}</a>
+        </div>`
+    }
+    if (p.tipo === 'roteiro' && p.ref_roteiro) {
+        const r = p.ref_roteiro
+        return `
+        <p class="post-ref-selo" style="font-size:12px; color:var(--text-muted); margin:0 0 8px;">📍 ${t('feed.ref.sharedItinerary')}</p>
+        <div class="ref-preview" style="margin-top:0; align-items:flex-start;">
+            <div class="ref-preview-info">
+                <p class="ref-preview-titulo">${escapeHtml(r.titulo)}</p>
+                <p class="ref-preview-sub">${escapeHtml(r.nome_grupo)}</p>
+                <p style="font-size:13px; color:var(--text-secondary); white-space:pre-wrap; margin:6px 0 0;">${escapeHtml(r.descricao || "")}</p>
+            </div>
+        </div>`
+    }
+    return ""
 }
 
 async function carregarPosts() {
@@ -238,6 +597,7 @@ async function carregarPosts() {
                 ${delBtn}
             </div>
             ${p.conteudo ? `<p class="post-texto">${escapeHtml(p.conteudo)}</p>` : ''}
+            ${montarCardReferencia(p)}
             <div class="post-acoes">
                 ${curtBtn}
                 <button class="btn-comentar" onclick="toggleComentarios(${p.id_post})">💬 <span>${nComents}</span></button>

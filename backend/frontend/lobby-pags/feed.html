@@ -116,6 +116,42 @@
 .comunidade-meta { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; }
 .comunidade-desc { font-size: 13px; color: var(--text-secondary); margin: 0 0 12px; }
 .explorar-vazio { color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 0; }
+
+/* Seletor de "compartilhar viagem/roteiro" no composer — reaproveita o
+   overlay/cartão do modal de confirmação genérico (.confirm-modal-ov /
+   .confirm-modal), só ajustando largura e alinhamento pro conteúdo próprio. */
+.seletor-modal { max-width: 480px; text-align: left; max-height: 80vh; overflow-y: auto; }
+.seletor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.seletor-fechar {
+    background: none; border: none; color: var(--text-muted); font-size: 16px;
+    cursor: pointer; padding: 4px;
+}
+.seletor-fechar:hover { color: var(--text); }
+.seletor-item {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.2s;
+}
+.seletor-item:hover { border-color: var(--primary); }
+.seletor-item-nome { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+.seletor-item-meta { font-size: 12px; color: var(--text-muted); }
+.seletor-vazio { color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px 0; }
+.seletor-select {
+    width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 14px; outline: none; margin-bottom: 14px;
+}
+
+/* Preview da viagem/roteiro escolhido, dentro do próprio composer, antes de publicar */
+.ref-preview {
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+    background: var(--surface-2); margin-top: 8px; display: flex; align-items: center; gap: 10px;
+}
+.ref-preview-info { flex: 1; min-width: 0; }
+.ref-preview-titulo { font-size: 13px; font-weight: 700; color: var(--text); margin: 0; }
+.ref-preview-sub { font-size: 12px; color: var(--text-muted); margin: 0; }
+.ref-preview-rm {
+    background: none; border: none; color: var(--text-muted); font-size: 15px; cursor: pointer; flex-shrink: 0;
+}
+.ref-preview-rm:hover { color: var(--danger); }
 </style>
 </head>
 <body>
@@ -173,11 +209,16 @@
                             <img id="imgPreview" src="" alt="">
                             <button class="btn-rm-img" onclick="removerImagem()">✕</button>
                         </div>
+                        <div id="refPreviewWrap"></div>
                         <div class="create-actions">
-                            <label class="btn-foto-post">
-                                <span data-i18n="feed.photo">📷 Foto</span>
-                                <input type="file" id="postFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
-                            </label>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                <label class="btn-foto-post">
+                                    <span data-i18n="feed.photo">📷 Foto</span>
+                                    <input type="file" id="postFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+                                </label>
+                                <button type="button" class="btn-foto-post" onclick="abrirSeletorViagem()" data-i18n="feed.shareTrip">🧳 Viagem</button>
+                                <button type="button" class="btn-foto-post" onclick="abrirSeletorRoteiro()" data-i18n="feed.shareItinerary">📍 Roteiro</button>
+                            </div>
                             <button class="btn-publicar" id="btnPublicar" onclick="publicar()" data-i18n="feed.publish">Publicar</button>
                         </div>
                     </div>
@@ -209,6 +250,19 @@
                 <div id="comunidadesLista"><p class="explorar-vazio" data-i18n="common.loading">Carregando...</p></div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Modal de seleção (compartilhar viagem/roteiro) — mesmo visual do modal
+     de confirmação genérico (.confirm-modal-ov/.confirm-modal em style.css),
+     só que com conteúdo próprio em vez de sim/não. -->
+<div class="confirm-modal-ov" id="seletorOv" onclick="if(event.target===this) fecharSeletor()">
+    <div class="confirm-modal seletor-modal">
+        <div class="seletor-header">
+            <h3 id="seletorTitulo" style="margin:0;"></h3>
+            <button type="button" class="seletor-fechar" onclick="fecharSeletor()">✕</button>
+        </div>
+        <div id="seletorCorpo"></div>
     </div>
 </div>
 
@@ -301,19 +355,27 @@ async function carregarComunidades() {
         return
     }
 
-    lista.innerHTML = comunidades.map(c => `
-        <div class="comunidade-card">
-            <p class="comunidade-nome" onclick="window.location.href='comunidade.html?id=${c.id_comunidade}'">
-                ${c.privacidade === 'privada' ? '🔒' : '👥'} ${escapeHtml(c.nome)}
-            </p>
-            <p class="comunidade-meta">
-                ${c.total_membros} ${t('comunidades.members')}${c.categoria ? ` · ${escapeHtml(c.categoria)}` : ''}
-                ${c.sou_membro ? ` · ${t('comunidades.youAreMember')}` : ''}
-            </p>
-            ${c.descricao ? `<p class="comunidade-desc">${escapeHtml(c.descricao)}</p>` : ''}
-            <button class="post-ref-btn" onclick="window.location.href='comunidade.html?id=${c.id_comunidade}'">${t('comunidades.viewBtn')}</button>
+    lista.innerHTML = comunidades.map(c => {
+        const iniciais = c.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+        const avatar = c.foto_capa
+            ? `<div class="av" style="width:48px;height:48px;font-size:18px;"><img src="${c.foto_capa}"></div>`
+            : `<div class="av" style="width:48px;height:48px;font-size:18px;">${iniciais || "👥"}</div>`
+        return `
+        <div class="comunidade-card" style="display:flex; gap:14px;">
+            ${avatar}
+            <div style="flex:1; min-width:0;">
+                <p class="comunidade-nome" onclick="window.location.href='comunidade.html?id=${c.id_comunidade}'">
+                    ${c.privacidade === 'privada' ? '🔒' : ''} ${escapeHtml(c.nome)}
+                </p>
+                <p class="comunidade-meta">
+                    ${c.total_membros} ${t('comunidades.members')}${c.categoria ? ` · ${escapeHtml(c.categoria)}` : ''}
+                    ${c.sou_membro ? ` · ${t('comunidades.youAreMember')}` : ''}
+                </p>
+                ${c.descricao ? `<p class="comunidade-desc">${escapeHtml(c.descricao)}</p>` : ''}
+                <button class="post-ref-btn" onclick="window.location.href='comunidade.html?id=${c.id_comunidade}'">${t('comunidades.viewBtn')}</button>
+            </div>
         </div>
-    `).join("")
+    `}).join("")
 }
 
 let arquivoSelecionado = null
@@ -356,9 +418,140 @@ function removerImagem() {
     document.getElementById("imgPreviewWrap").style.display = "none"
 }
 
+// ── Compartilhar viagem/roteiro no composer ──
+// Reaproveita POST /posts (tipo/ref_id_grupo/ref_id_roteiro), que já existia
+// no backend — só faltava um jeito de chegar nele pela interface, em vez de
+// escondido dentro da tela da viagem. GET /grupos/compartilhaveis (admin +
+// viagem pública) alimenta o seletor de viagem; GET /grupos/administradas
+// (qualquer privacidade) + GET /grupos/{id}/roteiros alimentam o de roteiro
+// — roteiro não exige a viagem ser pública, porque o conteúdo já vai
+// embutido na publicação.
+let _refSelecionada = null // { tipo, ref_id_grupo?, ref_id_roteiro?, titulo, sub }
+
+function abrirSeletor(titulo) {
+    document.getElementById("seletorTitulo").textContent = titulo
+    document.getElementById("seletorOv").classList.add("ativo")
+}
+
+function fecharSeletor() {
+    document.getElementById("seletorOv").classList.remove("ativo")
+}
+
+async function abrirSeletorViagem() {
+    abrirSeletor(t('feed.shareTrip.pickerTitle'))
+    const corpo = document.getElementById("seletorCorpo")
+    corpo.innerHTML = `<p class="seletor-vazio">${t('common.loading')}</p>`
+
+    const resp = await fetch("/grupos/compartilhaveis", { credentials: "include" })
+    if (!resp.ok) { corpo.innerHTML = `<p class="seletor-vazio">${t('feed.shareTrip.pickerError')}</p>`; return }
+    const viagens = await resp.json()
+
+    if (viagens.length === 0) {
+        corpo.innerHTML = `<p class="seletor-vazio">${t('feed.shareTrip.pickerEmpty')}</p>`
+        return
+    }
+
+    corpo.innerHTML = viagens.map((v, i) => {
+        const periodo = (v.data_inicio && v.data_fim) ? `${v.data_inicio} → ${v.data_fim}` : ""
+        return `
+        <div class="seletor-item" onclick="selecionarViagem(${i})">
+            <p class="seletor-item-nome">🧳 ${escapeHtml(v.nome_grupo)}</p>
+            <p class="seletor-item-meta">${v.destino_principal ? escapeHtml(v.destino_principal) + " · " : ""}${periodo}${v.limite_participantes != null ? ` · ${v.vagas_ocupadas}/${v.limite_participantes}` : ""}</p>
+        </div>`
+    }).join("")
+    window._viagensSelecionaveis = viagens
+}
+
+function selecionarViagem(indice) {
+    const v = window._viagensSelecionaveis[indice]
+    const periodo = (v.data_inicio && v.data_fim) ? `${v.data_inicio} → ${v.data_fim}` : ""
+    _refSelecionada = {
+        tipo: "viagem", ref_id_grupo: v.id_grupo,
+        titulo: v.nome_grupo, sub: [v.destino_principal, periodo].filter(Boolean).join(" · "),
+    }
+    renderRefPreview()
+    fecharSeletor()
+}
+
+async function abrirSeletorRoteiro() {
+    abrirSeletor(t('feed.shareItinerary.pickerTitle'))
+    const corpo = document.getElementById("seletorCorpo")
+    corpo.innerHTML = `<p class="seletor-vazio">${t('common.loading')}</p>`
+
+    const resp = await fetch("/grupos/administradas", { credentials: "include" })
+    if (!resp.ok) { corpo.innerHTML = `<p class="seletor-vazio">${t('feed.shareTrip.pickerError')}</p>`; return }
+    const viagens = await resp.json()
+
+    if (viagens.length === 0) {
+        corpo.innerHTML = `<p class="seletor-vazio">${t('feed.shareItinerary.pickerEmpty')}</p>`
+        return
+    }
+
+    corpo.innerHTML = `
+        <select class="seletor-select" id="seletorRoteiroViagem" onchange="carregarRoteirosDoSeletor(this.value)">
+            <option value="" disabled selected>${t('feed.shareItinerary.chooseTrip')}</option>
+            ${viagens.map(v => `<option value="${v.id_grupo}">${escapeHtml(v.nome_grupo)}</option>`).join("")}
+        </select>
+        <div id="seletorRoteiroLista"></div>
+    `
+    window._viagensAdministradas = Object.fromEntries(viagens.map(v => [v.id_grupo, v]))
+}
+
+async function carregarRoteirosDoSeletor(idGrupo) {
+    const lista = document.getElementById("seletorRoteiroLista")
+    lista.innerHTML = `<p class="seletor-vazio">${t('common.loading')}</p>`
+    const resp = await fetch(`/grupos/${idGrupo}/roteiros`, { credentials: "include" })
+    if (!resp.ok) { lista.innerHTML = `<p class="seletor-vazio">${t('feed.shareTrip.pickerError')}</p>`; return }
+    const roteiros = await resp.json()
+
+    if (roteiros.length === 0) {
+        lista.innerHTML = `<p class="seletor-vazio">${t('feed.shareItinerary.noItineraries')}</p>`
+        return
+    }
+
+    const nomeGrupo = window._viagensAdministradas[idGrupo]?.nome_grupo || ""
+    lista.innerHTML = roteiros.map((r, i) => `
+        <div class="seletor-item" onclick="selecionarRoteiro(${i})">
+            <p class="seletor-item-nome">📍 ${escapeHtml(r.titulo)}</p>
+            <p class="seletor-item-meta">${escapeHtml(nomeGrupo)}</p>
+        </div>
+    `).join("")
+    window._roteirosSelecionaveis = roteiros.map(r => ({ ...r, nome_grupo: nomeGrupo }))
+}
+
+function selecionarRoteiro(indice) {
+    const r = window._roteirosSelecionaveis[indice]
+    _refSelecionada = {
+        tipo: "roteiro", ref_id_roteiro: r.id_roteiro,
+        titulo: r.titulo, sub: r.nome_grupo,
+    }
+    renderRefPreview()
+    fecharSeletor()
+}
+
+function removerReferencia() {
+    _refSelecionada = null
+    renderRefPreview()
+}
+
+function renderRefPreview() {
+    const wrap = document.getElementById("refPreviewWrap")
+    if (!_refSelecionada) { wrap.innerHTML = ""; return }
+    const emoji = _refSelecionada.tipo === "viagem" ? "🧳" : "📍"
+    wrap.innerHTML = `
+        <div class="ref-preview">
+            <div class="ref-preview-info">
+                <p class="ref-preview-titulo">${emoji} ${escapeHtml(_refSelecionada.titulo)}</p>
+                ${_refSelecionada.sub ? `<p class="ref-preview-sub">${escapeHtml(_refSelecionada.sub)}</p>` : ""}
+            </div>
+            <button type="button" class="ref-preview-rm" onclick="removerReferencia()">✕</button>
+        </div>
+    `
+}
+
 async function publicar() {
     const texto = document.getElementById("postTexto").value.trim()
-    if (!texto && !arquivoSelecionado) return
+    if (!texto && !arquivoSelecionado && !_refSelecionada) return
 
     const btn = document.getElementById("btnPublicar")
     btn.disabled = true
@@ -366,6 +559,11 @@ async function publicar() {
     const form = new FormData()
     form.append("conteudo", texto)
     if (arquivoSelecionado) form.append("imagem", arquivoSelecionado)
+    if (_refSelecionada) {
+        form.append("tipo", _refSelecionada.tipo)
+        if (_refSelecionada.ref_id_grupo) form.append("ref_id_grupo", _refSelecionada.ref_id_grupo)
+        if (_refSelecionada.ref_id_roteiro) form.append("ref_id_roteiro", _refSelecionada.ref_id_roteiro)
+    }
 
     try {
         const resp = await fetch("/posts", {
@@ -376,7 +574,11 @@ async function publicar() {
         if (resp.ok) {
             document.getElementById("postTexto").value = ""
             removerImagem()
+            removerReferencia()
             carregarFeed()
+        } else {
+            const e = await resp.json().catch(() => ({}))
+            alert(e.detail || t('feed.publishError'))
         }
     } finally {
         btn.disabled = false

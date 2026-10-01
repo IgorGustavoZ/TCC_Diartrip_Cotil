@@ -3,7 +3,7 @@ from pydantic import BaseModel, field_validator, Field
 from datetime import datetime, date
 from schemas import (
     GrupoLista, GrupoDetalhe, GrupoCriado, EntrarGrupoResponse,
-    CodigoConviteResponse, MensagemResponse,
+    CodigoConviteResponse, MensagemResponse, ExplorarViagemResponse,
 )
 from utils.auth import get_usuario_logado
 from utils.rate_limiter import verificar_rate_limit
@@ -108,6 +108,19 @@ def buscar_grupo_por_nome(
 ):
     verificar_rate_limit(f"busca_grupos:{usuario_id}", limite=30)
     return grupo_service.buscar_por_nome(usuario_id, nome, limite, offset)
+
+
+@router.get("/grupos/compartilhaveis", response_model=list[ExplorarViagemResponse])
+def listar_grupos_compartilhaveis(usuario_id: int = Depends(get_usuario_logado)):
+    # Rotas fixas precisam vir ANTES de "/grupos/{id_grupo}" abaixo, senão o
+    # FastAPI tenta casar "compartilhaveis"/"administradas" como id_grupo
+    # (int) e nunca chega aqui — mesmo cuidado já tomado em /explorar/roteiros.
+    return grupo_service.listar_compartilhaveis(usuario_id)
+
+
+@router.get("/grupos/administradas", response_model=list[GrupoLista])
+def listar_grupos_administradas(usuario_id: int = Depends(get_usuario_logado)):
+    return grupo_service.listar_administradas(usuario_id)
 
 
 @router.post("/grupos/entrar", response_model=EntrarGrupoResponse)

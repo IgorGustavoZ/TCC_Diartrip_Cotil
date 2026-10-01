@@ -350,6 +350,7 @@ class ComunidadeResponse(BaseModel):
     id_comunidade: int
     nome: str
     descricao: Optional[str] = None
+    foto_capa: Optional[str] = None
     categoria: Optional[str] = None
     privacidade: str
     criado_por: int
@@ -362,3 +363,7 @@ class ComunidadeResponse(BaseModel):
 class ComunidadeCriada(BaseModel):
     mensagem: str
     id_comunidade: int
+
+
+class FotoComunidadeResponse(BaseModel):
+    foto_capa: str

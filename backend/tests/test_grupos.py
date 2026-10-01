@@ -664,3 +664,60 @@ class TestListarMembros:
         data = resp.json()
         assert data[0]["foto_perfil"] == "https://res.cloudinary.com/x/igor.jpg"
         assert data[1]["foto_perfil"] is None
+
+
+class TestListarGruposCompartilhaveis:
+    def test_lista_viagens_admin_e_publicas(self, client_usuario):
+        viagem = {
+            "id_grupo": 10, "nome_grupo": "Japão", "destino_principal": "Tóquio",
+            "data_inicio": "2027-07-01", "data_fim": "2027-07-10", "id_criador": 1,
+            "criador": "Kaneki Ken", "limite_participantes": 4, "vagas_ocupadas": 3,
+            "orcamento_total": 5000,
+        }
+        conn = _conn_seq([(1,)], fetchalls={0: [viagem]})
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/grupos/compartilhaveis")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]["id_grupo"] == 10
+
+    def test_lista_vazia_quando_nao_ha_viagem_compartilhavel(self, client_usuario):
+        conn = _conn_seq([(1,)], fetchalls={0: []})
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/grupos/compartilhaveis")
+        assert resp.status_code == 200
+        assert resp.json() == []
+
+    def test_sem_autenticacao_retorna_401(self, client):
+        resp = client.get("/grupos/compartilhaveis")
+        assert resp.status_code == 401
+
+
+class TestListarGruposAdministradas:
+    def test_lista_viagens_onde_e_admin(self, client_usuario):
+        viagem = {
+            "id_grupo": 10, "nome_grupo": "Japão", "destino_principal": "Tóquio",
+            "data_inicio": "2027-07-01", "data_fim": "2027-07-10", "criador": "Kaneki Ken",
+        }
+        conn = _conn_seq([(1,)], fetchalls={0: [viagem]})
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/grupos/administradas")
+        assert resp.status_code == 200
+        assert len(resp.json()) == 1
+
+    def test_inclui_viagem_privada(self, client_usuario):
+        # diferente de /grupos/compartilhaveis: nao filtra por publica=1
+        viagem = {
+            "id_grupo": 11, "nome_grupo": "Viagem privada", "destino_principal": None,
+            "data_inicio": None, "data_fim": None, "criador": "Kaneki Ken",
+        }
+        conn = _conn_seq([(1,)], fetchalls={0: [viagem]})
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/grupos/administradas")
+        assert resp.status_code == 200
+        assert len(resp.json()) == 1
+
+    def test_sem_autenticacao_retorna_401(self, client):
+        resp = client.get("/grupos/administradas")
+        assert resp.status_code == 401

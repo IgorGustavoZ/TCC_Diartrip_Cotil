@@ -48,6 +48,63 @@ def listar_por_usuario(usuario_id: int) -> list:
             cursor.close()
 
 
+def listar_administradas(usuario_id: int) -> list:
+    """Viagens onde o usuário é admin, de QUALQUER privacidade — usada pelo
+    seletor de "compartilhar roteiro", que (diferente de "compartilhar
+    viagem") não exige a viagem ser pública, porque o conteúdo do roteiro já
+    vai embutido na publicação (ver post_service.criar)."""
+    with get_db() as conexao:
+        cursor = conexao.cursor(dictionary=True)
+        try:
+            cursor.execute(
+                """
+                SELECT g.id_grupo, g.nome_grupo, g.destino_principal, g.data_inicio, g.data_fim,
+                       u.nome AS criador
+                FROM grupos_viagem g
+                JOIN usuarios u ON g.criado_por = u.id_usuario
+                JOIN grupo_membros gm ON gm.id_grupo = g.id_grupo
+                WHERE gm.id_usuario = %s AND gm.cargo = 'admin'
+                ORDER BY g.data_criacao DESC
+                """,
+                (usuario_id,),
+            )
+            return cursor.fetchall()
+        finally:
+            cursor.close()
+
+
+def listar_compartilhaveis(usuario_id: int) -> list:
+    """Viagens que o usuário pode compartilhar como publicação no Feed —
+    exatamente a mesma regra que post_service.criar() já exige (admin do
+    grupo + viagem pública), pra o seletor nunca oferecer algo que o backend
+    recusaria. Mesmo formato de ExplorarViagemResponse (reaproveitado)."""
+    with get_db() as conexao:
+        cursor = conexao.cursor(dictionary=True)
+        try:
+            cursor.execute(
+                """
+                SELECT g.id_grupo, g.nome_grupo, g.destino_principal, g.data_inicio, g.data_fim,
+                       g.criado_por AS id_criador, u.nome AS criador, g.limite_participantes,
+                       (SELECT COALESCE(SUM(gm2.orcamento), 0) FROM grupo_membros gm2
+                        WHERE gm2.id_grupo = g.id_grupo) AS orcamento_total,
+                       (SELECT COUNT(*) FROM grupo_membros gm3 WHERE gm3.id_grupo = g.id_grupo) AS vagas_ocupadas
+                FROM grupos_viagem g
+                JOIN usuarios u ON g.criado_por = u.id_usuario
+                JOIN grupo_membros gm ON gm.id_grupo = g.id_grupo
+                WHERE gm.id_usuario = %s AND gm.cargo = 'admin' AND g.publica = 1
+                ORDER BY g.data_criacao DESC
+                """,
+                (usuario_id,),
+            )
+            viagens = cursor.fetchall()
+            for v in viagens:
+                if v.get("orcamento_total") is not None:
+                    v["orcamento_total"] = float(v["orcamento_total"])
+            return viagens
+        finally:
+            cursor.close()
+
+
 def buscar_por_nome(usuario_id: int, nome: str | None, limite: int = 50, offset: int = 0) -> list:
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
