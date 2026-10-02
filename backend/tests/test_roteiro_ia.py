@@ -44,7 +44,7 @@ _JSON_VALIDO = json.dumps({
 
 class TestGerarRoteiroIA:
     def test_gerar_com_sucesso(self, client_usuario):
-        cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo()])
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
         conn = make_connection(cur)
 
         with patch("database.get_db", fake_get_db(conn)), \
@@ -66,7 +66,7 @@ class TestGerarRoteiroIA:
         mock_listar.assert_called_once()
 
     def test_previsao_disponivel_entra_no_prompt(self, client_usuario):
-        cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo(data_inicio="2026-09-10", data_fim="2026-09-11")])
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo(data_inicio="2026-09-10", data_fim="2026-09-11")])
         conn = make_connection(cur)
 
         with patch("database.get_db", fake_get_db(conn)), \
@@ -87,7 +87,7 @@ class TestGerarRoteiroIA:
         assert "Chuva leve" in prompt_enviado
 
     def test_previsao_indisponivel_ainda_gera_roteiro(self, client_usuario):
-        cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo()])
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
         conn = make_connection(cur)
 
         with patch("database.get_db", fake_get_db(conn)), \
@@ -105,7 +105,7 @@ class TestGerarRoteiroIA:
         assert "PREVISAO_TEMPO" not in prompt_enviado
 
     def test_sem_destino_retorna_400(self, client_usuario):
-        cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo(destino=None)])
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo(destino=None)])
         conn = make_connection(cur)
 
         with patch("database.get_db", fake_get_db(conn)):
@@ -114,7 +114,7 @@ class TestGerarRoteiroIA:
         assert resp.status_code == 400
 
     def test_sem_datas_retorna_400(self, client_usuario):
-        cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo(data_inicio=None, data_fim=None)])
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo(data_inicio=None, data_fim=None)])
         conn = make_connection(cur)
 
         with patch("database.get_db", fake_get_db(conn)):
@@ -131,12 +131,22 @@ class TestGerarRoteiroIA:
 
         assert resp.status_code == 403
 
+    def test_membro_comum_nao_pode_gerar_com_ia(self, client_usuario):
+        # Gerar roteiro é ação administrativa — igual a adicionar manualmente.
+        cur = make_cursor(rows=[(1,), {"cargo": "membro"}])
+        conn = make_connection(cur)
+
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.post("/grupos/10/roteiros/gerar-ia")
+
+        assert resp.status_code == 403
+
     def test_sem_autenticacao_retorna_401(self, client):
         resp = client.post("/grupos/10/roteiros/gerar-ia")
         assert resp.status_code == 401
 
     def test_geoapify_indisponivel_ainda_gera_roteiro(self, client_usuario):
-        cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo()])
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
         conn = make_connection(cur)
 
         with patch("database.get_db", fake_get_db(conn)), \
@@ -152,7 +162,7 @@ class TestGerarRoteiroIA:
         mock_pois.assert_not_called()  # sem coordenadas, nem tenta buscar POIs
 
     def test_ia_retorna_json_invalido_retorna_502(self, client_usuario):
-        cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo()])
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
         conn = make_connection(cur)
 
         with patch("database.get_db", fake_get_db(conn)), \
@@ -165,7 +175,7 @@ class TestGerarRoteiroIA:
         assert "técnic" not in resp.json()["detail"].lower()
 
     def test_ia_sem_itens_retorna_502(self, client_usuario):
-        cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo()])
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
         conn = make_connection(cur)
 
         with patch("database.get_db", fake_get_db(conn)), \
@@ -177,7 +187,7 @@ class TestGerarRoteiroIA:
         assert resp.status_code == 502
 
     def test_ia_indisponivel_retorna_502(self, client_usuario):
-        cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo()])
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
         conn = make_connection(cur)
 
         with patch("database.get_db", fake_get_db(conn)), \
@@ -189,7 +199,7 @@ class TestGerarRoteiroIA:
         assert resp.status_code == 502
 
     def test_ia_sem_creditos_retorna_mensagem_especifica_sem_retentar(self, client_usuario):
-        cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo()])
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
         conn = make_connection(cur)
 
         erro_402 = Exception(
@@ -209,7 +219,7 @@ class TestGerarRoteiroIA:
         assert mock_client.chat.completions.create.call_count == 1
 
     def test_data_fim_antes_do_inicio_retorna_400(self, client_usuario):
-        cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo(data_inicio="2026-09-12", data_fim="2026-09-10")])
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo(data_inicio="2026-09-12", data_fim="2026-09-10")])
         conn = make_connection(cur)
 
         with patch("database.get_db", fake_get_db(conn)):
@@ -219,7 +229,7 @@ class TestGerarRoteiroIA:
 
     def test_preferencias_entram_no_prompt(self, client_usuario):
         cur = make_cursor(rows=[
-            (1,), {"cargo": "membro"},
+            (1,), {"cargo": "admin"},
             _fake_grupo(preferencias="Participantes: 4 | Transporte: carro | gastronomia, vida noturna"),
         ])
         conn = make_connection(cur)
@@ -244,7 +254,7 @@ class TestGerarRoteiroIA:
 
     def test_transporte_a_pe_reduz_raio_de_busca(self, client_usuario):
         cur = make_cursor(rows=[
-            (1,), {"cargo": "membro"},
+            (1,), {"cargo": "admin"},
             _fake_grupo(preferencias="Transporte: a pé"),
         ])
         conn = make_connection(cur)
@@ -263,7 +273,7 @@ class TestGerarRoteiroIA:
         assert mock_pois.call_args.kwargs.get("raio_metros") == 1500
 
     def test_sem_preferencias_prompt_indica_nao_informado(self, client_usuario):
-        cur = make_cursor(rows=[(1,), {"cargo": "membro"}, _fake_grupo()])
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
         conn = make_connection(cur)
 
         with patch("database.get_db", fake_get_db(conn)), \
@@ -278,6 +288,33 @@ class TestGerarRoteiroIA:
         prompt_enviado = mock_client.chat.completions.create.call_args.kwargs["messages"][0]["content"]
         assert "Participantes: não informado" in prompt_enviado
         assert "Meio de transporte: não informado" in prompt_enviado
+
+
+class TestRegenerarSubstituiApenasItensDaIA:
+    def test_regenerar_apaga_so_itens_origem_ia_antes_de_inserir(self, client_usuario):
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
+        conn = make_connection(cur)
+
+        with patch("database.get_db", fake_get_db(conn)), \
+             patch("services.roteiro_ia_service.geocodificar", return_value=None), \
+             patch("services.roteiro_ia_service._client") as mock_client, \
+             patch("services.roteiro_ia_service.roteiro_service.criar", return_value={"mensagem": "ok", "id": 1}) as mock_criar, \
+             patch("services.roteiro_ia_service.roteiro_service.listar_por_grupo", return_value=[]):
+            mock_client.chat.completions.create.return_value = _fake_ia(_JSON_VALIDO)
+            resp = client_usuario.post("/grupos/10/roteiros/gerar-ia")
+
+        assert resp.status_code == 200
+        deletes = [
+            c for c in cur.execute.call_args_list
+            if c.args and "DELETE" in c.args[0] and "roteiros" in c.args[0]
+        ]
+        assert len(deletes) == 1
+        sql, params = deletes[0].args
+        assert "origem_ia=1" in sql
+        assert params == (10,)
+        # a geração por IA nunca cria itens manuais (origem_ia=0) — só
+        # os seus próprios itens antigos podem ser apagados aqui
+        assert mock_criar.call_count == 2
 
 
 class TestExtrairPreferencias:

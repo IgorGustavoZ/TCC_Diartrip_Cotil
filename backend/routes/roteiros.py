@@ -18,6 +18,10 @@ class RoteiroUpdate(BaseModel):
     descricao: str = Field(..., max_length=10000)
 
 
+class RoteiroMover(BaseModel):
+    direcao: str = Field(..., pattern="^(cima|baixo)$")
+
+
 @router.get("/grupos/{id_grupo}/roteiros", response_model=list[RoteiroResponse])
 def listar_roteiros_grupo(id_grupo: int, usuario_id: int = Depends(get_usuario_logado)):
     return roteiro_service.listar_por_grupo(id_grupo, usuario_id)
@@ -53,3 +57,10 @@ def atualizar_roteiro(
 @router.delete("/roteiros/{id_roteiro}", response_model=MensagemResponse)
 def deletar_roteiro(id_roteiro: int, usuario_id: int = Depends(get_usuario_logado)):
     return roteiro_service.deletar(id_roteiro, usuario_id)
+
+
+@router.patch("/roteiros/{id_roteiro}/mover", response_model=MensagemResponse)
+def mover_roteiro(
+    id_roteiro: int, dados: RoteiroMover, usuario_id: int = Depends(get_usuario_logado)
+):
+    return roteiro_service.mover(id_roteiro, dados.direcao, usuario_id)

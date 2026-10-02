@@ -87,13 +87,40 @@
 }
 .codigo-convite-valor { font-size: 18px; font-weight: 700; letter-spacing: 2px; color: var(--text); flex: 1; }
 
-.form-editar-comunidade { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-.form-editar-comunidade input, .form-editar-comunidade textarea {
-    width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 14px; outline: none; font-family: inherit;
+/* Configurações da comunidade — mesma linguagem visual do modal "criar
+   comunidade" (feed.html: .form-comunidade-campo/.privacidade-card), pra não
+   parecer um formulário administrativo genérico dentro da página. */
+.settings-card h2 { margin: 0 0 4px; }
+.settings-sub { font-size: 13px; color: var(--text-muted); margin: 0 0 20px; line-height: 1.5; }
+.settings-section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-muted);
+    text-transform: uppercase; margin: 22px 0 12px;
 }
-.form-editar-comunidade textarea { resize: vertical; min-height: 60px; }
-.form-editar-comunidade label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+.settings-section-label:first-of-type { margin-top: 4px; }
+.form-comunidade-campo { margin-bottom: 16px; }
+.form-comunidade-campo > label {
+    display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;
+}
+.form-comunidade-campo input, .form-comunidade-campo textarea {
+    width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; outline: none;
+    font-family: inherit; transition: border-color 0.2s;
+}
+.form-comunidade-campo input:focus, .form-comunidade-campo textarea:focus { border-color: var(--primary); background: var(--surface); }
+.form-comunidade-campo textarea { resize: vertical; min-height: 64px; }
+.privacidade-opcoes { display: flex; flex-direction: column; gap: 8px; }
+.privacidade-card {
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+.privacidade-card:hover { background: var(--surface-2); }
+.privacidade-card.selecionada { border-color: var(--primary); background: var(--primary-soft); }
+.privacidade-card-titulo { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 2px; }
+.privacidade-card-desc { font-size: 12px; color: var(--text-muted); margin: 0; }
+.settings-danger-btn {
+    background: var(--danger); color: #fff; border: none; border-radius: 8px;
+    padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
 
 /* Seletor de "compartilhar viagem/roteiro" — idêntico ao do Feed
    (backend/frontend/lobby-pags/feed.html), reaproveita o overlay/cartão do
@@ -153,26 +180,53 @@
             </div>
 
             <div id="painelAdmin" style="display:none;">
-                <div class="trip-card-expanded">
+                <div class="trip-card-expanded settings-card">
                     <h2 data-i18n="comunidades.admin.settingsTitle">⚙️ Configurações da comunidade</h2>
-                    <div class="form-editar-comunidade">
-                        <input id="editNome" maxlength="150" data-i18n-placeholder="comunidades.form.name" placeholder="Nome">
-                        <textarea id="editDescricao" maxlength="2000" data-i18n-placeholder="comunidades.form.desc" placeholder="Descrição"></textarea>
-                        <input id="editCategoria" maxlength="100" data-i18n-placeholder="comunidades.form.category" placeholder="Categoria/destino">
-                        <label><input type="radio" name="editPriv" value="publica"> <span data-i18n="comunidades.form.public">Pública</span></label>
-                        <label><input type="radio" name="editPriv" value="privada"> <span data-i18n="comunidades.form.private">Privada</span></label>
-                        <span class="msg" id="editComunidadeErro" style="display:none; color:var(--danger); font-size:12px;"></span>
-                        <button class="btn-publicar" style="align-self:flex-start;" onclick="salvarEdicaoComunidade()" data-i18n="comunidades.admin.save">Salvar alterações</button>
+                    <p class="settings-sub" data-i18n="comunidades.admin.settingsSub">Gerencie as informações e a privacidade desta comunidade.</p>
+
+                    <div class="settings-section-label" data-i18n="comunidades.admin.infoSection">Informações</div>
+                    <div class="form-comunidade-campo">
+                        <label data-i18n="comunidades.form.name">Nome</label>
+                        <input id="editNome" maxlength="150" data-i18n-placeholder="comunidades.form.namePlaceholder" placeholder="ex: Amantes do Japão">
                     </div>
+                    <div class="form-comunidade-campo">
+                        <label data-i18n="comunidades.form.aboutLabel">Sobre a comunidade</label>
+                        <textarea id="editDescricao" maxlength="2000" data-i18n-placeholder="comunidades.form.desc" placeholder="Descrição"></textarea>
+                    </div>
+                    <div class="form-comunidade-campo">
+                        <label data-i18n="comunidades.form.themeLabel">Tema / destino</label>
+                        <input id="editCategoria" maxlength="100" data-i18n-placeholder="comunidades.form.category" placeholder="Categoria/destino">
+                    </div>
+
+                    <div class="settings-section-label" data-i18n="comunidades.form.privacyLabel">Privacidade</div>
+                    <div class="privacidade-opcoes">
+                        <div class="privacidade-card" id="editPrivCardPublica" onclick="selecionarEditPrivacidade('publica')">
+                            <p class="privacidade-card-titulo">🌎 <span data-i18n="comunidades.form.public">Pública</span></p>
+                            <p class="privacidade-card-desc" data-i18n="comunidades.form.publicDesc">Qualquer pessoa pode encontrar e participar.</p>
+                        </div>
+                        <div class="privacidade-card" id="editPrivCardPrivada" onclick="selecionarEditPrivacidade('privada')">
+                            <p class="privacidade-card-titulo">🔒 <span data-i18n="comunidades.form.private">Privada</span></p>
+                            <p class="privacidade-card-desc" data-i18n="comunidades.form.privateDesc">Apenas pessoas com código de convite podem participar.</p>
+                        </div>
+                    </div>
+
+                    <span class="msg" id="editComunidadeErro" style="display:none; color:var(--danger); font-size:12px; margin-top:12px;"></span>
+                    <button class="btn-publicar" style="margin-top:16px;" onclick="salvarEdicaoComunidade()" data-i18n="comunidades.admin.save">Salvar alterações</button>
                 </div>
 
-                <div class="trip-card-expanded">
+                <div class="trip-card-expanded" id="cardCodigoConvite" style="display:none;">
                     <h2 data-i18n="comunidades.admin.inviteTitle">🔑 Código de convite</h2>
-                    <p style="color:var(--text-muted); font-size:13px; margin:0;" data-i18n="comunidades.admin.inviteDesc">Use este código para convidar pessoas quando a comunidade for privada.</p>
+                    <p style="color:var(--text-muted); font-size:13px; margin:0;" data-i18n="comunidades.admin.inviteDesc">Use este código para convidar pessoas — só existe porque esta comunidade é privada.</p>
                     <div class="codigo-convite-box">
                         <span class="codigo-convite-valor" id="codigoConviteValor">······</span>
                         <button class="btn-editar-comunidade" onclick="copiarCodigoConvite()" data-i18n="common.copy">Copiar</button>
                     </div>
+                </div>
+
+                <div class="trip-card-expanded" style="border:1px solid rgba(var(--danger-rgb),0.3);">
+                    <h2 style="color:var(--danger);" data-i18n="comunidades.admin.dangerTitle">⚠️ Zona de perigo</h2>
+                    <p style="color:var(--text-muted); font-size:14px; margin:0 0 14px;" data-i18n="comunidades.admin.dangerDesc">Excluir a comunidade remove permanentemente todos os membros e publicações dela.</p>
+                    <button class="settings-danger-btn" onclick="excluirComunidade()" data-i18n="comunidades.deleteBtn">🗑 Excluir comunidade</button>
                 </div>
             </div>
 
@@ -180,9 +234,17 @@
                 <div class="av" id="avCreate">?</div>
                 <div class="create-right">
                     <textarea id="postTexto" data-i18n-placeholder="comunidades.postPlaceholder" placeholder="Compartilhe algo com a comunidade..."></textarea>
+                    <div class="img-preview-wrap" id="imgPreviewWrap">
+                        <img id="imgPreview" src="" alt="">
+                        <button class="btn-rm-img" onclick="removerImagem()">✕</button>
+                    </div>
                     <div id="refPreviewWrap"></div>
                     <div class="create-actions">
                         <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <label class="btn-foto-post">
+                                <span data-i18n="feed.photo">📷 Foto</span>
+                                <input type="file" id="postFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+                            </label>
                             <button type="button" class="btn-foto-post" onclick="abrirSeletorViagem()" data-i18n="feed.shareTrip">🧳 Viagem</button>
                             <button type="button" class="btn-foto-post" onclick="abrirSeletorRoteiro()" data-i18n="feed.shareItinerary">📍 Roteiro</button>
                         </div>
@@ -218,6 +280,7 @@ if (!sessionStorage.getItem("logado")) window.location.href = "../login.html"
 let souMembro = false
 let souAdmin = false
 let comunidadeAtual = null
+let arquivoSelecionado = null
 
 document.addEventListener('languageChanged', async () => {
     applyTranslations()
@@ -250,8 +313,19 @@ async function carregarComunidade() {
         document.getElementById("editNome").value = c.nome
         document.getElementById("editDescricao").value = c.descricao || ""
         document.getElementById("editCategoria").value = c.categoria || ""
-        document.querySelector(`input[name="editPriv"][value="${c.privacidade}"]`).checked = true
-        carregarCodigoConvite()
+        selecionarEditPrivacidade(c.privacidade)
+
+        // Código de convite só existe pra comunidade PRIVADA — pública não
+        // tem (nem precisa ter: qualquer um entra direto). O backend já
+        // recusa (400) chamar esse endpoint pra uma comunidade pública; aqui
+        // simplesmente nem mostramos o card nem chamamos o endpoint.
+        const cardCodigo = document.getElementById("cardCodigoConvite")
+        if (c.privacidade === 'privada') {
+            cardCodigo.style.display = ""
+            carregarCodigoConvite()
+        } else {
+            cardCodigo.style.display = "none"
+        }
     }
 
     let acao = ""
@@ -298,6 +372,32 @@ document.getElementById("fotoComunidadeInput").addEventListener("change", async 
     e.target.value = ""
 })
 
+let _editPrivacidadeSelecionada = "publica"
+
+function selecionarEditPrivacidade(valor) {
+    _editPrivacidadeSelecionada = valor
+    document.getElementById("editPrivCardPublica").classList.toggle("selecionada", valor === "publica")
+    document.getElementById("editPrivCardPrivada").classList.toggle("selecionada", valor === "privada")
+}
+
+function excluirComunidade() {
+    abrirModalConfirmacao({
+        titulo: t('comunidades.deleteConfirmTitle'),
+        mensagem: t('comunidades.deleteConfirmBody'),
+        textoConfirmar: t('comunidades.deleteBtn'),
+        tipo: 'perigo',
+        onConfirmar: async () => {
+            const resp = await fetch(`/comunidades/${idComunidade}`, { method: "DELETE", credentials: "include" })
+            if (resp.ok) {
+                window.location.href = "feed.html"
+            } else {
+                const e = await resp.json().catch(() => ({}))
+                alert(e.detail || t('comunidades.deleteError'))
+            }
+        }
+    })
+}
+
 async function salvarEdicaoComunidade() {
     const erro = document.getElementById("editComunidadeErro")
     erro.style.display = "none"
@@ -311,7 +411,7 @@ async function salvarEdicaoComunidade() {
         nome,
         descricao: document.getElementById("editDescricao").value.trim(),
         categoria: document.getElementById("editCategoria").value.trim(),
-        privacidade: document.querySelector('input[name="editPriv"]:checked').value,
+        privacidade: _editPrivacidadeSelecionada,
     }
     const resp = await fetch(`/comunidades/${idComunidade}`, {
         method: "PUT", credentials: "include",
@@ -366,6 +466,22 @@ async function carregarMeu() {
     const el = document.getElementById("avCreate")
     if (u.foto_perfil) el.innerHTML = `<img src="${u.foto_perfil}">`
     else el.textContent = u.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+}
+
+document.getElementById("postFotoInput").addEventListener("change", (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    arquivoSelecionado = file
+    const url = URL.createObjectURL(file)
+    document.getElementById("imgPreview").src = url
+    document.getElementById("imgPreviewWrap").style.display = "block"
+})
+
+function removerImagem() {
+    arquivoSelecionado = null
+    document.getElementById("postFotoInput").value = ""
+    document.getElementById("imgPreview").src = ""
+    document.getElementById("imgPreviewWrap").style.display = "none"
 }
 
 // ── Compartilhar viagem/roteiro no composer — mesmo mecanismo do Feed
@@ -477,12 +593,13 @@ function renderRefPreview() {
 
 async function publicar() {
     const texto = document.getElementById("postTexto").value.trim()
-    if (!texto && !_refSelecionada) return
+    if (!texto && !arquivoSelecionado && !_refSelecionada) return
     const btn = document.getElementById("btnPublicar")
     btn.disabled = true
     const form = new FormData()
     form.append("conteudo", texto)
     form.append("id_comunidade", idComunidade)
+    if (arquivoSelecionado) form.append("imagem", arquivoSelecionado)
     if (_refSelecionada) {
         form.append("tipo", _refSelecionada.tipo)
         if (_refSelecionada.ref_id_grupo) form.append("ref_id_grupo", _refSelecionada.ref_id_grupo)
@@ -492,6 +609,7 @@ async function publicar() {
         const resp = await fetch("/posts", { method: "POST", credentials: "include", body: form })
         if (resp.ok) {
             document.getElementById("postTexto").value = ""
+            removerImagem()
             removerReferencia()
             carregarPosts()
         } else {
@@ -521,7 +639,7 @@ function montarCardReferencia(p) {
         const r = p.ref_roteiro
         const preview = r.itens.slice(0, 3)
         const resto = r.itens.slice(3)
-        const linhaItem = it => `<p style="font-size:13px; color:var(--text-secondary); margin:4px 0 0;">• ${escapeHtml(it.titulo)}</p>`
+        const linhaItem = it => `<p style="font-size:13px; color:var(--text-secondary); margin:4px 0 0;">• ${escapeHtml(formatarTituloRoteiro(it.titulo))}</p>`
         return `
         <p class="post-ref-selo" style="font-size:12px; color:var(--text-muted); margin:0 0 8px;">📍 ${t('feed.ref.sharedItinerary')}</p>
         <div class="ref-preview" style="margin-top:0; align-items:flex-start;">
@@ -568,6 +686,9 @@ async function carregarPosts() {
         const delBtn = p.id_usuario === meuId
             ? `<button class="btn-del-post" onclick="deletarPost(${p.id_post})">${t('common.delete')}</button>`
             : ""
+        const imgHtml = p.imagem
+            ? `<img class="post-img" src="${p.imagem}" alt="">`
+            : ""
         const jaCurtiu = p.ja_curtiu === 1
         const curtBtn = `<button class="btn-curtir${jaCurtiu ? " curtido" : ""}" onclick="curtir(${p.id_post}, this)">
             <span class="curtir-icon">${jaCurtiu ? "❤️" : "🤍"}</span>
@@ -594,6 +715,7 @@ async function carregarPosts() {
                 ${delBtn}
             </div>
             ${p.conteudo ? `<p class="post-texto">${escapeHtml(p.conteudo)}</p>` : ''}
+            ${imgHtml}
             ${montarCardReferencia(p)}
             <div class="post-acoes">
                 ${curtBtn}
@@ -691,6 +813,13 @@ function formatarData(iso) {
 
 function escapeHtml(txt) {
     return String(txt).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+}
+
+// "Dia N · horário —" é texto livre dentro de titulo (ver
+// backend/alembic/versions/011_roteiro_ordem.py) — removido só da exibição,
+// nunca alterado no banco.
+function formatarTituloRoteiro(titulo) {
+    return (titulo || "").replace(/^dia\s+\d+\s*·\s*\d{1,2}:\d{2}\s*[—\-–]\s*/i, "")
 }
 
 // carregarComunidade() precisa terminar (e definir souMembro) ANTES de

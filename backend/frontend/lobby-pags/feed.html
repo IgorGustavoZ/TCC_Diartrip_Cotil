@@ -98,15 +98,50 @@
 }
 .btn-nova-comunidade:hover { background: var(--surface); }
 
-.form-comunidade { display: none; flex-direction: column; gap: 10px; margin-top: 4px; }
-.form-comunidade.aberto { display: flex; }
-.form-comunidade input, .form-comunidade textarea {
-    width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; outline: none; font-family: inherit;
+/* Criar comunidade — modal dedicado (mesmo overlay/cartão do seletor de
+   compartilhamento, .confirm-modal-ov/.confirm-modal), com hierarquia clara
+   em vez de um formulário de cadastro genérico. */
+.criar-comunidade-modal { max-width: 460px; text-align: left; max-height: 85vh; overflow-y: auto; }
+.criar-comunidade-sub { font-size: 13px; color: var(--text-muted); margin: 0 0 20px; line-height: 1.5; }
+
+.criar-comunidade-foto-row { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.criar-comunidade-foto-av {
+    width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    background: var(--surface-2); border: 1px dashed var(--border-strong);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; color: var(--text-muted);
 }
-.form-comunidade textarea { resize: vertical; min-height: 60px; }
-.form-comunidade label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
-.form-comunidade .msg { font-size: 12px; color: var(--danger); }
+.criar-comunidade-foto-av img { width: 100%; height: 100%; object-fit: cover; }
+.criar-comunidade-foto-av.tem-foto { border-style: solid; }
+.signup-foto-btn {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 16px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer;
+}
+.signup-foto-btn:hover { background: var(--surface); }
+
+.form-comunidade-campo { margin-bottom: 16px; }
+.form-comunidade-campo > label {
+    display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;
+}
+.form-comunidade-campo input, .form-comunidade-campo textarea {
+    width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; outline: none;
+    font-family: inherit; transition: border-color 0.2s;
+}
+.form-comunidade-campo input:focus, .form-comunidade-campo textarea:focus { border-color: var(--primary); background: var(--surface); }
+.form-comunidade-campo textarea { resize: vertical; min-height: 64px; }
+
+.privacidade-opcoes { display: flex; flex-direction: column; gap: 8px; }
+.privacidade-card {
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+.privacidade-card:hover { background: var(--surface-2); }
+.privacidade-card.selecionada { border-color: var(--primary); background: var(--primary-soft); }
+.privacidade-card-titulo { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 2px; }
+.privacidade-card-desc { font-size: 12px; color: var(--text-muted); margin: 0; }
+
+.criar-comunidade-submit { width: 100%; margin-top: 8px; }
 
 .comunidade-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
@@ -237,20 +272,61 @@
                         <input id="comunidadeBuscaInput" data-i18n-placeholder="comunidades.searchPlaceholder" placeholder="🔎 Search communities...">
                         <button class="btn-buscar" onclick="carregarComunidades()" data-i18n="explorar.searchBtn">Search</button>
                     </div>
-                    <button class="btn-nova-comunidade" onclick="toggleFormComunidade()" data-i18n="comunidades.newBtn">+ Criar comunidade</button>
-                    <div class="form-comunidade" id="formComunidade">
-                        <input id="comunidadeNome" maxlength="150" data-i18n-placeholder="comunidades.form.name" placeholder="Nome">
-                        <textarea id="comunidadeDescricao" maxlength="2000" data-i18n-placeholder="comunidades.form.desc" placeholder="Descrição"></textarea>
-                        <input id="comunidadeCategoria" maxlength="100" data-i18n-placeholder="comunidades.form.category" placeholder="Categoria/destino (ex: Japão, Mochilão)">
-                        <label><input type="radio" name="comunidadePriv" value="publica" checked> <span data-i18n="comunidades.form.public">Pública</span></label>
-                        <label><input type="radio" name="comunidadePriv" value="privada"> <span data-i18n="comunidades.form.private">Privada</span></label>
-                        <span class="msg" id="comunidadeFormErro" style="display:none;"></span>
-                        <button class="btn-buscar" onclick="criarComunidade()" data-i18n="comunidades.form.submit">Criar comunidade</button>
-                    </div>
+                    <button class="btn-nova-comunidade" onclick="abrirModalCriarComunidade()" data-i18n="comunidades.newBtn">+ Criar comunidade</button>
                 </div>
                 <div id="comunidadesLista"><p class="explorar-vazio" data-i18n="common.loading">Carregando...</p></div>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="confirm-modal-ov" id="modalCriarComunidadeOv" onclick="if(event.target===this) fecharModalCriarComunidade()">
+    <div class="confirm-modal criar-comunidade-modal">
+        <div class="seletor-header">
+            <h3 style="margin:0;" data-i18n="comunidades.form.title">Create community</h3>
+            <button type="button" class="seletor-fechar" onclick="fecharModalCriarComunidade()">✕</button>
+        </div>
+        <p class="criar-comunidade-sub" data-i18n="comunidades.form.subtitle">Create a space for people who share the same travel interests.</p>
+
+        <div class="criar-comunidade-foto-row">
+            <div class="criar-comunidade-foto-av" id="comunidadeFotoAv">+</div>
+            <label class="signup-foto-btn">
+                <span id="comunidadeFotoBtnTexto" data-i18n="register.photo.add">Add photo</span>
+                <input type="file" id="comunidadeFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+            </label>
+        </div>
+
+        <div class="form-comunidade-campo">
+            <label data-i18n="comunidades.form.name">Name</label>
+            <input id="comunidadeNome" maxlength="150" data-i18n-placeholder="comunidades.form.namePlaceholder" placeholder="e.g. Japan Lovers">
+        </div>
+
+        <div class="form-comunidade-campo">
+            <label data-i18n="comunidades.form.aboutLabel">About the community</label>
+            <textarea id="comunidadeDescricao" maxlength="2000" data-i18n-placeholder="comunidades.form.desc" placeholder="Description"></textarea>
+        </div>
+
+        <div class="form-comunidade-campo">
+            <label data-i18n="comunidades.form.themeLabel">Theme / destination</label>
+            <input id="comunidadeCategoria" maxlength="100" data-i18n-placeholder="comunidades.form.category" placeholder="Category/destination (e.g. Japan, Backpacking)">
+        </div>
+
+        <div class="form-comunidade-campo">
+            <label data-i18n="comunidades.form.privacyLabel">Privacy</label>
+            <div class="privacidade-opcoes">
+                <div class="privacidade-card selecionada" id="privCardPublica" onclick="selecionarPrivacidade('publica')">
+                    <p class="privacidade-card-titulo">🌎 <span data-i18n="comunidades.form.public">Public</span></p>
+                    <p class="privacidade-card-desc" data-i18n="comunidades.form.publicDesc">Anyone can find and join.</p>
+                </div>
+                <div class="privacidade-card" id="privCardPrivada" onclick="selecionarPrivacidade('privada')">
+                    <p class="privacidade-card-titulo">🔒 <span data-i18n="comunidades.form.private">Private</span></p>
+                    <p class="privacidade-card-desc" data-i18n="comunidades.form.privateDesc">Only people with an invite code can join.</p>
+                </div>
+            </div>
+        </div>
+
+        <span class="msg" id="comunidadeFormErro" style="display:none; color:var(--danger); font-size:13px;"></span>
+        <button class="btn-publicar criar-comunidade-submit" id="btnCriarComunidade" onclick="criarComunidade()" data-i18n="comunidades.form.submit">Create community</button>
     </div>
 </div>
 
@@ -300,16 +376,40 @@ document.getElementById("comunidadeBuscaInput")?.addEventListener("keydown", e =
     if (e.key === "Enter") carregarComunidades()
 })
 
-function toggleFormComunidade() {
-    document.getElementById("formComunidade").classList.toggle("aberto")
+// ── Criar comunidade (modal) ──
+let _comunidadePrivacidade = 'publica'
+let _comunidadeFotoSelecionada = null
+
+function abrirModalCriarComunidade() {
+    document.getElementById("modalCriarComunidadeOv").classList.add("ativo")
 }
+
+function fecharModalCriarComunidade() {
+    document.getElementById("modalCriarComunidadeOv").classList.remove("ativo")
+}
+
+function selecionarPrivacidade(valor) {
+    _comunidadePrivacidade = valor
+    document.getElementById("privCardPublica").classList.toggle("selecionada", valor === 'publica')
+    document.getElementById("privCardPrivada").classList.toggle("selecionada", valor === 'privada')
+}
+
+document.getElementById("comunidadeFotoInput").addEventListener("change", (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    _comunidadeFotoSelecionada = file
+    const av = document.getElementById("comunidadeFotoAv")
+    av.classList.add("tem-foto")
+    av.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="">`
+    document.getElementById("comunidadeFotoBtnTexto").textContent = t("register.photo.change")
+})
 
 async function criarComunidade() {
     const nome = document.getElementById("comunidadeNome").value.trim()
     const descricao = document.getElementById("comunidadeDescricao").value.trim()
     const categoria = document.getElementById("comunidadeCategoria").value.trim()
-    const privacidade = document.querySelector('input[name="comunidadePriv"]:checked').value
     const erro = document.getElementById("comunidadeFormErro")
+    const btn = document.getElementById("btnCriarComunidade")
     erro.style.display = "none"
 
     if (nome.length < 3) {
@@ -318,12 +418,13 @@ async function criarComunidade() {
         return
     }
 
+    btn.disabled = true
     try {
         const resp = await fetch("/comunidades", {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nome, descricao, categoria, privacidade })
+            body: JSON.stringify({ nome, descricao, categoria, privacidade: _comunidadePrivacidade })
         })
         const dados = await resp.json()
         if (!resp.ok) {
@@ -331,14 +432,26 @@ async function criarComunidade() {
             erro.style.display = "inline"
             return
         }
-        document.getElementById("comunidadeNome").value = ""
-        document.getElementById("comunidadeDescricao").value = ""
-        document.getElementById("comunidadeCategoria").value = ""
-        toggleFormComunidade()
+
+        // A criação é só JSON (sem foto) — igual ao cadastro de usuário, se
+        // uma foto foi escolhida o upload acontece logo depois, reaproveitando
+        // o mesmo PATCH /comunidades/{id}/foto já usado na página da comunidade.
+        if (_comunidadeFotoSelecionada) {
+            const fotoForm = new FormData()
+            fotoForm.append("foto", _comunidadeFotoSelecionada)
+            try {
+                await fetch(`/comunidades/${dados.id_comunidade}/foto`, {
+                    method: "PATCH", credentials: "include", body: fotoForm
+                })
+            } catch (e) { /* comunidade já foi criada; foto pode ser definida depois */ }
+        }
+
         window.location.href = `comunidade.html?id=${dados.id_comunidade}`
     } catch (e) {
         erro.textContent = t('comunidades.form.error')
         erro.style.display = "inline"
+    } finally {
+        btn.disabled = false
     }
 }
 
@@ -596,7 +709,7 @@ function montarCardReferencia(p) {
         const r = p.ref_roteiro
         const preview = r.itens.slice(0, 3)
         const resto = r.itens.slice(3)
-        const linhaItem = it => `<div class="post-ref-item">• ${escapeHtml(it.titulo)}</div>`
+        const linhaItem = it => `<div class="post-ref-item">• ${escapeHtml(formatarTituloRoteiro(it.titulo))}</div>`
         return `
         <p class="post-ref-selo">📍 ${t('feed.ref.sharedItinerary')}</p>
         <div class="post-ref-card">
@@ -785,6 +898,13 @@ function formatarData(iso) {
 
 function escapeHtml(txt) {
     return txt.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+}
+
+// "Dia N · horário —" é texto livre dentro de titulo (ver
+// backend/alembic/versions/011_roteiro_ordem.py) — removido só da exibição,
+// nunca alterado no banco.
+function formatarTituloRoteiro(titulo) {
+    return (titulo || "").replace(/^dia\s+\d+\s*·\s*\d{1,2}:\d{2}\s*[—\-–]\s*/i, "")
 }
 
 carregarMeu()

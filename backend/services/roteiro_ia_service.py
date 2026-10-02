@@ -3,8 +3,9 @@
 Não é um sistema paralelo de roteiros: este módulo só monta o prompt, chama
 a IA e reaproveita services/roteiro_service.py::criar() para inserir cada
 item — exatamente a mesma tabela, os mesmos campos, o mesmo mecanismo de
-edição/exclusão do roteiro manual. "Gerar novamente com IA" apenas adiciona
-mais itens, nunca substitui os existentes.
+edição/exclusão do roteiro manual. "Gerar novamente com IA" substitui apenas
+os itens que a própria IA criou antes (origem_ia=1) — itens criados
+manualmente pelo usuário nunca são tocados.
 """
 import json
 import logging
@@ -316,7 +317,11 @@ def gerar_com_ia(id_grupo: int, usuario_id: int) -> list:
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:
-            checar_membro_grupo(cursor, id_grupo, usuario_id)
+            cargo = checar_membro_grupo(cursor, id_grupo, usuario_id)
+            if cargo != "admin":
+                raise HTTPException(
+                    status_code=403, detail="Apenas administradores podem gerar roteiros com IA"
+                )
             grupo = _buscar_grupo(cursor, id_grupo)
         finally:
             cursor.close()
@@ -406,6 +411,18 @@ def gerar_com_ia(id_grupo: int, usuario_id: int) -> list:
             else "Não foi possível gerar o roteiro. Tente novamente."
         )
         raise HTTPException(status_code=502, detail=detail)
+
+    # Substitui só os itens que a IA mesma criou antes — itens manuais
+    # (origem_ia=0) ficam intactos. Só apaga depois que a geração deu certo,
+    # pra não perder o roteiro anterior se a chamada à IA falhar.
+    with get_db() as conexao:
+        cursor = conexao.cursor()
+        try:
+            cursor.execute(
+                "DELETE FROM roteiros WHERE id_grupo=%s AND origem_ia=1", (id_grupo,)
+            )
+        finally:
+            cursor.close()
 
     criados_ids = []
     for item in itens:

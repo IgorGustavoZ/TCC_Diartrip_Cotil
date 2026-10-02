@@ -85,3 +85,8 @@ def entrar_comunidade(
 @router.delete("/comunidades/{id_comunidade}/sair", response_model=MensagemResponse)
 def sair_comunidade(id_comunidade: int, usuario_id: int = Depends(get_usuario_logado)):
     return comunidade_service.sair(id_comunidade, usuario_id)
+
+
+@router.delete("/comunidades/{id_comunidade}", response_model=MensagemResponse)
+def excluir_comunidade(id_comunidade: int, usuario_id: int = Depends(get_usuario_logado)):
+    return comunidade_service.excluir(id_comunidade, usuario_id)

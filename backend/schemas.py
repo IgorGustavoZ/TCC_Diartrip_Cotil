@@ -149,6 +149,7 @@ class RoteiroResponse(BaseModel):
     titulo: str
     descricao: Optional[str] = None
     origem_ia: bool = False
+    ordem: int = 0
     data_criacao: datetime
 
 

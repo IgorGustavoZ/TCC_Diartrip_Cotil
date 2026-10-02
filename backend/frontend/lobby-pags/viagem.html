@@ -1157,20 +1157,28 @@ async function carregarRoteiro() {
         return
     }
 
-    lista.innerHTML = itens.map((r, i) => `
+    const dias = itens.map(r => diaDoItem(r.titulo))
+
+    lista.innerHTML = itens.map((r, i) => {
+        const ehPrimeiroDoDia = i === 0 || dias[i - 1] !== dias[i]
+        const ehUltimoDoDia = i === itens.length - 1 || dias[i + 1] !== dias[i]
+        return `
         <div id="ritem-${r.id_roteiro}" style="border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:10px;background:var(--surface-2);">
             <div style="display:flex;align-items:flex-start;gap:12px;">
                 <div style="width:28px;height:28px;border-radius:8px;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${i + 1}</div>
                 <div style="flex:1;min-width:0;" id="rview-${r.id_roteiro}">
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
-                        <div style="font-size:15px;font-weight:600;color:var(--text);">${escapeHtml(r.titulo)}</div>
+                        <div style="font-size:15px;font-weight:600;color:var(--text);">${escapeHtml(formatarTituloRoteiro(r.titulo))}</div>
                         ${r.origem_ia ? `<span style="font-size:11px;font-weight:600;color:#8b5cf6;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:2px 8px;white-space:nowrap;">${t('viagem.itinerary.ia.badge')}</span>` : ""}
                     </div>
                     <div style="font-size:13px;color:var(--text-muted);white-space:pre-wrap;">${escapeHtml(r.descricao)}</div>
                 </div>
                 ${isAdmin && !viagemPassada ? `
-                <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;">
-                    <button onclick="toggleCompartilharRoteiro(${r.id_roteiro})" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text-secondary);font-size:12px;cursor:pointer;">${t('viagem.itinerary.shareBtn')}</button>
+                <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;align-items:center;">
+                    <div style="display:flex;flex-direction:column;gap:2px;">
+                        <button onclick="moverRoteiroItem(${r.id_roteiro},'cima')" ${ehPrimeiroDoDia ? "disabled" : ""} title="${t('viagem.itinerary.moveUp')}" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 8px;color:var(--text-secondary);font-size:11px;cursor:${ehPrimeiroDoDia ? "default" : "pointer"};opacity:${ehPrimeiroDoDia ? "0.4" : "1"};">▲</button>
+                        <button onclick="moverRoteiroItem(${r.id_roteiro},'baixo')" ${ehUltimoDoDia ? "disabled" : ""} title="${t('viagem.itinerary.moveDown')}" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 8px;color:var(--text-secondary);font-size:11px;cursor:${ehUltimoDoDia ? "default" : "pointer"};opacity:${ehUltimoDoDia ? "0.4" : "1"};">▼</button>
+                    </div>
                     <button onclick="iniciarEdicaoRoteiro(${r.id_roteiro},'${escapeAtr(r.titulo)}','${escapeAtr(r.descricao)}')" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text-secondary);font-size:12px;cursor:pointer;">${t('viagem.itinerary.edit')}</button>
                     <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:var(--danger-soft);border:none;border-radius:6px;padding:6px 10px;color:var(--danger);font-size:12px;cursor:pointer;">🗑</button>
                 </div>` : ""}
@@ -1183,26 +1191,62 @@ async function carregarRoteiro() {
                     <button onclick="cancelarEdicaoRoteiro(${r.id_roteiro})" style="background:var(--surface);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;">${t('viagem.itinerary.cancel')}</button>
                 </div>
             </div>
-            ${isAdmin && !viagemPassada ? `
-            <div id="rshare-${r.id_roteiro}" style="display:none;margin-top:12px;">
-                <textarea id="rshareTexto-${r.id_roteiro}" data-i18n-placeholder="viagem.itinerary.shareCaption" placeholder="Escreva uma legenda (opcional)..." style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;resize:vertical;min-height:50px;outline:none;"></textarea>
-                <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
-                    <button onclick="publicarCompartilharRoteiro(${r.id_roteiro})" style="background:var(--gradient);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">${t('viagem.itinerary.shareConfirm')}</button>
-                    <button onclick="document.getElementById('rshare-${r.id_roteiro}').style.display='none'" style="background:var(--surface);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;">${t('viagem.itinerary.cancel')}</button>
-                    <span id="rshareMsg-${r.id_roteiro}" style="font-size:12px;color:var(--danger);display:none;"></span>
-                </div>
-            </div>` : ""}
         </div>
-    `).join("")
+    `}).join("")
 }
 
+// "Dia N" é texto livre dentro de titulo (nunca foi um campo separado — ver
+// backend/alembic/versions/011_roteiro_ordem.py). Usado só pra: (1) decidir
+// quais botões ▲/▼ habilitar e (2) esconder esse prefixo da exibição sem
+// alterar o que está salvo no banco (a edição continua operando sobre o
+// título real, com o prefixo, se houver).
+function diaDoItem(titulo) {
+    const m = (titulo || "").trim().match(/^dia\s+(\d+)\s*[·\-–—]/i)
+    return m ? parseInt(m[1], 10) : null
+}
+
+function formatarTituloRoteiro(titulo) {
+    return (titulo || "").replace(/^dia\s+\d+\s*·\s*\d{1,2}:\d{2}\s*[—\-–]\s*/i, "")
+}
+
+async function moverRoteiroItem(id, direcao) {
+    const resp = await fetch(`/roteiros/${id}/mover`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ direcao })
+    })
+    if (resp.ok) carregarRoteiro()
+}
+
+let roteiroTemItens = false
+
 function atualizarBotaoRoteiroIA(temItens) {
+    roteiroTemItens = temItens
     const btn = document.getElementById("btnGerarRoteiroIA")
     if (!btn) return
     btn.textContent = temItens ? t('viagem.itinerary.ia.regenerateBtn') : t('viagem.itinerary.ia.createBtn')
 }
 
-async function gerarRoteiroComIA() {
+function gerarRoteiroComIA() {
+    // Recriar substitui os itens que a própria IA gerou antes (itens manuais
+    // ficam intactos — ver backend/services/roteiro_ia_service.py). Só pede
+    // confirmação quando já existe algo pra substituir; na primeira geração
+    // (lista vazia) não há nada destrutivo, então gera direto.
+    if (roteiroTemItens) {
+        abrirModalConfirmacao({
+            titulo: t('viagem.itinerary.ia.confirmTitle'),
+            mensagem: t('viagem.itinerary.ia.confirmBody'),
+            textoConfirmar: t('viagem.itinerary.ia.confirmBtn'),
+            tipo: 'perigo',
+            onConfirmar: _executarGerarRoteiroComIA,
+        })
+    } else {
+        _executarGerarRoteiroComIA()
+    }
+}
+
+async function _executarGerarRoteiroComIA() {
     const btn = document.getElementById("btnGerarRoteiroIA")
     const status = document.getElementById("roteiroIaStatus")
     const mensagens = [
@@ -1299,44 +1343,6 @@ function deletarRoteiroItem(id) {
             if (resp.ok) carregarRoteiro()
         }
     })
-}
-
-// Compartilhar roteiro cria uma PUBLICAÇÃO no Feed (POST /posts, tipo=
-// 'roteiro') que referencia este roteiro — não é mais um flag liga/desliga.
-// Não depende da viagem ser pública: o conteúdo do roteiro já vai embutido
-// na publicação.
-function toggleCompartilharRoteiro(id) {
-    const painel = document.getElementById(`rshare-${id}`)
-    if (!painel) return
-    const aberto = painel.style.display !== "none"
-    painel.style.display = aberto ? "none" : "block"
-    if (!aberto) document.getElementById(`rshareTexto-${id}`)?.focus()
-}
-
-async function publicarCompartilharRoteiro(id) {
-    const texto = document.getElementById(`rshareTexto-${id}`).value.trim()
-    const msg = document.getElementById(`rshareMsg-${id}`)
-    msg.style.display = "none"
-
-    const form = new FormData()
-    form.append("conteudo", texto)
-    form.append("tipo", "roteiro")
-    form.append("ref_id_roteiro", id)
-
-    try {
-        const resp = await fetch("/posts", { method: "POST", credentials: "include", body: form })
-        if (resp.ok) {
-            document.getElementById(`rshare-${id}`).style.display = "none"
-            document.getElementById(`rshareTexto-${id}`).value = ""
-        } else {
-            const e = await resp.json().catch(() => ({}))
-            msg.textContent = e.detail || t('viagem.itinerary.shareError')
-            msg.style.display = "inline"
-        }
-    } catch (e) {
-        msg.textContent = t('viagem.itinerary.shareError')
-        msg.style.display = "inline"
-    }
 }
 
 // ── Momentos (mini feed do grupo) ──

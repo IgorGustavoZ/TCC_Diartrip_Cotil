@@ -242,14 +242,94 @@ class TestAtualizarComunidade:
         assert resp.status_code == 403
 
 
+def _conn_excluir(fetchones, imagens_posts=None):
+    # excluir() usa fetchone pra autenticação/cargo/foto_capa e um fetchall
+    # separado pra imagens dos posts — o helper genérico make_cursor() faz
+    # fetchall devolver TODAS as rows passadas (não só as de posts), então
+    # aqui cada um tem sua própria sequência/retorno independente.
+    fetch_idx = [0]
+
+    def factory(**kw):
+        c = MagicMock()
+        c.rowcount = 1
+
+        def _fetchone():
+            i = fetch_idx[0]
+            fetch_idx[0] += 1
+            return fetchones[i] if i < len(fetchones) else None
+
+        c.fetchone.side_effect = _fetchone
+        c.fetchall.return_value = imagens_posts or []
+        return c
+
+    conn = MagicMock()
+    conn.cursor.side_effect = factory
+    conn.commit = MagicMock()
+    conn.rollback = MagicMock()
+    conn.close = MagicMock()
+    return conn
+
+
+class TestExcluirComunidade:
+    def test_admin_pode_excluir(self, client_usuario):
+        conn = _conn_excluir([(1,), {"cargo": "admin"}, {"foto_capa": None}])
+        with patch("services.comunidade_service.deletar_imagem") as mock_del, \
+             patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.delete("/comunidades/1")
+        assert resp.status_code == 200
+        mock_del.assert_not_called()  # sem foto_capa e sem posts com imagem
+
+    def test_excluir_apaga_imagens_no_cloudinary(self, client_usuario):
+        conn = _conn_excluir(
+            [(1,), {"cargo": "admin"}, {"foto_capa": "https://cloud/capa.jpg"}],
+            imagens_posts=[{"imagem": "https://cloud/post1.jpg"}],
+        )
+        with patch("services.comunidade_service.deletar_imagem") as mock_del, \
+             patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.delete("/comunidades/1")
+        assert resp.status_code == 200
+        urls = [c.args[0] for c in mock_del.call_args_list]
+        assert "https://cloud/capa.jpg" in urls
+        assert "https://cloud/post1.jpg" in urls
+
+    def test_membro_comum_nao_pode_excluir(self, client_usuario):
+        conn = _conn_excluir([(1,), {"cargo": "membro"}])
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.delete("/comunidades/1")
+        assert resp.status_code == 403
+
+    def test_nao_membro_nao_pode_excluir(self, client_usuario):
+        conn = _conn_excluir([(1,), None])
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.delete("/comunidades/1")
+        assert resp.status_code == 403
+
+    def test_excluir_sem_autenticacao_retorna_401(self, client):
+        resp = client.delete("/comunidades/1")
+        assert resp.status_code == 401
+
+
 class TestCodigoConviteComunidade:
-    def test_admin_ve_codigo(self, client_usuario):
-        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, {"codigo_convite": "JAPAO2"}])
+    def test_admin_ve_codigo_de_comunidade_privada(self, client_usuario):
+        cur = make_cursor(rows=[
+            (1,), {"cargo": "admin"}, {"codigo_convite": "JAPAO2", "privacidade": "privada"},
+        ])
         conn = make_connection(cur)
         with patch("database.get_db", fake_get_db(conn)):
             resp = client_usuario.get("/comunidades/1/codigo-convite")
         assert resp.status_code == 200
         assert resp.json()["codigo_convite"] == "JAPAO2"
+
+    def test_admin_nao_ve_codigo_de_comunidade_publica(self, client_usuario):
+        # Código de convite só existe pra quando a comunidade é privada —
+        # pública não precisa (nem deve) expor um código.
+        cur = make_cursor(rows=[
+            (1,), {"cargo": "admin"}, {"codigo_convite": "JAPAO2", "privacidade": "publica"},
+        ])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client_usuario.get("/comunidades/1/codigo-convite")
+        assert resp.status_code == 400
 
     def test_membro_comum_nao_ve_codigo(self, client_usuario):
         cur = make_cursor(rows=[(1,), {"cargo": "membro"}])

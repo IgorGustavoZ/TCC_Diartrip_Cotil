@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from mysql.connector import IntegrityError
 
 from database import get_db
-from utils.cloudinary_upload import upload_imagem
+from utils.cloudinary_upload import upload_imagem, deletar_imagem
 from utils.imagem_utils import validar_imagem, strip_exif
 
 
@@ -173,16 +173,25 @@ def atualizar(
 
 
 def obter_codigo_convite(id_comunidade: int, usuario_id: int) -> dict:
+    """Código de convite só existe pra quem acessa (faz sentido): se a
+    comunidade for pública, qualquer um entra direto, sem código — então o
+    código nem deve ser exposto nesse caso."""
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:
             _checar_admin(cursor, id_comunidade, usuario_id)
             cursor.execute(
-                "SELECT codigo_convite FROM comunidades WHERE id_comunidade=%s", (id_comunidade,)
+                "SELECT codigo_convite, privacidade FROM comunidades WHERE id_comunidade=%s",
+                (id_comunidade,),
             )
             row = cursor.fetchone()
             if not row:
                 raise HTTPException(status_code=404, detail="Comunidade não encontrada")
+            if row["privacidade"] != "privada":
+                raise HTTPException(
+                    status_code=400,
+                    detail="Código de convite só existe para comunidades privadas",
+                )
             return {"codigo_convite": row["codigo_convite"]}
         finally:
             cursor.close()
@@ -215,6 +224,42 @@ def atualizar_foto(id_comunidade: int, usuario_id: int, arquivo_nome: str, arqui
                 (foto_url, id_comunidade),
             )
             return {"foto_capa": foto_url}
+        finally:
+            cursor.close()
+
+
+def excluir(id_comunidade: int, usuario_id: int) -> dict:
+    """Só o admin (= quem criou, já que comunidades não têm promoção de
+    cargo — ver criar()) pode excluir. Reaproveita _checar_admin, a mesma
+    checagem já usada em atualizar()/obter_codigo_convite()/atualizar_foto().
+    Apaga os registros dependentes explicitamente antes da comunidade — mesmo
+    padrão de grupo_service.deletar() — e só então limpa as imagens no
+    Cloudinary (capa + fotos dos posts), depois do commit da exclusão."""
+    with get_db() as conexao:
+        cursor = conexao.cursor(dictionary=True)
+        try:
+            _checar_admin(cursor, id_comunidade, usuario_id)
+
+            cursor.execute(
+                "SELECT foto_capa FROM comunidades WHERE id_comunidade=%s", (id_comunidade,)
+            )
+            row = cursor.fetchone()
+            foto_capa = row["foto_capa"] if row else None
+
+            cursor.execute(
+                "SELECT imagem FROM posts WHERE id_comunidade=%s AND imagem IS NOT NULL",
+                (id_comunidade,),
+            )
+            imagens_posts = [r["imagem"] for r in cursor.fetchall()]
+
+            cursor.execute("DELETE FROM posts WHERE id_comunidade=%s", (id_comunidade,))
+            cursor.execute("DELETE FROM comunidade_membros WHERE id_comunidade=%s", (id_comunidade,))
+            cursor.execute("DELETE FROM comunidades WHERE id_comunidade=%s", (id_comunidade,))
+
+            for url in ([foto_capa] if foto_capa else []) + imagens_posts:
+                deletar_imagem(url)
+
+            return {"mensagem": "Comunidade excluída"}
         finally:
             cursor.close()
 
