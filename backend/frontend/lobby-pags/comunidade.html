@@ -211,7 +211,12 @@
                     </div>
 
                     <span class="msg" id="editComunidadeErro" style="display:none; color:var(--danger); font-size:12px; margin-top:12px;"></span>
+
                     <button class="btn-publicar" style="margin-top:16px;" onclick="salvarEdicaoComunidade()" data-i18n="comunidades.admin.save">Salvar alterações</button>
+                    
+                    <div class="sucess">
+                        
+                    </div>
                 </div>
 
                 <div class="trip-card-expanded" id="cardCodigoConvite" style="display:none;">
@@ -353,8 +358,8 @@ async function carregarComunidade() {
             ${souAdmin ? `<button class="btn-alterar-foto-comunidade" onclick="document.getElementById('fotoComunidadeInput').click()">${t('comunidades.changePhoto')}</button>` : ""}
         </div>
         <div class="comunidade-header-body">
-            <h1>${c.privacidade === 'privada' ? '🔒' : '👥'} ${escapeHtml(c.nome)}</h1>
-            <p class="meta">${c.total_membros} ${t('comunidades.members')}${c.categoria ? ` · ${escapeHtml(c.categoria)}` : ''} · ${t('explorar.createdBy')} ${escapeHtml(c.criador)}</p>
+            <h1>${escapeHtml(c.nome)}</h1>
+            <p class="meta">${c.privacidade === 'privada' ? 'Privada' : 'Pública'} · ${c.total_membros} ${t('comunidades.members')}${c.categoria ? ` · ${escapeHtml(c.categoria)}` : ''} · ${t('explorar.createdBy')} ${escapeHtml(c.criador)}</p>
             ${c.descricao ? `<p class="desc">${escapeHtml(c.descricao)}</p>` : ''}
             <div class="comunidade-acoes">${acao}</div>
         </div>
@@ -367,7 +372,10 @@ document.getElementById("fotoComunidadeInput").addEventListener("change", async 
     const form = new FormData()
     form.append("foto", file)
     const resp = await fetch(`/comunidades/${idComunidade}/foto`, { method: "PATCH", credentials: "include", body: form })
-    if (resp.ok) await carregarComunidade()
+    if (resp.ok) {
+        await carregarComunidade()
+        document.querySelector(".sucess").innerHTML = "Mudanças realizadas com sucesso!"
+    } 
     else { const err = await resp.json().catch(() => ({})); alert(err.detail || t('comunidades.error')) }
     e.target.value = ""
 })
@@ -418,7 +426,10 @@ async function salvarEdicaoComunidade() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dados),
     })
-    if (resp.ok) await carregarComunidade()
+    if (resp.ok){
+        await carregarComunidade()
+        document.querySelector(".sucess").innerHTML = "Mudanças realizadas com sucesso!"
+    } 
     else { const e = await resp.json().catch(() => ({})); erro.textContent = e.detail || t('comunidades.error'); erro.style.display = "inline" }
 }
 

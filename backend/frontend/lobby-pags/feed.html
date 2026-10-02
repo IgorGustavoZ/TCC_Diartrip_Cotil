@@ -694,13 +694,13 @@ function montarCardReferencia(p) {
         const g = p.ref_grupo
         const periodo = (g.data_inicio && g.data_fim) ? `${g.data_inicio} → ${g.data_fim}` : ""
         return `
-        <p class="post-ref-selo">🧳 ${t('feed.ref.sharedTrip')}</p>
+        <p class="post-ref-selo">${t('feed.ref.sharedTrip')}</p>
         <div class="post-ref-card">
             <p class="post-ref-titulo">${escapeHtml(g.nome_grupo)}</p>
             <div class="post-ref-meta">
-                ${g.destino_principal ? `<span>📍 ${escapeHtml(g.destino_principal)}</span>` : ""}
+                ${g.destino_principal ? `<span>${escapeHtml(g.destino_principal)}</span>` : ""}
                 ${periodo ? `<span>${periodo}</span>` : ""}
-                ${g.limite_participantes != null ? `<span>👥 ${g.vagas_ocupadas}/${g.limite_participantes}</span>` : ""}
+                ${g.limite_participantes != null ? `<span>𓁆𓁇 ${g.vagas_ocupadas}/${g.limite_participantes}</span>` : ""}
             </div>
             <a class="post-ref-btn" href="explorar-viagens.html?id=${g.id_grupo}">${t('feed.ref.viewTrip')}</a>
         </div>`
