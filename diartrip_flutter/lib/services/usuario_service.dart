@@ -30,7 +30,27 @@ class UsuarioService {
     }
   }
 
-  static Future<Usuario> atualizar({
+  static Future<void> verificarEmail({
+    required String email,
+    required String codigo,
+    required String senha,
+  }) async {
+    final r = await dio.post('/usuarios/verificar-email', data: {
+      'email': email,
+      'codigo': codigo,
+      'senha': senha,
+    });
+    _check(r);
+  }
+
+  static Future<void> reenviarCodigo(String email) async {
+    final r = await dio.post('/usuarios/reenviar-codigo', data: {'email': email});
+    _check(r);
+  }
+
+  /// Retorna `emailPendente = true` quando o email mudou: o backend só
+  /// troca depois de [confirmarEmail] com o código enviado ao novo endereço.
+  static Future<({Usuario usuario, bool emailPendente})> atualizar({
     required int id,
     required String nome,
     required String email,
@@ -42,7 +62,13 @@ class UsuarioService {
       if (bio != null) 'bio': bio,
     });
     _check(r);
-    return getMe();
+    final pendente = (r.data is Map && r.data['email_pendente'] == true);
+    return (usuario: await getMe(), emailPendente: pendente);
+  }
+
+  static Future<void> confirmarEmail({required int id, required String codigo}) async {
+    final r = await dio.post('/usuarios/$id/confirmar-email', data: {'codigo': codigo});
+    _check(r);
   }
 
   static Future<String> atualizarFoto({

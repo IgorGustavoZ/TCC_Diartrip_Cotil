@@ -1,14 +1,17 @@
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Response, UploadFile, File
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Request, Response, UploadFile, File
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from schemas import (
     UsuarioDesktop, UsuarioPublico, UsuarioMe, UsuarioCriado, UsuarioSimples,
-    FotoPerfilResponse, SeguirResponse, MensagemResponse,
+    FotoPerfilResponse, SeguirResponse, MensagemResponse, LoginResponse,
+    UsuarioAtualizadoResponse,
 )
 from utils.auth import get_usuario_logado
 from utils.rate_limiter import verificar_rate_limit
 from utils.security import revogar_token, revogar_refresh_token
 from routes.login import _set_auth_cookies
 from services import usuario_service
+from services import email_verification_service
+from services.email_verification_service import EmailDeliveryError, normalizar_email
 
 router = APIRouter(tags=["Usuários"])
 
@@ -56,6 +59,24 @@ class TrocarSenhaInput(BaseModel):
         return _validar_senha_forte(v)
 
 
+class VerificarEmailInput(BaseModel):
+    email: EmailStr
+    codigo: str = Field(..., pattern=r"^\d{6}$")
+    senha: str = Field(..., min_length=1, max_length=100)
+
+
+class ReenviarCodigoInput(BaseModel):
+    email: EmailStr
+
+
+class ConfirmarEmailInput(BaseModel):
+    codigo: str = Field(..., pattern=r"^\d{6}$")
+
+
+def _ip(request: Request) -> str:
+    return request.client.host if request.client else "desconhecido"
+
+
 @router.get("/usuarios/", response_model=list[UsuarioPublico])
 def obter_todos_os_perfil(
     limite: int = Query(20, ge=1, le=50),
@@ -84,9 +105,50 @@ def buscar_usuario(id_usuario: int, usuario_logado: int = Depends(get_usuario_lo
 
 
 @router.post("/usuarios", response_model=UsuarioCriado, status_code=201)
-def criar_usuario(dados: UsuarioInput):
-    verificar_rate_limit(f"cadastro:{dados.email}", limite=5)
+def criar_usuario(dados: UsuarioInput, request: Request):
+    verificar_rate_limit(f"cadastro:{normalizar_email(dados.email)}", limite=5)
+    verificar_rate_limit(f"cadastro_ip:{_ip(request)}", limite=20, janela=3600)
     return usuario_service.criar(dados.nome, dados.email, dados.senha)
+
+
+@router.post("/usuarios/verificar-email", response_model=LoginResponse)
+def verificar_email(dados: VerificarEmailInput, request: Request):
+    email = normalizar_email(dados.email)
+    verificar_rate_limit(f"verificar_email:{email}", limite=10)
+    verificar_rate_limit(f"verificar_email_h:{email}", limite=30, janela=3600)
+    verificar_rate_limit(f"verificar_email_ip:{_ip(request)}", limite=30)
+    return email_verification_service.verificar_codigo(email, dados.codigo, dados.senha)
+
+
+@router.post("/usuarios/reenviar-codigo", response_model=MensagemResponse)
+def reenviar_codigo(dados: ReenviarCodigoInput, request: Request):
+    email = normalizar_email(dados.email)
+    # 1 por minuto e 5 por hora por email: cada reenvio zera as tentativas
+    # do código, então este limite é o que segura a força bruta dos 6 dígitos
+    # (e o envio em massa de emails para a caixa de alguém).
+    verificar_rate_limit(f"reenviar_codigo:{email}", limite=1)
+    verificar_rate_limit(f"reenviar_codigo_h:{email}", limite=5, janela=3600)
+    verificar_rate_limit(f"reenviar_codigo_ip:{_ip(request)}", limite=10, janela=3600)
+    try:
+        email_verification_service.reenviar_codigo(email)
+    except EmailDeliveryError as err:
+        raise HTTPException(
+            status_code=503,
+            detail="Nao foi possivel enviar o codigo. Tente novamente mais tarde.",
+        ) from err
+    return {"mensagem": "Se a conta estiver pendente, um novo codigo sera enviado."}
+
+
+@router.post("/usuarios/{id_usuario}/confirmar-email", response_model=MensagemResponse)
+def confirmar_troca_email(
+    id_usuario: int,
+    dados: ConfirmarEmailInput,
+    usuario_logado: int = Depends(get_usuario_logado),
+):
+    if usuario_logado != id_usuario:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    verificar_rate_limit(f"confirmar_email:{usuario_logado}", limite=10)
+    return email_verification_service.confirmar_troca_email(id_usuario, dados.codigo)
 
 
 @router.patch("/usuarios/{id_usuario}/foto", response_model=FotoPerfilResponse)
@@ -105,7 +167,7 @@ async def atualizar_foto_usuario(
     return usuario_service.atualizar_foto(id_usuario, foto.filename or "perfil.jpg", conteudo)
 
 
-@router.put("/usuarios/{id_usuario}", response_model=MensagemResponse)
+@router.put("/usuarios/{id_usuario}", response_model=UsuarioAtualizadoResponse)
 def atualizar_usuario(
     id_usuario: int,
     dados: UsuarioUpdate,

@@ -17,8 +17,7 @@ from database import get_db
 from utils.dependencies import checar_membro_grupo
 from utils.rate_limiter import verificar_rate_limit
 from utils.ia_client import client as _client, IA_MODEL
-from utils.geoapify_client import geocodificar, buscar_pontos_interesse
-from utils.openweather_client import previsao_por_dia
+from utils.apis_externas import geocodificar, buscar_pontos_interesse, previsao_por_dia
 from services import roteiro_service
 from services.chat_service import _sanitizar
 
@@ -118,9 +117,11 @@ def _montar_prompt(
     grupo: dict, dias: int, pois: list[dict], bloco_clima: str | None, prefs: dict
 ) -> tuple[str, str]:
     if pois:
+        # Nomes/endereços vêm do OpenStreetMap (editável por qualquer pessoa):
+        # sanitizar como entrada de usuário, pra não abrir prompt injection
         pois_txt = "\n".join(
-            f"- {p['nome']} | categoria: {p.get('categoria') or 'N/A'} | "
-            f"endereço: {p.get('endereco') or 'N/A'}"
+            f"- {_sanitizar(p['nome'], 120)} | categoria: {_sanitizar(p.get('categoria'), 60)} | "
+            f"endereço: {_sanitizar(p.get('endereco'), 150)}"
             for p in pois
         )
         instrucao_pois = (

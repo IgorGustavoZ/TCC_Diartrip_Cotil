@@ -14,7 +14,8 @@ Plataforma de gerenciamento de viagens em grupo com app mobile (Flutter), app de
 - bcrypt (senhas)
 - JWT (autenticação via Cookies HttpOnly)
 - Pydantic v2 (validação de dados e limites)
-- OpenAI SDK via OpenRouter (IA)
+- OpenAI SDK via OpenRouter (IA) — com fallback opcional para outros modelos/provedores (ex.: Groq, Ollama)
+- Geoapify (cidades e locais) e OpenWeatherMap (clima) — com backup automático e sem key em OpenStreetMap (Photon, Nominatim, Overpass) e Open-Meteo; teste ao vivo com `python scripts/verificar_apis.py --sem-ia`
 - Cloudinary (upload e hospedagem de imagens)
 - pytest (testes automatizados E2E)
 - python-multipart (upload de arquivos)
@@ -46,6 +47,7 @@ Plataforma de gerenciamento de viagens em grupo com app mobile (Flutter), app de
 
 ### Autenticação
 - Login com JWT (token válido por 2 horas)
+- Verificação obrigatória do email por código antes do primeiro login
 - Armazenamento seguro via Cookies HttpOnly
 - Verificação de estado do usuário no banco em cada requisição
 
@@ -106,6 +108,8 @@ docker compose up
 
 A API estará disponível em `http://localhost:8000`.  
 Para parar: `docker compose down`. Para resetar o banco: `docker compose down -v`.
+
+Configure o envio de email no `backend/.env` para permitir novos cadastros: `SMTP_HOST`, `SMTP_PORT` (587 por padrão), `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM` e, para SMTPS na porta 465, `SMTP_USE_SSL=true`. A aplicação envia códigos com validade de 15 minutos; contas cadastradas antes da migration continuam verificadas. Em bancos existentes, aplique as migrations com `cd backend; alembic upgrade head`.
 
 > **Nota:** Se a porta 3306 já estiver em uso localmente, altere `MYSQL_HOST_PORT=3307` no `backend/.env` (o container sempre usa 3306 internamente).
 

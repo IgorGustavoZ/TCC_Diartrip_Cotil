@@ -4,6 +4,24 @@ from database import get_db
 from utils.security import gerar_hash, verificar_senha
 from utils.cloudinary_upload import upload_imagem
 from utils.imagem_utils import validar_imagem, strip_exif
+from utils.rate_limiter import verificar_rate_limit
+from services.email_verification_service import (
+    EmailDeliveryError,
+    enviar_codigo_verificacao,
+    gerar_codigo_verificacao,
+    normalizar_email,
+    solicitar_troca_email,
+)
+
+
+def _enviar_ou_503(email: str, codigo: str, troca_email: bool = False) -> None:
+    try:
+        enviar_codigo_verificacao(email, codigo, troca_email=troca_email)
+    except EmailDeliveryError as err:
+        raise HTTPException(
+            status_code=503,
+            detail="Nao foi possivel enviar o codigo. Tente novamente mais tarde.",
+        ) from err
 
 def buscar_tudo(
     busca: str | None = None
@@ -87,15 +105,40 @@ def buscar_por_id_publico(usuario_id: int, viewer_id: int) -> dict:
 
 
 def criar(nome: str, email: str, senha: str) -> dict:
+    email = normalizar_email(email)
     with get_db() as conexao:
-        cursor = conexao.cursor()
+        cursor = conexao.cursor(dictionary=True)
         try:
             senha_hash = gerar_hash(senha)
+            codigo, codigo_hash, expira = gerar_codigo_verificacao()
             cursor.execute(
-                "INSERT INTO usuarios (nome, email, senha_hash) VALUES (%s, %s, %s)",
-                (nome, email, senha_hash),
+                "SELECT id_usuario, email_verificado FROM usuarios WHERE email=%s FOR UPDATE",
+                (email,),
             )
-            return {"mensagem": "Usuário criado com sucesso", "id": cursor.lastrowid, "email": email}
+            existente = cursor.fetchone()
+            if existente and existente["email_verificado"]:
+                raise HTTPException(status_code=409, detail="Email já cadastrado")
+            if existente:
+                # Cadastro pendente (nunca verificado): quem se cadastra de novo
+                # assume a conta, com novo código. Sem isso, qualquer pessoa
+                # poderia "travar" o email de outra cadastrando-o primeiro.
+                cursor.execute(
+                    """UPDATE usuarios SET nome=%s, senha_hash=%s,
+                              codigo_verificacao_hash=%s, codigo_verificacao_expira=%s,
+                              tentativas_verificacao=0
+                       WHERE id_usuario=%s""",
+                    (nome, senha_hash, codigo_hash, expira, existente["id_usuario"]),
+                )
+                usuario_id = existente["id_usuario"]
+            else:
+                cursor.execute(
+                    """INSERT INTO usuarios
+                           (nome, email, senha_hash, email_verificado,
+                            codigo_verificacao_hash, codigo_verificacao_expira)
+                       VALUES (%s, %s, %s, 0, %s, %s)""",
+                    (nome, email, senha_hash, codigo_hash, expira),
+                )
+                usuario_id = cursor.lastrowid
         except (Error, Exception) as err:
             if hasattr(err, 'errno') and err.errno == 1062:
                 raise HTTPException(status_code=409, detail="Email já cadastrado")
@@ -103,24 +146,44 @@ def criar(nome: str, email: str, senha: str) -> dict:
         finally:
             cursor.close()
 
+    # Envia depois do commit para o SMTP não segurar conexão/lock do banco.
+    # Se falhar, a conta fica pendente e um novo cadastro a reaproveita.
+    _enviar_ou_503(email, codigo)
+    return {"mensagem": "Usuário criado com sucesso", "id": usuario_id, "email": email}
+
 
 def atualizar(usuario_id: int, nome: str, email: str, bio: str | None = None) -> dict:
+    """Atualiza nome/bio na hora. Se o email mudou, ele NÃO é trocado aqui:
+    fica pendente até o usuário confirmar o código enviado ao novo endereço
+    (POST /usuarios/{id}/confirmar-email)."""
+    email = normalizar_email(email)
+    codigo = None
     with get_db() as conexao:
-        cursor = conexao.cursor()
+        cursor = conexao.cursor(dictionary=True)
         try:
             cursor.execute(
-                "UPDATE usuarios SET nome=%s, email=%s, bio=%s WHERE id_usuario=%s",
-                (nome, email, bio, usuario_id),
+                "SELECT email FROM usuarios WHERE id_usuario=%s FOR UPDATE", (usuario_id,)
             )
-            return {"mensagem": "Usuário atualizado"}
-        except (Error, Exception) as err:
-            if hasattr(err, 'errno') and err.errno == 1062:
-                raise HTTPException(
-                    status_code=409, detail="Este e-mail já está em uso por outro usuário"
-                )
-            raise
+            atual = cursor.fetchone()
+            if not atual:
+                raise HTTPException(status_code=404, detail="Usuário não encontrado")
+            cursor.execute(
+                "UPDATE usuarios SET nome=%s, bio=%s WHERE id_usuario=%s",
+                (nome, bio, usuario_id),
+            )
+            if normalizar_email(atual["email"] or "") != email:
+                verificar_rate_limit(f"troca_email:{usuario_id}", limite=5, janela=3600)
+                codigo = solicitar_troca_email(cursor, usuario_id, email)
         finally:
             cursor.close()
+
+    if codigo is None:
+        return {"mensagem": "Usuário atualizado", "email_pendente": False}
+    _enviar_ou_503(email, codigo, troca_email=True)
+    return {
+        "mensagem": "Dados atualizados. Confirme o codigo enviado para o novo email.",
+        "email_pendente": True,
+    }
 
 
 def trocar_senha(usuario_id: int, senha_atual: str, nova_senha: str) -> dict:

@@ -12,8 +12,11 @@ class TestCriarUsuario:
         cur = MagicMock()
         cur.lastrowid = 5
         cur.rowcount = 1
+        cur.fetchone.return_value = None  # email ainda não cadastrado
         conn = make_connection(cur)
-        with patch("database.get_db", fake_get_db(conn)):
+        with patch("database.get_db", fake_get_db(conn)), patch(
+            "services.usuario_service.enviar_codigo_verificacao"
+        ):
             resp = client.post("/usuarios", json={
                 "nome": "Joao Silva",
                 "email": "joao@example.com",
@@ -22,6 +25,36 @@ class TestCriarUsuario:
         assert resp.status_code == 201
         data = resp.json()
         assert "id" in data or "mensagem" in data
+
+    def test_email_verificado_retorna_409(self, client):
+        cur = make_cursor(rows=[{"id_usuario": 3, "email_verificado": 1}])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)), patch(
+            "services.usuario_service.enviar_codigo_verificacao"
+        ) as enviar:
+            resp = client.post("/usuarios", json={
+                "nome": "Outro", "email": "existe@example.com", "senha": "SenhaForte1"
+            })
+        assert resp.status_code == 409
+        enviar.assert_not_called()
+
+    def test_cadastro_pendente_e_reaproveitado(self, client):
+        """Email cadastrado e nunca verificado não fica "preso": novo cadastro
+        assume a conta (nova senha + novo código) em vez de dar 409."""
+        cur = make_cursor(rows=[{"id_usuario": 3, "email_verificado": 0}])
+        conn = make_connection(cur)
+        with patch("database.get_db", fake_get_db(conn)), patch(
+            "services.usuario_service.enviar_codigo_verificacao"
+        ) as enviar:
+            resp = client.post("/usuarios", json={
+                "nome": "Dono Real", "email": "Pendente@Example.com", "senha": "SenhaForte1"
+            })
+        assert resp.status_code == 201
+        assert resp.json()["id"] == 3
+        update_sql, params = cur.execute.call_args_list[1].args
+        assert update_sql.lstrip().startswith("UPDATE usuarios SET nome=")
+        assert params[0] == "Dono Real" and params[-1] == 3
+        assert enviar.call_args.args[0] == "pendente@example.com"
 
     def test_criar_usuario_email_invalido_retorna_422(self, client):
         resp = client.post("/usuarios", json={
@@ -78,8 +111,11 @@ class TestCriarUsuario:
         cur = MagicMock()
         cur.lastrowid = 7
         cur.rowcount = 1
+        cur.fetchone.return_value = None
         conn = make_connection(cur)
-        with patch("database.get_db", fake_get_db(conn)):
+        with patch("database.get_db", fake_get_db(conn)), patch(
+            "services.usuario_service.enviar_codigo_verificacao"
+        ):
             resp = client.post("/usuarios", json={
                 "nome": "Hash Test",
                 "email": "hashtest@example.com",
@@ -179,20 +215,8 @@ class TestBuscarUsuario:
 class TestAtualizarUsuario:
     def test_atualizar_proprio_perfil(self, client_usuario):
         """PUT /usuarios/1 com token id=1 deve funcionar."""
-        call_count = [0]
-
-        def cursor_factory(**kw):
-            call_count[0] += 1
-            c = MagicMock()
-            c.fetchone.return_value = (1,)
-            c.rowcount = 1
-            return c
-
-        conn = MagicMock()
-        conn.cursor.side_effect = cursor_factory
-        conn.commit = MagicMock()
-        conn.rollback = MagicMock()
-        conn.close = MagicMock()
+        cur = make_cursor(rows=[(1,), {"email": "novo@example.com"}])  # 1ª linha: get_usuario_logado
+        conn = make_connection(cur)
 
         with patch("database.get_db", fake_get_db(conn)):
             resp = client_usuario.put("/usuarios/1", json={
@@ -202,6 +226,27 @@ class TestAtualizarUsuario:
             })
 
         assert resp.status_code == 200
+        assert resp.json()["email_pendente"] is False
+
+    def test_trocar_email_fica_pendente_ate_confirmar(self, client_usuario):
+        """Email novo não é gravado direto: vira email_pendente + código."""
+        cur = make_cursor(rows=[(1,), {"email": "antigo@example.com"}, None])
+        conn = make_connection(cur)
+
+        with patch("database.get_db", fake_get_db(conn)), patch(
+            "services.usuario_service.enviar_codigo_verificacao"
+        ) as enviar:
+            resp = client_usuario.put("/usuarios/1", json={
+                "nome": "Nome", "email": "Novo@Example.com", "bio": None
+            })
+
+        assert resp.status_code == 200
+        assert resp.json()["email_pendente"] is True
+        sqls = [c.args[0] for c in cur.execute.call_args_list]
+        assert not any("SET nome=%s, email=" in q for q in sqls)
+        assert any("email_pendente=%s" in q for q in sqls)
+        assert enviar.call_args.args[0] == "novo@example.com"
+        assert enviar.call_args.kwargs["troca_email"] is True
 
     def test_nao_pode_atualizar_perfil_de_outro(self, client_usuario):
         """PUT /usuarios/2 com token id=1 retorna 403."""

@@ -60,17 +60,22 @@ def _set_auth_cookies(response: Response, usuario_id: int) -> None:
 
 @router.post("/login", response_model=LoginResponse)
 def login(dados: LoginInput, response: Response):
-    verificar_rate_limit(f"login:{dados.email}", limite=5)
+    verificar_rate_limit(f"login:{dados.email.strip().lower()}", limite=5)
     with get_db() as conexao:
         cursor = conexao.cursor(dictionary=True)
         try:
             cursor.execute(
-                "SELECT id_usuario, senha_hash FROM usuarios WHERE email=%s",
+                "SELECT id_usuario, senha_hash, email_verificado FROM usuarios WHERE email=%s",
                 (dados.email,)
             )
             usuario = cursor.fetchone()
             if not usuario or not verificar_senha(dados.senha, usuario["senha_hash"]):
                 raise HTTPException(status_code=401, detail="Informações inválidas")
+            if not usuario.get("email_verificado", True):
+                raise HTTPException(
+                    status_code=403,
+                    detail="Email ainda nao verificado. Confirme o codigo enviado para sua caixa de entrada.",
+                )
             _set_auth_cookies(response, usuario["id_usuario"])
             return {"mensagem": "Login realizado com sucesso", "usuario_id": usuario["id_usuario"]}
         finally:

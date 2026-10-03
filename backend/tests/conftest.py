@@ -17,6 +17,13 @@ os.environ.setdefault("CLOUDINARY_CLOUD_NAME", "test-cloud")
 os.environ.setdefault("CLOUDINARY_API_KEY", "test-api-key")
 os.environ.setdefault("CLOUDINARY_API_SECRET", "test-api-secret")
 os.environ["REDIS_URL"] = ""  # forca fallback em memoria
+# APIs externas secundárias (OSM/Open-Meteo/IA backup) desligadas: nenhum teste
+# pode sair pra rede. tests/test_apis_backup.py liga explicitamente com mocks.
+os.environ["APIS_BACKUP_HABILITADO"] = "false"
+os.environ["APIS_FORCAR_BACKUP"] = "false"
+os.environ["IA_FORCAR_BACKUP"] = "false"
+os.environ["IA_MODELOS_BACKUP"] = ""
+os.environ["IA_BACKUP_BASE_URL"] = ""
 
 _mysql_mock = MagicMock()
 _mysql_connector_mock = MagicMock()

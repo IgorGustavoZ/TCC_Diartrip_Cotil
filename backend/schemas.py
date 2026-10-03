@@ -9,6 +9,12 @@ class MensagemResponse(BaseModel):
     mensagem: str
 
 
+class UsuarioAtualizadoResponse(BaseModel):
+    mensagem: str
+    # True = o email novo ainda não vale: aguarda o código enviado a ele
+    email_pendente: bool = False
+
+
 class UsuarioSimples(BaseModel):
     id_usuario: int
     nome: str

@@ -10,6 +10,8 @@ import os
 import logging
 import httpx
 
+from utils.log_seguro import descrever_erro
+
 logger = logging.getLogger("diartrip.geoapify")
 
 _API_KEY = os.getenv("GEOAPIFY_API_KEY")
@@ -51,7 +53,7 @@ def geocodificar(destino: str) -> tuple[float, float] | None:
         lon, lat = features[0]["geometry"]["coordinates"]
         return (lat, lon)
     except Exception as exc:
-        logger.warning("Geoapify geocode falhou: %s", exc)
+        logger.warning("Geoapify geocode falhou: %s", descrever_erro(exc))
         return None
 
 
@@ -78,7 +80,7 @@ def buscar_pontos_interesse(
         features = resp.json().get("features") or []
         return [_filtrar_poi(f) for f in features if f.get("properties", {}).get("name")]
     except Exception as exc:
-        logger.warning("Geoapify places falhou: %s", exc)
+        logger.warning("Geoapify places falhou: %s", descrever_erro(exc))
         return []
 
 

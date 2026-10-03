@@ -12,6 +12,8 @@ from collections import defaultdict
 
 import httpx
 
+from utils.log_seguro import descrever_erro
+
 logger = logging.getLogger("diartrip.openweather")
 
 _API_KEY = os.getenv("OPENWEATHER_API_KEY")
@@ -38,7 +40,7 @@ def previsao_por_dia(lat: float, lon: float) -> dict[str, dict]:
         resp.raise_for_status()
         entradas = resp.json().get("list") or []
     except Exception as exc:
-        logger.warning("OpenWeather falhou: %s", exc)
+        logger.warning("OpenWeather falhou: %s", descrever_erro(exc))
         return {}
 
     por_dia: dict[str, list[dict]] = defaultdict(list)

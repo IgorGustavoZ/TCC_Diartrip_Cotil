@@ -8,18 +8,19 @@ _janelas: dict[str, list[float]] = {}
 
 MAX_REQUISICOES = 10
 JANELA_SEGUNDOS = 60
+_MAIOR_JANELA = 24 * 3600
 
 
-def _verificar_redis(r, chave: str, limite: int) -> None:
+def _verificar_redis(r, chave: str, limite: int, janela: int = JANELA_SEGUNDOS) -> None:
     agora = time.time()
-    corte = agora - JANELA_SEGUNDOS
+    corte = agora - janela
     key = f"rl:{chave}"
 
     pipe = r.pipeline()
     pipe.zremrangebyscore(key, "-inf", corte)
     pipe.zadd(key, {str(agora): agora})
     pipe.zcard(key)
-    pipe.expire(key, JANELA_SEGUNDOS + 1)
+    pipe.expire(key, janela + 1)
     results = pipe.execute()
 
     contagem = results[2]
@@ -30,14 +31,17 @@ def _verificar_redis(r, chave: str, limite: int) -> None:
         )
 
 
-def _verificar_memoria(chave: str, limite: int) -> None:
+def _verificar_memoria(chave: str, limite: int, janela: int = JANELA_SEGUNDOS) -> None:
     agora = time.monotonic()
-    corte = agora - JANELA_SEGUNDOS
+    corte = agora - janela
 
     with _lock:
         if len(_janelas) > 10000:
+            # Limpeza usa a maior janela possível para não apagar o histórico
+            # de chaves com janela longa (ex.: limites por hora)
+            corte_limpeza = agora - _MAIOR_JANELA
             for k in list(_janelas.keys()):
-                _janelas[k] = [t for t in _janelas[k] if t > corte]
+                _janelas[k] = [t for t in _janelas[k] if t > corte_limpeza]
                 if not _janelas[k]:
                     del _janelas[k]
 
@@ -54,10 +58,13 @@ def _verificar_memoria(chave: str, limite: int) -> None:
         _janelas[chave] = historico
 
 
-def verificar_rate_limit(chave: str | int, limite: int = MAX_REQUISICOES) -> None:
+def verificar_rate_limit(
+    chave: str | int, limite: int = MAX_REQUISICOES, janela: int = JANELA_SEGUNDOS
+) -> None:
     chave = str(chave)
+    janela = min(janela, _MAIOR_JANELA)
     r = get_redis()
     if r is not None:
-        _verificar_redis(r, chave, limite)
+        _verificar_redis(r, chave, limite, janela)
     else:
-        _verificar_memoria(chave, limite)
+        _verificar_memoria(chave, limite, janela)

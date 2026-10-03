@@ -74,6 +74,72 @@ class _ConfigScreenState extends State<ConfigScreen> {
     });
   }
 
+  /// Pede o código enviado ao novo email e confirma a troca. Retorna true se
+  /// o backend aceitou; false se o usuário cancelou.
+  Future<bool> _pedirCodigoNovoEmail(int id) async {
+    final lang = context.read<LanguageProvider>();
+    final codigoCtrl = TextEditingController();
+    String? erro;
+    bool enviando = false;
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialog) => AlertDialog(
+          backgroundColor: WebColors.bg,
+          title: Text(lang.translate('config.emailVerifyTitle'), style: const TextStyle(color: WebColors.text)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(lang.translate('config.emailVerifySent'), style: const TextStyle(color: WebColors.textSecondary)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: codigoCtrl,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                style: const TextStyle(color: WebColors.text, letterSpacing: 4),
+                decoration: InputDecoration(
+                  labelText: lang.translate('register.verify.label'),
+                  errorText: erro,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: enviando ? null : () => Navigator.pop(ctx, false),
+              child: Text(lang.translate('common.cancel')),
+            ),
+            ElevatedButton(
+              onPressed: enviando
+                  ? null
+                  : () async {
+                      final codigo = codigoCtrl.text.trim();
+                      if (!RegExp(r'^\d{6}$').hasMatch(codigo)) {
+                        setDialog(() => erro = lang.translate('register.verify.invalid'));
+                        return;
+                      }
+                      setDialog(() { enviando = true; erro = null; });
+                      try {
+                        await UsuarioService.confirmarEmail(id: id, codigo: codigo);
+                        if (ctx.mounted) Navigator.pop(ctx, true);
+                      } catch (e) {
+                        setDialog(() {
+                          enviando = false;
+                          erro = e is ApiException ? e.message : lang.translate('register.verify.error');
+                        });
+                      }
+                    },
+              child: Text(lang.translate('register.verify.submit')),
+            ),
+          ],
+        ),
+      ),
+    );
+    codigoCtrl.dispose();
+    return ok ?? false;
+  }
+
   Future<void> _salvarConta() async {
     final lang = context.read<LanguageProvider>();
     if (_nomeCtrl.text.trim().isEmpty) {
@@ -89,12 +155,25 @@ class _ConfigScreenState extends State<ConfigScreen> {
     if (id == null) return;
     setState(() { _savingAccount = true; _accountMsg = null; });
     try {
-      final u = await UsuarioService.atualizar(
+      final res = await UsuarioService.atualizar(
         id: id,
         nome: _nomeCtrl.text.trim(),
         email: _emailCtrl.text.trim(),
       );
-      auth.updateUsuario(u);
+      auth.updateUsuario(res.usuario);
+      if (res.emailPendente && mounted) {
+        // O email novo só vale depois de confirmar o código enviado a ele
+        final confirmado = await _pedirCodigoNovoEmail(id);
+        if (confirmado) auth.updateUsuario(await UsuarioService.getMe());
+        if (mounted) {
+          _emailCtrl.text = auth.usuario?.email ?? _emailCtrl.text;
+          setState(() {
+            _accountMsg = lang.translate(confirmado ? 'config.updateSuccess' : 'config.emailNotConfirmed');
+            _accountMsgErro = !confirmado;
+          });
+        }
+        return;
+      }
       if (mounted) {
         setState(() { _accountMsg = lang.translate('config.updateSuccess'); _accountMsgErro = false; });
       }

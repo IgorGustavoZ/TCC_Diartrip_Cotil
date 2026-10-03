@@ -310,6 +310,32 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
 
         colocarDados()
 
+        async function confirmarNovoEmail() {
+            let aviso = t('config.emailVerifySent')
+            while (true) {
+                const codigo = prompt(`${t('config.emailVerifyTitle')}\n\n${aviso}`)
+                if (codigo === null) return false
+                if (!/^\d{6}$/.test(codigo.trim())) {
+                    aviso = t('register.verify.invalid')
+                    continue
+                }
+                const resp = await fetch(`/usuarios/${sessionStorage.getItem("id")}/confirmar-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ codigo: codigo.trim() })
+                })
+                if (resp.ok) return true
+                const erro = await resp.json().catch(() => ({}))
+                aviso = erro.detail || t('register.verify.error')
+                // Expirado / tentativas esgotadas: só salvando de novo gera outro código
+                if (resp.status === 429 || /expirado/i.test(aviso)) {
+                    alert(aviso)
+                    return false
+                }
+            }
+        }
+
         btnSave.addEventListener("click", async ()=>{
             if (!nomeInput.value.trim()) {
                 esconderAvisos()
@@ -340,9 +366,17 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
             btnSave.classList.remove("is-loading")
             btnSave.textContent = textoOriginalSave
             if(respPutUsuario.ok){
+                const dadosPut = await respPutUsuario.json().catch(() => ({}))
+                // Email novo só vale depois de confirmar o código enviado a ele
+                const confirmado = dadosPut.email_pendente ? await confirmarNovoEmail() : true
                 esconderAvisos()
-                msgSucess.style.display = "block"
-                msgSucess.innerHTML = t('config.updateSuccess')
+                if (confirmado) {
+                    msgSucess.style.display = "block"
+                    msgSucess.textContent = t('config.updateSuccess')
+                } else {
+                    msgError.style.display = "block"
+                    msgError.textContent = t('config.emailNotConfirmed')
+                }
                 limparCampos()
                 colocarDados()
             } else {

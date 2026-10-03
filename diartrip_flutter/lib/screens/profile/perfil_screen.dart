@@ -85,12 +85,12 @@ class _PerfilScreenState extends State<PerfilScreen> {
   Future<void> _salvar() async {
     setState(() => _saving = true);
     try {
-      final atualizado = await UsuarioService.atualizar(
+      final atualizado = (await UsuarioService.atualizar(
         id: _targetId,
         nome: _nomeCtrl.text.trim(),
         email: _usuario!.email ?? '',
         bio: _bioCtrl.text.trim(),
-      );
+      )).usuario;
       if (!mounted) return;
       context.read<AuthProvider>().updateUsuario(atualizado);
       setState(() { _usuario = atualizado; _editando = false; });

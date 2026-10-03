@@ -21,11 +21,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nomeCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _senhaCtrl = TextEditingController();
+  final _codigoCtrl = TextEditingController();
   final _emailFocus = FocusNode();
   final _senhaFocus = FocusNode();
   bool _senhaVisivel = false;
   bool _loading = false;
+  bool _aguardandoVerificacao = false;
   String? _erro;
+  String? _info;
   String? _emailErro;
 
   @override
@@ -33,6 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _nomeCtrl.dispose();
     _emailCtrl.dispose();
     _senhaCtrl.dispose();
+    _codigoCtrl.dispose();
     _emailFocus.dispose();
     _senhaFocus.dispose();
     super.dispose();
@@ -51,14 +55,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         senha: _senhaCtrl.text,
       );
       if (!mounted) return;
-      try {
-        await context.read<AuthProvider>().login(_emailCtrl.text.trim(), _senhaCtrl.text);
-        if (mounted) Navigator.pushReplacementNamed(context, '/lobby');
-      } catch (_) {
-        // Conta criada, mas o login automático falhou — igual ao
-        // "register.err.autoLogin" do form.html.
-        if (mounted) setState(() => _erro = lang.translate('register.err.autoLogin'));
-      }
+      setState(() => _aguardandoVerificacao = true);
     } on ApiException catch (e) {
       if (e.statusCode == 409) {
         setState(() => _emailErro = lang.translate('register.err.emailTaken'));
@@ -67,6 +64,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (_) {
       setState(() => _erro = lang.translate('register.err.connect'));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _confirmarCodigo() async {
+    if (_loading) return;
+    final lang = context.read<LanguageProvider>();
+    final codigo = _codigoCtrl.text.trim();
+    setState(() { _erro = null; _info = null; });
+    if (!RegExp(r'^\d{6}$').hasMatch(codigo)) {
+      setState(() => _erro = lang.translate('register.verify.invalid'));
+      return;
+    }
+    setState(() => _loading = true);
+    try {
+      await UsuarioService.verificarEmail(
+        email: _emailCtrl.text.trim(),
+        codigo: codigo,
+        senha: _senhaCtrl.text,
+      );
+      await context.read<AuthProvider>().login(_emailCtrl.text.trim(), _senhaCtrl.text);
+      if (mounted) Navigator.pushReplacementNamed(context, '/lobby');
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _erro = e.message);
+    } catch (_) {
+      if (mounted) setState(() => _erro = lang.translate('register.verify.error'));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _reenviarCodigo() async {
+    if (_loading) return;
+    final lang = context.read<LanguageProvider>();
+    setState(() { _erro = null; _info = null; _loading = true; });
+    try {
+      await UsuarioService.reenviarCodigo(_emailCtrl.text.trim());
+      if (mounted) setState(() => _info = lang.translate('register.verify.resent'));
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _erro = e.message);
+    } catch (_) {
+      if (mounted) setState(() => _erro = lang.translate('register.verify.error'));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -140,6 +180,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
+                              if (_aguardandoVerificacao) ...[
+                                Text(
+                                  lang.translate('register.verify.sent'),
+                                  style: const TextStyle(color: WebColors.textMuted, fontSize: 14),
+                                ),
+                                const SizedBox(height: 20),
+                                TextFormField(
+                                  controller: _codigoCtrl,
+                                  keyboardType: TextInputType.number,
+                                  maxLength: 6,
+                                  textInputAction: TextInputAction.done,
+                                  style: const TextStyle(color: WebColors.text, letterSpacing: 4),
+                                  decoration: _decoration(
+                                    label: lang.translate('register.verify.label'),
+                                    icon: Icons.mark_email_read_outlined,
+                                  ),
+                                  onFieldSubmitted: (_) => _confirmarCodigo(),
+                                ),
+                                if (_erro != null) ...[
+                                  const SizedBox(height: 12),
+                                  Text(_erro!, style: const TextStyle(color: WebColors.danger, fontSize: 13)),
+                                ],
+                                if (_info != null) ...[
+                                  const SizedBox(height: 12),
+                                  Text(_info!, style: const TextStyle(color: WebColors.textMuted, fontSize: 13)),
+                                ],
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: _loading ? null : _confirmarCodigo,
+                                  child: Text(lang.translate('register.verify.submit')),
+                                ),
+                                TextButton(
+                                  onPressed: _loading ? null : _reenviarCodigo,
+                                  child: Text(lang.translate('register.verify.resend')),
+                                ),
+                              ] else ...[
                               Text(
                                 lang.translate('register.title'),
                                 style: const TextStyle(
@@ -293,6 +369,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                 ],
                               ),
+                              ],
                             ],
                           ),
                         ),

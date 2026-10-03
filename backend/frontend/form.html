@@ -38,6 +38,7 @@
     <section style="padding:100px 20px; max-width:600px; margin:auto; position: relative;">
         <h2 class="section-title titulo" style="margin-bottom:20px;" data-i18n="register.title">Sign Up</h2>
         <form id="signupForm" style="display:flex; flex-direction:column; gap:22px; background:var(--surface); padding:40px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow-md); position:relative;">
+        <div id="signupFields">
 
         <p class="signup-secao-titulo" data-i18n="register.section.personal">Personal information</p>
 
@@ -90,6 +91,19 @@
         <input class="cta" id="submit" type="submit" data-i18n-value="register.submit" value="Create Account">
         <div class="signup-upload-status" id="uploadStatus" style="display:none; text-align:center;"></div>
         <div class="login"><a href="login.html" data-i18n="register.hasAccount">Already have an account? Click here.</a></div>
+        </div>
+
+        <div id="verificationPanel" style="display:none; flex-direction:column; gap:18px;">
+            <p data-i18n="register.verify.sent">We sent a 6-digit code to your email. Enter it to activate your account.</p>
+            <div class="field">
+                <label for="verificationCode" data-i18n="register.verify.label">Email verification code</label>
+                <input id="verificationCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" disabled>
+            </div>
+            <span class="error" id="verificationError" style="display:none;"></span>
+            <button class="cta" id="verifyButton" type="button" data-i18n="register.verify.submit">Verify email</button>
+            <button id="resendCodeButton" type="button" style="background:none;border:0;color:var(--primary);cursor:pointer;" data-i18n="register.verify.resend">Send a new code</button>
+            <span class="signup-upload-status" id="verificationStatus" style="display:none;"></span>
+        </div>
 
     </form>
 
@@ -111,6 +125,13 @@
     const passwordConfirmError = document.getElementById("passwordConfirmError")
     const submitBtn = document.getElementById("submit")
     const uploadStatus = document.getElementById("uploadStatus")
+    const signupFields = document.getElementById("signupFields")
+    const verificationPanel = document.getElementById("verificationPanel")
+    const verificationCode = document.getElementById("verificationCode")
+    const verificationError = document.getElementById("verificationError")
+    const verificationStatus = document.getElementById("verificationStatus")
+    const verifyButton = document.getElementById("verifyButton")
+    const resendCodeButton = document.getElementById("resendCodeButton")
 
     function toggleVer(input, botao) {
         if (input.type === "password") {
@@ -153,6 +174,10 @@
 
     form.addEventListener("submit", async function(e) {
         e.preventDefault()
+        if (verificationPanel.style.display === "flex") {
+            verifyButton.click()
+            return
+        }
 
         nameError.textContent = ""
         emailError.textContent = ""
@@ -231,6 +256,27 @@
                 return
             }
 
+            signupFields.querySelectorAll("input, button").forEach((control) => {
+                control.disabled = true
+            })
+            verificationCode.disabled = false
+            signupFields.style.display = "none"
+            verificationPanel.style.display = "flex"
+            verificationCode.focus()
+            return
+
+        } catch (err) {
+            emailError.textContent = t("register.err.connect")
+        } finally {
+            submitBtn.disabled = false
+            submitBtn.value = t("register.submit")
+        }
+    })
+
+    async function entrarAposVerificacao() {
+        const email = emailInput.value.trim()
+        const senha = passwordInput.value
+
             const respLogin = await fetch("/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -263,12 +309,56 @@
             }
 
             window.location.href = "lobby.html"
+    }
 
+    verifyButton.addEventListener("click", async () => {
+        verificationError.style.display = "none"
+        verificationStatus.style.display = "none"
+        const codigo = verificationCode.value.trim()
+        if (!/^\d{6}$/.test(codigo)) {
+            verificationError.textContent = t("register.verify.invalid")
+            verificationError.style.display = "block"
+            return
+        }
+        verifyButton.disabled = true
+        try {
+            const resp = await fetch("/usuarios/verificar-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: emailInput.value.trim(), codigo, senha: passwordInput.value })
+            })
+            if (!resp.ok) {
+                const dados = await resp.json()
+                verificationError.textContent = dados.detail || t("register.verify.error")
+                verificationError.style.display = "block"
+                return
+            }
+            await entrarAposVerificacao()
         } catch (err) {
-            emailError.textContent = t("register.err.connect")
+            verificationError.textContent = t("register.err.connect")
+            verificationError.style.display = "block"
         } finally {
-            submitBtn.disabled = false
-            submitBtn.value = t("register.submit")
+            verifyButton.disabled = false
+        }
+    })
+
+    resendCodeButton.addEventListener("click", async () => {
+        resendCodeButton.disabled = true
+        verificationStatus.style.display = "none"
+        try {
+            const resp = await fetch("/usuarios/reenviar-codigo", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: emailInput.value.trim() })
+            })
+            if (!resp.ok) throw new Error()
+            verificationStatus.textContent = t("register.verify.resent")
+            verificationStatus.style.display = "block"
+        } catch (err) {
+            verificationError.textContent = t("register.verify.error")
+            verificationError.style.display = "block"
+        } finally {
+            resendCodeButton.disabled = false
         }
     })
 </script>

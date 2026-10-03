@@ -18,7 +18,7 @@ ALGORITHM = "HS256"
 
 def _make_login_db(senha_plain):
     hashed = bcrypt.hashpw(senha_plain.encode(), bcrypt.gensalt()).decode()
-    cursor = make_cursor(rows=[{"id_usuario": 1, "senha_hash": hashed}])
+    cursor = make_cursor(rows=[{"id_usuario": 1, "senha_hash": hashed, "email_verificado": 1}])
     conn = make_connection(cursor)
     return conn, hashed
 
@@ -49,6 +49,20 @@ class TestLogin:
         with patch("database.get_db", fake_get_db(conn)):
             resp = client.post("/login", json={"email": "t@t.com", "senha": "SenhaErrada1"})
         assert resp.status_code == 401
+
+    def test_login_email_nao_verificado_bloqueia_sessao(self, client):
+        senha = "SenhaForte1"
+        hashed = bcrypt.hashpw(senha.encode(), bcrypt.gensalt()).decode()
+        cursor = make_cursor(rows=[{
+            "id_usuario": 1,
+            "senha_hash": hashed,
+            "email_verificado": 0,
+        }])
+        conn = make_connection(cursor)
+        with patch("database.get_db", fake_get_db(conn)):
+            resp = client.post("/login", json={"email": "pendente@example.com", "senha": senha})
+        assert resp.status_code == 403
+        assert "access_token" not in resp.cookies
 
     def test_login_usuario_inexistente_retorna_401(self, client):
         cursor = make_cursor(rows=[])
@@ -84,7 +98,7 @@ class TestLogin:
 
 
 
-class TestTokenJWT:
+class TestTokenJWTExpiry:
     def test_token_expirado_retorna_401(self, client):
         from fastapi.testclient import TestClient
         from main import app
@@ -98,6 +112,134 @@ class TestTokenJWT:
             resp = c.get("/usuarios/me")
         assert resp.status_code == 401
 
+
+def _hash_codigo_teste(codigo: str) -> str:
+    import hashlib
+    import hmac
+    return hmac.new(SECRET_KEY.encode(), codigo.encode("ascii"), hashlib.sha256).hexdigest()
+
+
+_SENHA_CADASTRO = "SenhaForte1"
+_SENHA_CADASTRO_HASH = bcrypt.hashpw(_SENHA_CADASTRO.encode(), bcrypt.gensalt(4)).decode()
+
+
+def _usuario_pendente(**extra):
+    linha = {
+        "id_usuario": 7,
+        "senha_hash": _SENHA_CADASTRO_HASH,
+        "email_verificado": 0,
+        "codigo_verificacao_hash": _hash_codigo_teste("123456"),
+        "codigo_verificacao_expira": datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=10),
+        "tentativas_verificacao": 0,
+    }
+    linha.update(extra)
+    return linha
+
+
+class TestVerificacaoEmail:
+    def test_codigo_e_senha_validos_marcam_email_verificado(self):
+        from services.email_verification_service import verificar_codigo
+
+        cursor = make_cursor(rows=[_usuario_pendente()])
+        conn = make_connection(cursor)
+        with patch("services.email_verification_service.get_db", fake_get_db(conn)):
+            resultado = verificar_codigo("Novo@Example.com", "123456", _SENHA_CADASTRO)
+
+        assert resultado["usuario_id"] == 7
+        assert cursor.execute.call_args_list[0].args[1] == ("novo@example.com",)
+        assert cursor.execute.call_count == 2
+        assert "email_verificado=1" in cursor.execute.call_args_list[1].args[0]
+
+    def test_codigo_certo_com_senha_errada_e_rejeitado(self):
+        """Quem tem só o código (dono da caixa) não ativa uma conta cadastrada
+        por outra pessoa com senha que ele não conhece."""
+        from fastapi import HTTPException
+        from services.email_verification_service import verificar_codigo
+
+        cursor = make_cursor(rows=[_usuario_pendente()])
+        conn = make_connection(cursor)
+        with patch("services.email_verification_service.get_db", fake_get_db(conn)):
+            with pytest.raises(HTTPException) as exc:
+                verificar_codigo("novo@example.com", "123456", "OutraSenha1")
+
+        assert exc.value.status_code == 400
+        assert cursor.execute.call_args_list[1].args[1] == (1, 7)  # conta como tentativa
+
+    def test_email_ja_verificado_nao_revela_conta(self):
+        from fastapi import HTTPException
+        from services.email_verification_service import verificar_codigo
+
+        cursor = make_cursor(rows=[_usuario_pendente(email_verificado=1)])
+        conn = make_connection(cursor)
+        with patch("services.email_verification_service.get_db", fake_get_db(conn)):
+            with pytest.raises(HTTPException) as exc:
+                verificar_codigo("ja@example.com", "000000", "qualquer")
+
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "Codigo invalido"
+
+    def test_codigo_expirado_e_rejeitado(self):
+        from fastapi import HTTPException
+        from services.email_verification_service import verificar_codigo
+
+        cursor = make_cursor(rows=[_usuario_pendente(
+            codigo_verificacao_expira=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=1),
+        )])
+        conn = make_connection(cursor)
+        with patch("services.email_verification_service.get_db", fake_get_db(conn)):
+            with pytest.raises(HTTPException) as exc:
+                verificar_codigo("novo@example.com", "123456", _SENHA_CADASTRO)
+
+        assert exc.value.status_code == 400
+        assert "expirado" in exc.value.detail.lower()
+        assert cursor.execute.call_count == 2
+
+    def test_codigo_invalido_incrementa_tentativas(self):
+        from fastapi import HTTPException
+        from services.email_verification_service import verificar_codigo
+
+        cursor = make_cursor(rows=[_usuario_pendente(tentativas_verificacao=1)])
+        conn = make_connection(cursor)
+        with patch("services.email_verification_service.get_db", fake_get_db(conn)):
+            with pytest.raises(HTTPException) as exc:
+                verificar_codigo("novo@example.com", "654321", _SENHA_CADASTRO)
+
+        assert exc.value.status_code == 400
+        assert cursor.execute.call_args_list[1].args[1] == (2, 7)
+
+    def test_rate_limit_ignora_maiusculas_do_email(self, client):
+        """Variar maiúsculas não pode gerar contadores de rate limit novos."""
+        with patch("services.email_verification_service.reenviar_codigo"):
+            primeira = client.post("/usuarios/reenviar-codigo", json={"email": "caso@example.com"})
+            segunda = client.post("/usuarios/reenviar-codigo", json={"email": "CASO@example.com"})
+        assert primeira.status_code == 200
+        assert segunda.status_code == 429
+
+
+class TestTrocaEmail:
+    def test_confirmar_troca_aplica_email_pendente(self):
+        from services.email_verification_service import confirmar_troca_email
+
+        cursor = make_cursor(rows=[_usuario_pendente(email_verificado=1, email_pendente="novo@example.com")])
+        conn = make_connection(cursor)
+        with patch("services.email_verification_service.get_db", fake_get_db(conn)):
+            confirmar_troca_email(7, "123456")
+
+        assert "email=email_pendente" in cursor.execute.call_args_list[1].args[0]
+
+    def test_confirmar_sem_troca_pendente_retorna_400(self):
+        from fastapi import HTTPException
+        from services.email_verification_service import confirmar_troca_email
+
+        cursor = make_cursor(rows=[_usuario_pendente(email_verificado=1, email_pendente=None)])
+        conn = make_connection(cursor)
+        with patch("services.email_verification_service.get_db", fake_get_db(conn)):
+            with pytest.raises(HTTPException) as exc:
+                confirmar_troca_email(7, "123456")
+        assert exc.value.status_code == 400
+
+
+class TestTokenJWT:
     def test_token_assinatura_adulterada_retorna_401(self, client):
         from fastapi.testclient import TestClient
         from main import app
