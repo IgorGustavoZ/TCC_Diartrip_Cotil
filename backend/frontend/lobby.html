@@ -1,160 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diartrip</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../static/style.css?v=5">
-<link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
-<script src="static/i18n.js"></script>
-<script src="static/viagem-status.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diartrip</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/style.css?v=5">
+    <link rel="shortcut icon" href="../imagens/favicon-diartrip.png" type="image/x-icon">
+    <script src="static/i18n.js"></script>
+    <script src="static/viagem-status.js"></script>
 </head>
+
 <body>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <div class="app">
 
-    <div class="sidebar">
+        <div class="sidebar">
 
-    <a href="lobby.html">
-        <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
-    </a>
+            <a href="lobby.html">
+                <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
+            </a>
 
-    <a href="lobby.html">
-        <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
-    </a>
-    <a href="lobby-pags/grupos.html">
-        <div class="menu-item" data-i18n="nav.groups">🌐︎ Groups</div>
-    </a>
-    <a href="lobby-pags/explorar-viagens.html">
-        <div class="menu-item" data-i18n="nav.explore">🔍︎ Explore Trips</div>
-    </a>
-    <a href="lobby-pags/feed.html">
-        <div class="menu-item" data-i18n="nav.community">🗪 Community</div>
-    </a>
-    <a href="lobby-pags/perfil.html">
-        <div class="menu-item" data-i18n="nav.profile">⚙ Profile</div>
-    </a>
-    <!-- <a href="lobby-pags/chat-viagem.html">
+            <a href="lobby.html">
+                <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
+            </a>
+            <a href="lobby-pags/grupos.html">
+                <div class="menu-item" data-i18n="nav.groups">🌐︎ Groups</div>
+            </a>
+            <a href="lobby-pags/explorar-viagens.html">
+                <div class="menu-item" data-i18n="nav.explore">🔍︎ Explore Trips</div>
+            </a>
+            <a href="lobby-pags/feed.html">
+                <div class="menu-item" data-i18n="nav.community">🗪 Community</div>
+            </a>
+            <a href="lobby-pags/perfil.html">
+                <div class="menu-item" data-i18n="nav.profile">⚙ Profile</div>
+            </a>
+            <!-- <a href="lobby-pags/chat-viagem.html">
         <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
     </a> -->
-    <a href="lobby-pags/chat-viagem.html">
-        <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
-    </a>
+            <a href="lobby-pags/chat-viagem.html">
+                <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
+            </a>
 
-    <div class="sidebar-spacer"></div>
-    <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Sair</div>
+            <div class="sidebar-spacer"></div>
+            <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Sair</div>
 
-    </div>
-
-    <div class="main">
-
-    <div class="header">
-    <h2 data-i18n="lobby.trips.heading">My Trips</h2>
-    <a href="lobby-pags/perfil.html" id="userChip" style="display:flex; align-items:center; gap:10px; background:var(--surface-2); border:1px solid var(--border); padding:6px 14px 6px 6px; border-radius:50px; cursor:pointer; transition:background 0.2s; text-decoration:none; color:inherit;">
-        <div id="avatarMini" style="width:32px; height:32px; border-radius:50%; background:var(--gradient); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0;">?</div>
-        <span id="userNome" style="font-size:14px; color:var(--text-secondary); white-space:nowrap;"></span>
-    </a>
-    </div>
-
-    <div class="content">
-
-    <div class="trips">
-    <div id="nextTripWrap"></div>
-    <h3 data-i18n="lobby.trips.section">Your trips</h3>
-
-    <div class="trip-grid" id="gridAtivas">
-    </div>
-
-    <div class="past-trips" id="viagensPassadas" style="display:none;">
-        <button type="button" class="past-trips-toggle" onclick="document.getElementById('viagensPassadas').classList.toggle('open')">
-            <span data-i18n="lobby.pastTrips">Past trips</span>
-            <span class="past-trips-count" id="pastTripsCount"></span>
-            <span class="past-trips-arrow">▾</span>
-        </button>
-        <div class="past-trips-body">
-            <div class="trip-grid" id="gridPassadas"></div>
         </div>
-    </div>
+
+        <div class="main">
+
+            <div class="header">
+                <h2 data-i18n="lobby.trips.heading">My Trips</h2>
+                <a href="lobby-pags/perfil.html" id="userChip"
+                    style="display:flex; align-items:center; gap:10px; background:var(--surface-2); border:1px solid var(--border); padding:6px 14px 6px 6px; border-radius:50px; cursor:pointer; transition:background 0.2s; text-decoration:none; color:inherit;">
+                    <div id="avatarMini"
+                        style="width:32px; height:32px; border-radius:50%; background:var(--gradient); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0;">
+                        ?</div>
+                    <span id="userNome" style="font-size:14px; color:var(--text-secondary); white-space:nowrap;"></span>
+                </a>
+            </div>
+
+            <div class="content">
+
+                <div class="trips">
+                    <div id="nextTripWrap"></div>
+                    <h3 data-i18n="lobby.trips.section">Your trips</h3>
+
+                    <div class="trip-grid" id="gridAtivas">
+                    </div>
+
+                    <div class="past-trips" id="viagensPassadas" style="display:none;">
+                        <button type="button" class="past-trips-toggle"
+                            onclick="document.getElementById('viagensPassadas').classList.toggle('open')">
+                            <span data-i18n="lobby.pastTrips">Past trips</span>
+                            <span class="past-trips-count" id="pastTripsCount"></span>
+                            <span class="past-trips-arrow">▾</span>
+                        </button>
+                        <div class="past-trips-body">
+                            <div class="trip-grid" id="gridPassadas"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="chat">
+
+                    <div class="chat-header" data-i18n="lobby.chat.header">Travel AI Assistant</div>
+
+                    <div id="chatMessages" class="chat-messages">
+                        <div class="message"><strong>AI:</strong> <span data-i18n="lobby.chat.initial">Hello! Select a
+                                trip and ask me anything about it.</span></div>
+                    </div>
+
+                    <div class="chat-input">
+                        <input id="chatInput" data-i18n-placeholder="lobby.chat.placeholder"
+                            placeholder="Ask something about your trip...">
+                        <button onclick="sendMessage()" data-i18n="lobby.chat.send">Send</button>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
 
     </div>
 
-    <div class="chat">
-
-    <div class="chat-header" data-i18n="lobby.chat.header">Travel AI Assistant</div>
-
-    <div id="chatMessages" class="chat-messages">
-    <div class="message"><strong>AI:</strong> <span data-i18n="lobby.chat.initial">Hello! Select a trip and ask me anything about it.</span></div>
-    </div>
-
-    <div class="chat-input">
-    <input id="chatInput" data-i18n-placeholder="lobby.chat.placeholder" placeholder="Ask something about your trip...">
-    <button onclick="sendMessage()" data-i18n="lobby.chat.send">Send</button>
-    </div>
-
-    </div>
-
-    </div>
-
-    </div>
-
-    </div>
-
-<script>
-    function escapeHtml(txt) {
-        return String(txt).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")
-    }
-
-    let grupoSelecionado = null
-
-    const txtBv = async () => {
-        const resp = await fetch(`/usuarios/me`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
-        })
-
-        if (resp.ok) {
-            const dados = await resp.json()
-            const avatarEl = document.getElementById("avatarMini")
-            if (dados.foto_perfil) {
-                avatarEl.innerHTML = `<img src="${dados.foto_perfil}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:block;">`
-            } else {
-                const iniciais = dados.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
-                avatarEl.textContent = iniciais
-            }
-            document.getElementById("userNome").textContent = `${t('lobby.greeting')}${dados.nome.split(" ")[0]}!`
+    <script>
+        function escapeHtml(txt) {
+            return String(txt).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
         }
-    }
 
-    const CAPAS = [
-        "linear-gradient(135deg,#2563eb,#06b6d4)",
-        "linear-gradient(135deg,#7c3aed,#c026d3)",
-        "linear-gradient(135deg,#0891b2,#16a34a)",
-        "linear-gradient(135deg,#ea580c,#f59e0b)",
-        "linear-gradient(135deg,#db2777,#f43f5e)",
-        "linear-gradient(135deg,#0d9488,#2563eb)",
-    ]
+        let grupoSelecionado = null
 
-    function capaPara(texto) {
-        let hash = 0
-        for (const ch of String(texto || "")) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
-        return CAPAS[hash % CAPAS.length]
-    }
+        const txtBv = async () => {
+            const resp = await fetch(`/usuarios/me`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            })
 
-    function renderNextTrip(viagens) {
-        const wrap = document.getElementById("nextTripWrap")
-        const hoje = new Date(); hoje.setHours(0, 0, 0, 0)
+            if (resp.ok) {
+                const dados = await resp.json()
+                const avatarEl = document.getElementById("avatarMini")
+                if (dados.foto_perfil) {
+                    avatarEl.innerHTML = `<img src="${dados.foto_perfil}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:block;">`
+                } else {
+                    const iniciais = dados.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
+                    avatarEl.textContent = iniciais
+                }
+                document.getElementById("userNome").textContent = `${t('lobby.greeting')}${dados.nome.split(" ")[0]}!`
+            }
+        }
 
-        const proximas = viagens
-            .filter(v => v.data_inicio && new Date(v.data_inicio + "T00:00:00") >= hoje)
-            .sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio))
+        const CAPAS = [
+            "linear-gradient(135deg,#2563eb,#06b6d4)",
+            "linear-gradient(135deg,#7c3aed,#c026d3)",
+            "linear-gradient(135deg,#0891b2,#16a34a)",
+            "linear-gradient(135deg,#ea580c,#f59e0b)",
+            "linear-gradient(135deg,#db2777,#f43f5e)",
+            "linear-gradient(135deg,#0d9488,#2563eb)",
+        ]
 
-        if (proximas.length === 0) { wrap.innerHTML = ""; return }
+        function capaPara(texto) {
+            let hash = 0
+            for (const ch of String(texto || "")) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
+            return CAPAS[hash % CAPAS.length]
+        }
 
-        const v = proximas[0]
-        wrap.innerHTML = `
+        function renderNextTrip(viagens) {
+            const wrap = document.getElementById("nextTripWrap")
+            const hoje = new Date(); hoje.setHours(0, 0, 0, 0)
+
+            const proximas = viagens
+                .filter(v => v.data_inicio && new Date(v.data_inicio + "T00:00:00") >= hoje)
+                .sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio))
+
+            if (proximas.length === 0) { wrap.innerHTML = ""; return }
+
+            const v = proximas[0]
+            wrap.innerHTML = `
             <div class="next-trip">
                 <div>
                     <div class="next-trip-label">✈ ${escapeHtml(t('lobby.nextTrip.label'))}</div>
@@ -164,33 +172,33 @@
                 <button class="next-trip-btn" onclick="window.location.href='lobby-pags/viagem.html?id=${v.id_grupo}'">${escapeHtml(t('lobby.nextTrip.btn'))}</button>
             </div>
         `
-    }
+        }
 
-    async function enriquecerOrcamento(idGrupo) {
-        try {
-            const resp = await fetch(`/grupos/${idGrupo}/dashboard/geral`, { credentials: "include" })
-            if (!resp.ok) return
-            const dados = await resp.json()
-            const el = document.getElementById(`budget-${idGrupo}`)
-            if (!el || !dados.orcamento_total) return
-            const pct = Math.min(dados.percentual_consumido || 0, 100)
-            el.innerHTML = `
-                <div class="trip-budget-label">R$ ${dados.orcamento_total.toLocaleString(getLang(), {minimumFractionDigits:2})} · ${pct}% ${t('viagem.tab.overview.consumed')}</div>
+        async function enriquecerOrcamento(idGrupo) {
+            try {
+                const resp = await fetch(`/grupos/${idGrupo}/dashboard/geral`, { credentials: "include" })
+                if (!resp.ok) return
+                const dados = await resp.json()
+                const el = document.getElementById(`budget-${idGrupo}`)
+                if (!el || !dados.orcamento_total) return
+                const pct = Math.min(dados.percentual_consumido || 0, 100)
+                el.innerHTML = `
+                <div class="trip-budget-label">R$ ${dados.orcamento_total.toLocaleString(getLang(), { minimumFractionDigits: 2 })} · ${pct}% ${t('viagem.tab.overview.consumed')}</div>
                 <div class="trip-budget-bar"><div class="trip-budget-fill" style="width:${pct}%"></div></div>
             `
-        } catch (e) { /* enriquecimento best-effort: falha silenciosa */ }
-    }
+            } catch (e) { /* enriquecimento best-effort: falha silenciosa */ }
+        }
 
-    // Um card de viagem (usado tanto na lista principal quanto na seção de
-    // passadas — o mesmo card, o mesmo clique/duplo clique).
-    function criarCardViagem(viagem, passada) {
-        const card = document.createElement("div")
+        // Um card de viagem (usado tanto na lista principal quanto na seção de
+        // passadas — o mesmo card, o mesmo clique/duplo clique).
+        function criarCardViagem(viagem, passada) {
+            const card = document.createElement("div")
 
-        card.className = "trip-card" + (passada ? " past" : "")
+            card.className = "trip-card" + (passada ? " past" : "")
 
-        card.dataset.id = viagem.id_grupo
+            card.dataset.id = viagem.id_grupo
 
-        card.innerHTML = `
+            card.innerHTML = `
             <div class="trip-cover" style="background:${capaPara(viagem.destino_principal)}">
                 <span class="trip-cover-emoji">✈︎</span>
             </div>
@@ -209,165 +217,166 @@
             </div>
         `
 
-        card.addEventListener("click", () => {
+            card.addEventListener("click", () => {
 
-            document
-                .querySelectorAll(".trip-card")
-                .forEach(c => c.classList.remove("ativo"))
+                document
+                    .querySelectorAll(".trip-card")
+                    .forEach(c => c.classList.remove("ativo"))
 
-            card.classList.add("ativo")
+                card.classList.add("ativo")
 
-            grupoSelecionado = viagem.id_grupo
+                grupoSelecionado = viagem.id_grupo
 
-            const messages = document.getElementById("chatMessages")
+                const messages = document.getElementById("chatMessages")
 
-            messages.innerHTML = `
+                messages.innerHTML = `
                 <div class="message">
                     <strong>AI:</strong>
                     <em>${escapeHtml(viagem.nome_grupo)}</em> ${t('lobby.chat.selected') || 'selected! How can I help?'}
                 </div>
             `
-        })
+            })
 
-        card.addEventListener("dblclick", () => {
+            card.addEventListener("dblclick", () => {
 
-            window.location.href =
-                `lobby-pags/viagem.html?id=${viagem.id_grupo}`
+                window.location.href =
+                    `lobby-pags/viagem.html?id=${viagem.id_grupo}`
 
-        })
+            })
 
-        return card
-    }
-
-    const carregarViagens = async () => {
-        const resp = await fetch(`/grupos`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
-        })
-
-        if (!resp.ok) return
-
-        const viagens = await resp.json()
-        const grid = document.getElementById("gridAtivas")
-        const gridPassadas = document.getElementById("gridPassadas")
-        const secaoPassadas = document.getElementById("viagensPassadas")
-        grid.innerHTML = ""
-        gridPassadas.innerHTML = ""
-        secaoPassadas.style.display = "none"
-
-        if (viagens.length === 0) {
-            grid.innerHTML = `<p>${t('lobby.trips.empty') || 'No trips found.'}</p>`
-            document.getElementById("nextTripWrap").innerHTML = ""
-            return
+            return card
         }
 
-        renderNextTrip(viagens)
+        const carregarViagens = async () => {
+            const resp = await fetch(`/grupos`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            })
 
-        // Cada viagem cai em exatamente uma das duas listas (regra única em
-        // static/viagem-status.js, a mesma do app Flutter).
-        const ativas = viagens.filter(v => !viagemJaPassou(v))
-        const passadas = viagens.filter(v => viagemJaPassou(v))
+            if (!resp.ok) return
 
-        if (ativas.length === 0) {
-            grid.innerHTML = `<p class="trip-date">${t('lobby.noUpcoming')}</p>`
-        }
+            const viagens = await resp.json()
+            const grid = document.getElementById("gridAtivas")
+            const gridPassadas = document.getElementById("gridPassadas")
+            const secaoPassadas = document.getElementById("viagensPassadas")
+            grid.innerHTML = ""
+            gridPassadas.innerHTML = ""
+            secaoPassadas.style.display = "none"
 
-        ativas.forEach(viagem => {
-            grid.appendChild(criarCardViagem(viagem, false))
-            enriquecerOrcamento(viagem.id_grupo)
-        })
+            if (viagens.length === 0) {
+                grid.innerHTML = `<p>${t('lobby.trips.empty') || 'No trips found.'}</p>`
+                document.getElementById("nextTripWrap").innerHTML = ""
+                return
+            }
 
-        if (passadas.length > 0) {
-            secaoPassadas.style.display = ""
-            document.getElementById("pastTripsCount").textContent = passadas.length
-            passadas.forEach(viagem => {
-                gridPassadas.appendChild(criarCardViagem(viagem, true))
+            renderNextTrip(viagens)
+
+            // Cada viagem cai em exatamente uma das duas listas (regra única em
+            // static/viagem-status.js, a mesma do app Flutter).
+            const ativas = viagens.filter(v => !viagemJaPassou(v))
+            const passadas = viagens.filter(v => viagemJaPassou(v))
+
+            if (ativas.length === 0) {
+                grid.innerHTML = `<p class="trip-date">${t('lobby.noUpcoming')}</p>`
+            }
+
+            ativas.forEach(viagem => {
+                grid.appendChild(criarCardViagem(viagem, false))
                 enriquecerOrcamento(viagem.id_grupo)
             })
-        }
-    }
 
-    async function sendMessage() {
-        const input = document.getElementById("chatInput")
-        const messages = document.getElementById("chatMessages")
-
-        const text = input.value.trim()
-        if (!text) return
-
-        if (!grupoSelecionado) {
-            const aviso = document.createElement("div")
-            aviso.className = "message"
-            aviso.innerHTML = `<strong>AI:</strong> ${t('lobby.chat.selectFirst') || 'Select a trip before sending a message.'}`
-            messages.appendChild(aviso)
-            messages.scrollTop = messages.scrollHeight
-            input.value = ""
-            return
-        }
-
-        const userMsg = document.createElement("div")
-        userMsg.className = "message"
-        userMsg.innerHTML = `<strong>${t('lobby.chat.you') || 'You'}:</strong> ${escapeHtml(text)}`
-        messages.appendChild(userMsg)
-        input.value = ""
-        messages.scrollTop = messages.scrollHeight
-
-        const loading = document.createElement("div")
-        loading.className = "message"
-        loading.id = "loading"
-        loading.innerHTML = `<strong>AI:</strong> ${t('lobby.chat.typing') || 'typing...'}`
-        messages.appendChild(loading)
-        messages.scrollTop = messages.scrollHeight
-
-        try {
-            const resp = await fetch("/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({
-                    pergunta: text,
-                    id_grupo: grupoSelecionado
+            if (passadas.length > 0) {
+                secaoPassadas.style.display = ""
+                document.getElementById("pastTripsCount").textContent = passadas.length
+                passadas.forEach(viagem => {
+                    gridPassadas.appendChild(criarCardViagem(viagem, true))
+                    enriquecerOrcamento(viagem.id_grupo)
                 })
-            })
+            }
+        }
 
-            document.getElementById("loading")?.remove()
+        async function sendMessage() {
+            const input = document.getElementById("chatInput")
+            const messages = document.getElementById("chatMessages")
 
-            if (!resp.ok) {
-                const erro = await resp.json()
-                const errMsg = document.createElement("div")
-                errMsg.className = "message"
-                errMsg.innerHTML = `<strong>AI:</strong> ${t('lobby.chat.error') || 'Error getting response.'} (${escapeHtml(String(erro.detail || resp.status))})`
-                messages.appendChild(errMsg)
-            } else {
-                const dados = await resp.json()
-                const aiMsg = document.createElement("div")
-                aiMsg.className = "message"
-                aiMsg.innerHTML = `
+            const text = input.value.trim()
+            if (!text) return
+
+            if (!grupoSelecionado) {
+                const aviso = document.createElement("div")
+                aviso.className = "message"
+                aviso.innerHTML = `<strong>AI:</strong> ${t('lobby.chat.selectFirst') || 'Select a trip before sending a message.'}`
+                messages.appendChild(aviso)
+                messages.scrollTop = messages.scrollHeight
+                input.value = ""
+                return
+            }
+
+            const userMsg = document.createElement("div")
+            userMsg.className = "message"
+            userMsg.innerHTML = `<strong>${t('lobby.chat.you') || 'You'}:</strong> ${escapeHtml(text)}`
+            messages.appendChild(userMsg)
+            input.value = ""
+            messages.scrollTop = messages.scrollHeight
+
+            const loading = document.createElement("div")
+            loading.className = "message"
+            loading.id = "loading"
+            loading.innerHTML = `<strong>AI:</strong> ${t('lobby.chat.typing') || 'typing...'}`
+            messages.appendChild(loading)
+            messages.scrollTop = messages.scrollHeight
+
+            try {
+                const resp = await fetch("/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        pergunta: text,
+                        id_grupo: grupoSelecionado
+                    })
+                })
+
+                document.getElementById("loading")?.remove()
+
+                if (!resp.ok) {
+                    const erro = await resp.json()
+                    const errMsg = document.createElement("div")
+                    errMsg.className = "message"
+                    errMsg.innerHTML = `<strong>AI:</strong> ${t('lobby.chat.error') || 'Error getting response.'} (${escapeHtml(String(erro.detail || resp.status))})`
+                    messages.appendChild(errMsg)
+                } else {
+                    const dados = await resp.json()
+                    const aiMsg = document.createElement("div")
+                    aiMsg.className = "message"
+                    aiMsg.innerHTML = `
     <strong>AI:</strong>
     <div class="ia-formatada">
         ${DOMPurify.sanitize(marked.parse(dados.resposta))}
     </div>
 `
-                messages.appendChild(aiMsg)
+                    messages.appendChild(aiMsg)
+                }
+            } catch (e) {
+                document.getElementById("loading")?.remove()
+                const errMsg = document.createElement("div")
+                errMsg.className = "message"
+                errMsg.innerHTML = `<strong>AI:</strong> ${t('lobby.chat.noServer') || 'Could not connect to server.'}`
+                messages.appendChild(errMsg)
             }
-        } catch (e) {
-            document.getElementById("loading")?.remove()
-            const errMsg = document.createElement("div")
-            errMsg.className = "message"
-            errMsg.innerHTML = `<strong>AI:</strong> ${t('lobby.chat.noServer') || 'Could not connect to server.'}`
-            messages.appendChild(errMsg)
+
+            messages.scrollTop = messages.scrollHeight
         }
 
-        messages.scrollTop = messages.scrollHeight
-    }
+        document.getElementById("chatInput").addEventListener("keydown", (e) => {
+            if (e.key === "Enter") sendMessage()
+        })
 
-    document.getElementById("chatInput").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") sendMessage()
-    })
-
-    txtBv()
-    carregarViagens()
-</script>
+        txtBv()
+        carregarViagens()
+    </script>
 
 </body>
+
 </html>

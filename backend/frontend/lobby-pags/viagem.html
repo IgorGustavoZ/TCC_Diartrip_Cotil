@@ -46,6 +46,33 @@
     color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0; white-space: nowrap;
 }
 .feed-coment-input button:hover { color: var(--accent); }
+
+/* Aba "Custos da viagem" — reaproveita .trip-card-expanded/.dashboard-grid/
+   .btn-salvar-gasto/.msg-erro-gasto já usados nas abas Overview/Gastos. */
+.busca-custo-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 14px; margin-top: 10px; }
+.busca-custo-form label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.busca-custo-form input, .busca-custo-form select {
+    width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 14px; outline: none; font-family: inherit;
+}
+.custo-resultados { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.custo-card {
+    border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+    background: var(--surface-2); display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+}
+.custo-card-img { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--surface); }
+.custo-card-info { flex: 1; min-width: 200px; }
+.custo-card-titulo { font-size: 15px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+.custo-card-sub { font-size: 13px; color: var(--text-muted); margin: 0 0 2px; }
+.custo-card-preco { font-size: 16px; font-weight: 700; color: var(--primary); white-space: nowrap; }
+.custo-card-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.custo-badge {
+    font-size: 11px; font-weight: 700; border-radius: 6px; padding: 3px 9px; white-space: nowrap;
+}
+.custo-badge.salva { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
+.custo-badge.orcamento { background: rgba(139,92,246,0.12); color: #8b5cf6; border: 1px solid rgba(139,92,246,0.3); }
+.custo-badge.paga { background: rgba(var(--success-rgb,34,197,94),0.12); color: var(--success, #22c55e); border: 1px solid rgba(var(--success-rgb,34,197,94),0.3); }
+.custo-badge.descartada { background: var(--danger-soft); color: var(--danger); border: 1px solid transparent; }
 </style>
 </head>
 <body>
@@ -103,6 +130,7 @@
             <button class="tab-btn"        data-tab="pessoal"  onclick="switchTab(this, 'pessoal')" data-i18n="viagem.tab.personal">👤 My Finances</button>
             <button class="tab-btn"        data-tab="admin"    id="adminTabBtn" style="display:none;" onclick="switchTab(this, 'admin')" data-i18n="viagem.tab.admin">👑 Admin</button>
             <button class="tab-btn"        data-tab="gastos"   onclick="switchTab(this, 'gastos')"  data-i18n="viagem.tab.expenses">💸 Expenses</button>
+            <button class="tab-btn"        data-tab="custos"   onclick="switchTab(this, 'custos')"  data-i18n="viagem.tab.costs">🧳 Trip Costs</button>
             <button class="tab-btn"        data-tab="roteiro"  onclick="switchTab(this, 'roteiro')" data-i18n="viagem.tab.itinerary">📋 Itinerary</button>
             <button class="tab-btn"        data-tab="momentos" onclick="switchTab(this, 'momentos')" data-i18n="viagem.tab.moments">📸 Moments</button>
             <button class="tab-btn"        data-tab="chat"     onclick="switchTab(this, 'chat')"    data-i18n="viagem.tab.chat">💬 Chat</button>
@@ -227,7 +255,7 @@
                     <div style="display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
                         <div>
                             <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;" data-i18n="viagem.explore.limitLabel">Limite de participantes</label>
-                            <input id="explorarLimite" type="number" min="1" step="1" style="width:150px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; outline:none;">
+                            <input id="explorarLimite" type="number" min="1" step="1" style="width:153px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; outline:none;">
                         </div>
                     </div>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -286,6 +314,129 @@
                             </div>
                         </div>
 
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-custos" class="tab-content">
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.costs.summaryTitle">💰 Resumo financeiro</h2>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3 data-i18n="viagem.tab.overview.budget">💰 Orçamento</h3>
+                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.tab.overview.budget.total">Orçamento Total</span><span class="stat-value" id="custosOrcamentoTotal">R$ 0,00</span></div>
+                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.tab.overview.totalSpent">Total Gasto</span><span class="stat-value" id="custosTotalConsumido">R$ 0,00</span></div>
+                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.tab.overview.remaining">Restante</span><span class="stat-value" id="custosOrcamentoRestante">R$ 0,00</span></div>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3 data-i18n="viagem.costs.planned">🗒️ Planejado (ainda não pago)</h3>
+                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.costs.plannedFlights">✈️ Passagens</span><span class="stat-value" id="custosPlanejadoVoos">R$ 0,00</span></div>
+                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.costs.plannedLodging">🏨 Hospedagem</span><span class="stat-value" id="custosPlanejadoHospedagem">R$ 0,00</span></div>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3 data-i18n="viagem.costs.actualSpend">✅ Já pago, por categoria</h3>
+                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.cat.transport">🚗 Transporte</span><span class="stat-value" id="custosGastoTransporte">R$ 0,00</span></div>
+                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.cat.lodging">🏨 Hospedagem</span><span class="stat-value" id="custosGastoHospedagem">R$ 0,00</span></div>
+                        </div>
+                    </div>
+                    <p style="font-size:12px; color:var(--text-muted); margin:12px 0 0;" data-i18n="viagem.costs.summaryNote">"Planejado" é só uma estimativa das opções que você marcou com "Adicionar ao orçamento" — não é somado ao restante até ser efetivamente registrado como pago.</p>
+                </div>
+
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.costs.searchFlights">✈️ Buscar passagens</h2>
+                    <div class="busca-custo-form">
+                        <div><label data-i18n="viagem.costs.origin">Origem (aeroporto)</label><input id="vooOrigem" maxlength="3" placeholder="GRU" style="text-transform:uppercase;"></div>
+                        <div><label data-i18n="viagem.costs.destination">Destino (aeroporto)</label><input id="vooDestino" maxlength="3" placeholder="CDG" style="text-transform:uppercase;"></div>
+                        <div><label data-i18n="viagem.costs.departDate">Ida</label><input id="vooDataIda" type="date"></div>
+                        <div><label data-i18n="viagem.costs.returnDateOptional">Volta (opcional)</label><input id="vooDataVolta" type="date"></div>
+                        <div><label data-i18n="viagem.costs.adults">Adultos</label><input id="vooAdultos" type="number" min="1" max="9" value="1"></div>
+                        <div><label data-i18n="viagem.costs.children">Crianças</label><input id="vooCriancas" type="number" min="0" max="8" value="0"></div>
+                        <div>
+                            <label data-i18n="viagem.costs.class">Classe</label>
+                            <select id="vooClasse">
+                                <option value="" data-i18n="viagem.costs.any">Qualquer</option>
+                                <option value="economy" data-i18n="viagem.costs.economy">Econômica</option>
+                                <option value="premium_economy" data-i18n="viagem.costs.premiumEconomy">Econômica premium</option>
+                                <option value="business" data-i18n="viagem.costs.business">Executiva</option>
+                                <option value="first" data-i18n="viagem.costs.first">Primeira classe</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label data-i18n="viagem.costs.maxStops">Escalas</label>
+                            <select id="vooMaxEscalas">
+                                <option value="" data-i18n="viagem.costs.any">Qualquer</option>
+                                <option value="0" data-i18n="viagem.costs.nonstop">Sem escala</option>
+                                <option value="1" data-i18n="viagem.costs.upTo1Stop">Até 1 escala</option>
+                                <option value="2" data-i18n="viagem.costs.upTo2Stops">Até 2 escalas</option>
+                            </select>
+                        </div>
+                        <div><label data-i18n="viagem.costs.maxPrice">Preço máximo (opcional)</label><input id="vooPrecoMax" type="number" min="0" step="0.01"></div>
+                        <div>
+                            <label data-i18n="viagem.costs.sortBy">Ordenar por</label>
+                            <select id="vooOrdenar">
+                                <option value="" data-i18n="viagem.costs.relevance">Relevância</option>
+                                <option value="preco" data-i18n="viagem.costs.price">Preço</option>
+                                <option value="duracao" data-i18n="viagem.costs.duration">Duração</option>
+                            </select>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label data-i18n="viagem.costs.airlinesOptional">Companhias preferidas (opcional, nenhuma selecionada = todas)</label>
+                            <select id="vooCompanhias" multiple size="5"></select>
+                        </div>
+                    </div>
+                    <button class="btn-salvar-gasto" style="margin-top:12px;" onclick="buscarVoosCusto()" data-i18n="viagem.costs.searchFlightsBtn">🔎 Buscar passagens</button>
+                    <span class="msg-erro-gasto" id="vooBuscaErro"></span>
+                    <div id="voosResultadoLink" style="margin-top:10px;"></div>
+                    <div id="voosResultado" class="custo-resultados"></div>
+                </div>
+
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.costs.searchLodging">🏨 Buscar hospedagem</h2>
+                    <div class="busca-custo-form">
+                        <div style="grid-column:1/-1;"><label data-i18n="viagem.costs.destinationCity">Destino / região</label><input id="hotelDestino" maxlength="150" placeholder="Paris"></div>
+                        <div><label data-i18n="viagem.costs.checkIn">Check-in</label><input id="hotelCheckin" type="date"></div>
+                        <div><label data-i18n="viagem.costs.checkOut">Check-out</label><input id="hotelCheckout" type="date"></div>
+                        <div><label data-i18n="viagem.costs.adults">Adultos</label><input id="hotelAdultos" type="number" min="1" max="9" value="2"></div>
+                        <div><label data-i18n="viagem.costs.children">Crianças</label><input id="hotelCriancas" type="number" min="0" max="8" value="0"></div>
+                        <div><label data-i18n="viagem.costs.minPrice">Preço mín./noite (opcional)</label><input id="hotelPrecoMin" type="number" min="0" step="0.01"></div>
+                        <div><label data-i18n="viagem.costs.maxPrice">Preço máx./noite (opcional)</label><input id="hotelPrecoMax" type="number" min="0" step="0.01"></div>
+                        <div>
+                            <label data-i18n="viagem.costs.minRating">Avaliação mínima</label>
+                            <select id="hotelAvaliacaoMin">
+                                <option value="" data-i18n="viagem.costs.any">Qualquer</option>
+                                <option value="3.5">3.5+</option>
+                                <option value="4.0">4.0+</option>
+                                <option value="4.5">4.5+</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label data-i18n="viagem.costs.sortBy">Ordenar por</label>
+                            <select id="hotelOrdenar">
+                                <option value="" data-i18n="viagem.costs.relevance">Relevância</option>
+                                <option value="preco" data-i18n="viagem.costs.price">Preço</option>
+                                <option value="avaliacao" data-i18n="viagem.costs.rating">Avaliação</option>
+                            </select>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label data-i18n="viagem.costs.starRating">Classificação por estrelas (opcional)</label>
+                            <div id="hotelEstrelasBox" style="display:flex; gap:14px; flex-wrap:wrap;">
+                                <label style="display:flex; align-items:center; gap:4px; font-size:13px;"><input type="checkbox" value="2" class="hotel-estrela-chk">2★</label>
+                                <label style="display:flex; align-items:center; gap:4px; font-size:13px;"><input type="checkbox" value="3" class="hotel-estrela-chk">3★</label>
+                                <label style="display:flex; align-items:center; gap:4px; font-size:13px;"><input type="checkbox" value="4" class="hotel-estrela-chk">4★</label>
+                                <label style="display:flex; align-items:center; gap:4px; font-size:13px;"><input type="checkbox" value="5" class="hotel-estrela-chk">5★</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-salvar-gasto" style="margin-top:12px;" onclick="buscarHoteisCusto()" data-i18n="viagem.costs.searchLodgingBtn">🔎 Buscar hospedagem</button>
+                    <span class="msg-erro-gasto" id="hotelBuscaErro"></span>
+                    <div id="hoteisResultadoLink" style="margin-top:10px;"></div>
+                    <div id="hoteisResultado" class="custo-resultados"></div>
+                </div>
+
+                <div class="trip-card-expanded">
+                    <h2 data-i18n="viagem.costs.savedOptions">📋 Opções salvas</h2>
+                    <div id="opcoesCustoLista">
+                        <p style="color:var(--text-muted); font-size:14px;" data-i18n="viagem.costs.noSavedOptions">Nenhuma opção salva ainda.</p>
                     </div>
                 </div>
             </div>
@@ -1077,7 +1228,322 @@ function switchTab(btn, tabName) {
     }
     if (tabName === 'roteiro') carregarRoteiro()
     if (tabName === 'momentos') carregarMomentos()
+    if (tabName === 'custos') { carregarResumoFinanceiro(); carregarOpcoesCusto() }
 }
+
+// ── Custos da viagem (busca SerpApi + opções salvas) ──
+// Mesma lista de companhias de backend/utils/iata_airlines.py — o frontend
+// só manda o NOME (ex.: "LATAM"); a conversão pro código IATA é sempre feita
+// no backend, nunca aqui.
+const COMPANHIAS_CUSTO = [
+    "LATAM", "GOL", "Azul", "TAP Air Portugal", "Air France", "KLM", "Lufthansa",
+    "British Airways", "Iberia", "American Airlines", "United Airlines", "Delta Air Lines",
+    "Emirates", "Qatar Airways", "Turkish Airlines", "Swiss International Air Lines",
+    "Air Canada", "Copa Airlines", "Avianca", "Aerolíneas Argentinas", "Qantas",
+    "Singapore Airlines", "Cathay Pacific", "ITA Airways",
+]
+
+function preencherCompanhiasSelect() {
+    const sel = document.getElementById("vooCompanhias")
+    if (!sel || sel.options.length) return
+    sel.innerHTML = COMPANHIAS_CUSTO.map(c => `<option value="${escapeAtr(c)}">${escapeHtml(c)}</option>`).join("")
+}
+
+function formatarMoeda(valor) {
+    return `R$ ${(valor ?? 0).toLocaleString(getLang(), { minimumFractionDigits: 2 })}`
+}
+
+async function carregarResumoFinanceiro() {
+    const resp = await fetch(`/grupos/${idGrupo}/custos/resumo-financeiro`, { credentials: "include" })
+    if (!resp.ok) return
+    const r = await resp.json()
+    document.getElementById("custosOrcamentoTotal").textContent = formatarMoeda(r.orcamento_total)
+    document.getElementById("custosTotalConsumido").textContent = formatarMoeda(r.total_consumido)
+    document.getElementById("custosOrcamentoRestante").textContent = formatarMoeda(r.orcamento_restante)
+    document.getElementById("custosPlanejadoVoos").textContent = formatarMoeda(r.planejado_voos)
+    document.getElementById("custosPlanejadoHospedagem").textContent = formatarMoeda(r.planejado_hospedagem)
+    document.getElementById("custosGastoTransporte").textContent = formatarMoeda(r.gastos_categoria_transporte)
+    document.getElementById("custosGastoHospedagem").textContent = formatarMoeda(r.gastos_categoria_hospedagem)
+}
+
+let _voosEncontrados = []
+let _hoteisEncontrados = []
+
+async function buscarVoosCusto() {
+    const erro = document.getElementById("vooBuscaErro")
+    erro.style.display = "none"
+    const origem = document.getElementById("vooOrigem").value.trim().toUpperCase()
+    const destino = document.getElementById("vooDestino").value.trim().toUpperCase()
+    const dataIda = document.getElementById("vooDataIda").value
+    if (origem.length !== 3 || destino.length !== 3 || !dataIda) {
+        erro.textContent = t('viagem.costs.flightFormError')
+        erro.style.display = "inline"
+        return
+    }
+
+    const params = new URLSearchParams()
+    params.set("origem", origem)
+    params.set("destino", destino)
+    params.set("data_ida", dataIda)
+    const dataVolta = document.getElementById("vooDataVolta").value
+    if (dataVolta) params.set("data_volta", dataVolta)
+    params.set("adultos", document.getElementById("vooAdultos").value || "1")
+    params.set("criancas", document.getElementById("vooCriancas").value || "0")
+    const classe = document.getElementById("vooClasse").value
+    if (classe) params.set("classe", classe)
+    const precoMax = document.getElementById("vooPrecoMax").value
+    if (precoMax) params.set("preco_max", precoMax)
+    const maxEscalas = document.getElementById("vooMaxEscalas").value
+    if (maxEscalas !== "") params.set("max_escalas", maxEscalas)
+    const ordenar = document.getElementById("vooOrdenar").value
+    if (ordenar) params.set("ordenar_por", ordenar)
+    Array.from(document.getElementById("vooCompanhias").selectedOptions).forEach(o => params.append("companhias", o.value))
+
+    const lista = document.getElementById("voosResultado")
+    const linkBox = document.getElementById("voosResultadoLink")
+    lista.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t('common.loading')}</p>`
+    linkBox.innerHTML = ""
+
+    const resp = await fetch(`/serpapi/voos?${params.toString()}`, { credentials: "include" })
+    if (!resp.ok) {
+        const e = await resp.json().catch(() => ({}))
+        lista.innerHTML = ""
+        erro.textContent = e.detail || t('viagem.costs.searchError')
+        erro.style.display = "inline"
+        return
+    }
+    const dados = await resp.json()
+    _voosEncontrados = dados.voos || []
+
+    if (dados.link_busca) {
+        linkBox.innerHTML = `<a href="${escapeAtr(dados.link_busca)}" target="_blank" rel="noopener" class="btn-foto-post">${t('viagem.costs.viewOnGoogleFlights')}</a>`
+    }
+
+    if (!_voosEncontrados.length) {
+        lista.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t('viagem.costs.noResults')}</p>`
+        return
+    }
+
+    lista.innerHTML = _voosEncontrados.map((v, i) => `
+        <div class="custo-card">
+            ${v.companhia_logo ? `<img class="custo-card-img" src="${escapeAtr(v.companhia_logo)}" alt="">` : ""}
+            <div class="custo-card-info">
+                <p class="custo-card-titulo">${escapeHtml(v.companhia_principal || t('viagem.costs.unknownAirline'))} ${v.tipo ? `· ${escapeHtml(v.tipo)}` : ""}</p>
+                <p class="custo-card-sub">${escapeHtml(v.partida.aeroporto_id || "?")} ${escapeHtml(v.partida.horario || "")} → ${escapeHtml(v.chegada.aeroporto_id || "?")} ${escapeHtml(v.chegada.horario || "")}</p>
+                <p class="custo-card-sub">${v.escalas === 0 ? t('viagem.costs.nonstop') : `${v.escalas} ${t('viagem.costs.stops')}`} ${v.duracao_total_min ? `· ${Math.floor(v.duracao_total_min / 60)}h${v.duracao_total_min % 60}m` : ""}</p>
+            </div>
+            <div class="custo-card-preco">${formatarMoeda(v.preco)}</div>
+            <div class="custo-card-acoes">
+                <button class="btn-foto-post" onclick="salvarOpcaoVoo(${i})">${t('viagem.costs.saveOption')}</button>
+            </div>
+        </div>
+    `).join("")
+}
+
+async function salvarOpcaoVoo(indice) {
+    const v = _voosEncontrados[indice]
+    if (!v) return
+    const origem = document.getElementById("vooOrigem").value.trim().toUpperCase()
+    const destino = document.getElementById("vooDestino").value.trim().toUpperCase()
+    const resp = await fetch(`/grupos/${idGrupo}/custos`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            tipo: "voo",
+            nome: v.companhia_principal || t('viagem.costs.unknownAirline'),
+            origem, destino,
+            data_ida: document.getElementById("vooDataIda").value,
+            data_volta: document.getElementById("vooDataVolta").value || null,
+            preco: v.preco,
+            detalhes: v,
+        }),
+    })
+    if (resp.ok) { await carregarOpcoesCusto(); await carregarResumoFinanceiro() }
+    else { const e = await resp.json().catch(() => ({})); alert(e.detail || t('viagem.costs.saveError')) }
+}
+
+async function buscarHoteisCusto() {
+    const erro = document.getElementById("hotelBuscaErro")
+    erro.style.display = "none"
+    const destino = document.getElementById("hotelDestino").value.trim()
+    const checkin = document.getElementById("hotelCheckin").value
+    const checkout = document.getElementById("hotelCheckout").value
+    if (!destino || !checkin || !checkout) {
+        erro.textContent = t('viagem.costs.lodgingFormError')
+        erro.style.display = "inline"
+        return
+    }
+
+    const params = new URLSearchParams()
+    params.set("destino", destino)
+    params.set("data_entrada", checkin)
+    params.set("data_saida", checkout)
+    params.set("adultos", document.getElementById("hotelAdultos").value || "2")
+    params.set("criancas", document.getElementById("hotelCriancas").value || "0")
+    const precoMin = document.getElementById("hotelPrecoMin").value
+    if (precoMin) params.set("preco_min", precoMin)
+    const precoMax = document.getElementById("hotelPrecoMax").value
+    if (precoMax) params.set("preco_max", precoMax)
+    const avaliacaoMin = document.getElementById("hotelAvaliacaoMin").value
+    if (avaliacaoMin) params.set("avaliacao_min", avaliacaoMin)
+    const ordenar = document.getElementById("hotelOrdenar").value
+    if (ordenar) params.set("ordenar_por", ordenar)
+    document.querySelectorAll(".hotel-estrela-chk:checked").forEach(c => params.append("estrelas", c.value))
+
+    const lista = document.getElementById("hoteisResultado")
+    const linkBox = document.getElementById("hoteisResultadoLink")
+    lista.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t('common.loading')}</p>`
+    linkBox.innerHTML = ""
+
+    const resp = await fetch(`/serpapi/hoteis?${params.toString()}`, { credentials: "include" })
+    if (!resp.ok) {
+        const e = await resp.json().catch(() => ({}))
+        lista.innerHTML = ""
+        erro.textContent = e.detail || t('viagem.costs.searchError')
+        erro.style.display = "inline"
+        return
+    }
+    const dados = await resp.json()
+    _hoteisEncontrados = dados.hoteis || []
+
+    if (dados.link_busca) {
+        linkBox.innerHTML = `<a href="${escapeAtr(dados.link_busca)}" target="_blank" rel="noopener" class="btn-foto-post">${t('viagem.costs.viewOnGoogleHotels')}</a>`
+    }
+
+    if (!_hoteisEncontrados.length) {
+        lista.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t('viagem.costs.noResults')}</p>`
+        return
+    }
+
+    lista.innerHTML = _hoteisEncontrados.map((hl, i) => `
+        <div class="custo-card">
+            ${hl.imagem ? `<img class="custo-card-img" src="${escapeAtr(hl.imagem)}" alt="">` : ""}
+            <div class="custo-card-info">
+                <p class="custo-card-titulo">${escapeHtml(hl.nome || "")}</p>
+                <p class="custo-card-sub">${hl.avaliacao ? `⭐ ${hl.avaliacao} (${hl.num_avaliacoes ?? 0})` : t('viagem.costs.noRating')} ${hl.classificacao_estrelas ? `· ${escapeHtml(hl.classificacao_estrelas)}` : ""}</p>
+                <p class="custo-card-sub">${hl.preco_total ? `${t('viagem.costs.totalStay')}: ${formatarMoeda(hl.preco_total)}` : ""}</p>
+            </div>
+            <div class="custo-card-preco">${hl.preco_por_noite ? `${formatarMoeda(hl.preco_por_noite)}<div style="font-size:11px;color:var(--text-muted);font-weight:400;">${t('viagem.costs.perNight')}</div>` : ""}</div>
+            <div class="custo-card-acoes">
+                ${hl.link ? `<a href="${escapeAtr(hl.link)}" target="_blank" rel="noopener" class="btn-foto-post">${t('viagem.costs.viewLink')}</a>` : ""}
+                <button class="btn-foto-post" onclick="salvarOpcaoHospedagem(${i})">${t('viagem.costs.saveOption')}</button>
+            </div>
+        </div>
+    `).join("")
+}
+
+async function salvarOpcaoHospedagem(indice) {
+    const hl = _hoteisEncontrados[indice]
+    if (!hl) return
+    const preco = hl.preco_total || hl.preco_por_noite
+    if (!preco) { alert(t('viagem.costs.noPriceToSave')); return }
+    const resp = await fetch(`/grupos/${idGrupo}/custos`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            tipo: "hospedagem",
+            nome: hl.nome,
+            destino: document.getElementById("hotelDestino").value.trim(),
+            data_ida: document.getElementById("hotelCheckin").value,
+            data_volta: document.getElementById("hotelCheckout").value,
+            preco,
+            link_externo: hl.link || null,
+            detalhes: hl,
+        }),
+    })
+    if (resp.ok) { await carregarOpcoesCusto(); await carregarResumoFinanceiro() }
+    else { const e = await resp.json().catch(() => ({})); alert(e.detail || t('viagem.costs.saveError')) }
+}
+
+async function carregarOpcoesCusto() {
+    const resp = await fetch(`/grupos/${idGrupo}/custos`, { credentials: "include" })
+    if (!resp.ok) return
+    const opcoes = await resp.json()
+    const lista = document.getElementById("opcoesCustoLista")
+
+    if (!opcoes.length) {
+        lista.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t('viagem.costs.noSavedOptions')}</p>`
+        return
+    }
+
+    const badgeTexto = { salva: t('viagem.costs.statusSaved'), orcamento: t('viagem.costs.statusBudgeted'), paga: t('viagem.costs.statusPaid'), descartada: t('viagem.costs.statusDiscarded') }
+    const emoji = o => o.tipo === "voo" ? "✈️" : "🏨"
+
+    lista.innerHTML = opcoes.map(o => {
+        let acoes = ""
+        if (o.status === "salva" || o.status === "orcamento") {
+            if (o.status === "salva") {
+                acoes += `<button class="btn-foto-post" onclick="adicionarOpcaoAoOrcamento(${o.id_opcao})">${t('viagem.costs.addToBudget')}</button>`
+            }
+            acoes += `<button class="btn-salvar-gasto" onclick="marcarOpcaoComoPaga(${o.id_opcao})">${t('viagem.costs.markAsPaid')}</button>`
+            acoes += `<button class="btn-foto-post" onclick="descartarOpcaoCusto(${o.id_opcao})">${t('viagem.costs.discard')}</button>`
+        }
+        if (o.status !== "paga") {
+            acoes += `<button style="background:var(--danger-soft);border:none;border-radius:6px;padding:6px 10px;color:var(--danger);font-size:12px;cursor:pointer;" onclick="excluirOpcaoCusto(${o.id_opcao})">🗑</button>`
+        }
+        const periodo = (o.data_ida && o.data_volta) ? `${o.data_ida} → ${o.data_volta}` : (o.data_ida || "")
+        return `
+        <div class="custo-card">
+            <div class="custo-card-info">
+                <p class="custo-card-titulo">${emoji(o)} ${escapeHtml(o.nome)} <span class="custo-badge ${o.status}">${badgeTexto[o.status] || o.status}</span></p>
+                <p class="custo-card-sub">${o.origem ? `${escapeHtml(o.origem)} → ` : ""}${o.destino ? escapeHtml(o.destino) : ""}${periodo ? ` · ${escapeHtml(periodo)}` : ""}</p>
+            </div>
+            <div class="custo-card-preco">${formatarMoeda(o.preco)}</div>
+            <div class="custo-card-acoes">${acoes}</div>
+        </div>
+    `}).join("")
+}
+
+async function adicionarOpcaoAoOrcamento(id) {
+    const resp = await fetch(`/grupos/${idGrupo}/custos/${id}/orcamento`, { method: "PATCH", credentials: "include" })
+    if (resp.ok) { await carregarOpcoesCusto(); await carregarResumoFinanceiro() }
+    else { const e = await resp.json().catch(() => ({})); alert(e.detail || t('viagem.costs.actionError')) }
+}
+
+function marcarOpcaoComoPaga(id) {
+    abrirModalConfirmacao({
+        titulo: t('viagem.costs.markAsPaidConfirmTitle'),
+        mensagem: t('viagem.costs.markAsPaidConfirmBody'),
+        textoConfirmar: t('viagem.costs.markAsPaid'),
+        onConfirmar: async () => {
+            const resp = await fetch(`/grupos/${idGrupo}/custos/${id}/pagar`, {
+                method: "POST", credentials: "include",
+                headers: { "Content-Type": "application/json" }, body: JSON.stringify({}),
+            })
+            if (resp.ok) { await carregarOpcoesCusto(); await carregarResumoFinanceiro() }
+            else { const e = await resp.json().catch(() => ({})); alert(e.detail || t('viagem.costs.actionError')) }
+        }
+    })
+}
+
+function descartarOpcaoCusto(id) {
+    abrirModalConfirmacao({
+        titulo: t('viagem.costs.discardConfirmTitle'),
+        mensagem: t('viagem.costs.discardConfirmBody'),
+        textoConfirmar: t('viagem.costs.discard'),
+        tipo: 'perigo',
+        onConfirmar: async () => {
+            const resp = await fetch(`/grupos/${idGrupo}/custos/${id}/descartar`, { method: "PATCH", credentials: "include" })
+            if (resp.ok) await carregarOpcoesCusto()
+        }
+    })
+}
+
+function excluirOpcaoCusto(id) {
+    abrirModalConfirmacao({
+        titulo: t('viagem.costs.deleteConfirmTitle'),
+        mensagem: t('viagem.costs.deleteConfirmBody'),
+        textoConfirmar: t('common.delete'),
+        tipo: 'perigo',
+        onConfirmar: async () => {
+            const resp = await fetch(`/grupos/${idGrupo}/custos/${id}`, { method: "DELETE", credentials: "include" })
+            if (resp.ok) { await carregarOpcoesCusto(); await carregarResumoFinanceiro() }
+            else { const e = await resp.json().catch(() => ({})); alert(e.detail || t('viagem.costs.actionError')) }
+        }
+    })
+}
+
+preencherCompanhiasSelect()
 
 function _renderMsgHtml(m) {
     const sou = m.id_usuario === meuId
@@ -1657,7 +2123,7 @@ function atualizarStatusExplorar() {
     if (!grupoAtual) return
     if (grupoAtual.publica) {
         textoEl.textContent = `${t('viagem.explore.published')} (${grupoAtual.vagas_ocupadas}/${grupoAtual.limite_participantes})`
-        btnPub.innerHTML = "🔄 " + t('viagem.explore.update')
+        btnPub.innerHTML = "⟲ " + t('viagem.explore.update')
         btnDesp.style.display = ""
         limiteEl.value = grupoAtual.limite_participantes || ""
     } else {
@@ -1774,7 +2240,7 @@ function escapeAtr(txt) {
     return String(txt).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\n/g,"\\n")
 }
 
-const TABS_VALIDAS = ["geral", "pessoal", "admin", "gastos", "roteiro", "momentos", "chat", "info"]
+const TABS_VALIDAS = ["geral", "pessoal", "admin", "gastos", "custos", "roteiro", "momentos", "chat", "info"]
 const tabInicial = params.get("tab")
 if (tabInicial && TABS_VALIDAS.includes(tabInicial)) {
     const btn = document.querySelector(`.tab-btn[data-tab="${tabInicial}"]`)

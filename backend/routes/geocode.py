@@ -5,7 +5,6 @@ from utils.apis_externas import autocomplete
 
 router = APIRouter(tags=["Geocodificação"])
 
-
 @router.get("/geocode/autocomplete")
 def autocomplete_cidade(
     text: str = Query(..., min_length=1, max_length=150),

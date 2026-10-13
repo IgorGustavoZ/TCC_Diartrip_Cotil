@@ -164,6 +164,46 @@ class RoteiroCriado(BaseModel):
     id: int
 
 
+class OpcaoCustoResponse(BaseModel):
+    id_opcao: int
+    id_grupo: int
+    id_usuario: int
+    tipo: str
+    status: str
+    nome: str
+    origem: Optional[str] = None
+    destino: Optional[str] = None
+    data_ida: Optional[date] = None
+    data_volta: Optional[date] = None
+    preco: float
+    moeda: str
+    link_externo: Optional[str] = None
+    detalhes: Optional[dict] = None
+    data_consulta: datetime
+    id_gasto: Optional[int] = None
+    data_criacao: datetime
+
+
+class OpcaoCustoCriada(BaseModel):
+    mensagem: str
+    id: int
+
+
+class PagamentoRegistradoResponse(BaseModel):
+    mensagem: str
+    id_gasto: int
+
+
+class ResumoFinanceiroViagemResponse(BaseModel):
+    orcamento_total: float
+    total_consumido: float
+    orcamento_restante: float
+    planejado_voos: float
+    planejado_hospedagem: float
+    gastos_categoria_transporte: float
+    gastos_categoria_hospedagem: float
+
+
 class FotoResponse(BaseModel):
     id_foto: int
     id_usuario: int
