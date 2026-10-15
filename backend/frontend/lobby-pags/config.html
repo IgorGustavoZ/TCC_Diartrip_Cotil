@@ -300,9 +300,7 @@ button.is-loading { opacity: .65; cursor: wait !important; pointer-events: none;
                 credentials: 'include'
            })
             if(respGetUsuario.ok){
-                const dados = await respGetUsuario.text()
-                const respJson = JSON.parse(dados)
-                console.log(dados)
+                const respJson = await respGetUsuario.json()
                 nomeInput.value = respJson.nome
                 emailInput.value = respJson.email
             }

@@ -1,366 +1,494 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="static/style.css?v=5">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <title>Diartrip - Sign Up</title>
+    <script
+    src="https://accounts.google.com/gsi/client"
+    async
+    onload="inicializarGoogle()"
+    ></script>
     <link rel="shortcut icon" href="imagens/favicon-diartrip.png" type="image/x-icon">
+    <script src="static/config.js"></script>
     <script src="static/i18n.js"></script>
     <style>
         .signup-secao-titulo {
-            font-size: 13px; font-weight: 700; color: var(--text-muted);
-            text-transform: uppercase; letter-spacing: 0.04em; margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin: 0;
         }
-        .signup-divisor { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
-        .signup-foto-row { display: flex; align-items: center; gap: 16px; }
+
+        .signup-divisor {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 4px 0;
+        }
+
+        .signup-foto-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
         .signup-foto-av {
-            width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
-            background: var(--surface-2); border: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px; color: var(--text-muted);
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: var(--text-muted);
         }
-        .signup-foto-av img { width: 100%; height: 100%; object-fit: cover; }
-        .signup-foto-av.tem-foto { background: var(--gradient); }
+
+        .signup-foto-av img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .signup-foto-av.tem-foto {
+            background: var(--gradient);
+        }
+
         .signup-foto-btn {
-            background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
-            padding: 9px 16px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 9px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
         }
-        .signup-foto-btn:hover { background: var(--surface); }
-        .signup-upload-status { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+
+        .signup-foto-btn:hover {
+            background: var(--surface);
+        }
+
+        .signup-upload-status {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
     </style>
 </head>
+
 <body>
     <header>
-        <a href="index.html"><div class="logo"><img src="imagens/logo-diartrip.png" alt=""></div></a>
+        <a href="index.html">
+            <div class="logo"><img src="imagens/logo-diartrip.png" alt=""></div>
+        </a>
     </header>
     <section style="padding:100px 20px; max-width:600px; margin:auto; position: relative;">
         <h2 class="section-title titulo" style="margin-bottom:20px;" data-i18n="register.title">Sign Up</h2>
-        <form id="signupForm" style="display:flex; flex-direction:column; gap:22px; background:var(--surface); padding:40px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow-md); position:relative;">
-        <div id="signupFields">
+        <form id="signupForm"
+            style="display:flex; flex-direction:column; gap:22px; background:var(--surface); padding:40px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow-md); position:relative;">
+            <div id="signupFields">
 
-        <p class="signup-secao-titulo" data-i18n="register.section.personal">Personal information</p>
+                <p class="signup-secao-titulo" data-i18n="register.section.personal">Personal information</p>
 
-        <div class="field">
-        <label data-i18n="register.name.label">Name</label>
-        <input id="name" type="text" data-i18n-placeholder="register.name.placeholder" placeholder="Enter your name" required>
-        <span class="error" id="nameError"></span>
-        </div>
+                <div class="field">
+                    <label data-i18n="register.name.label">Name</label>
+                    <input id="name" type="text" data-i18n-placeholder="register.name.placeholder"
+                        placeholder="Enter your name" required>
+                    <span class="error" id="nameError"></span>
+                </div>
 
-        <div class="field">
-        <label data-i18n="register.email.label">Email</label>
-        <input id="email" type="email" data-i18n-placeholder="register.email.placeholder" placeholder="Enter your email" required>
-        <span class="error" id="emailError"></span>
-        </div>
+                <div class="field">
+                    <label data-i18n="register.email.label">Email</label>
+                    <input id="email" type="email" data-i18n-placeholder="register.email.placeholder"
+                        placeholder="Enter your email" required>
+                    <span class="error" id="emailError"></span>
+                </div>
 
-        <div class="field" style="position:relative">
-        <label data-i18n="register.pass.label">Password</label>
-        <input id="password" type="password" data-i18n-placeholder="register.pass.placeholder" placeholder="Create a password" required>
-        <span id="togglePassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);">⌣</span>
-        <span style="font-size:12px; color:var(--text-muted); margin-top:4px; display:block;" data-i18n="register.pass.hint">
-            Minimum 8 characters, with at least one uppercase letter and one number.
-        </span>
-        <span class="error" id="passwordError"></span>
-        </div>
+                <div class="field" style="position:relative">
+                    <label data-i18n="register.pass.label">Password</label>
+                    <input id="password" type="password" data-i18n-placeholder="register.pass.placeholder"
+                        placeholder="Create a password" required>
+                    <span id="togglePassword"
+                        style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);">⌣</span>
+                    <span style="font-size:12px; color:var(--text-muted); margin-top:4px; display:block;"
+                        data-i18n="register.pass.hint">
+                        Minimum 8 characters, with at least one uppercase letter and one number.
+                    </span>
+                    <span class="error" id="passwordError"></span>
+                </div>
 
-        <div class="field" style="position:relative">
-        <label data-i18n="register.pass.confirmLabel">Confirm password</label>
-        <input id="passwordConfirm" type="password" data-i18n-placeholder="register.pass.confirmPlaceholder" placeholder="Repeat your password" required>
-        <span id="toggleConfirmPassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);">⌣</span>
-        <span class="error" id="passwordConfirmError"></span>
-        </div>
+                <div class="field" style="position:relative">
+                    <label data-i18n="register.pass.confirmLabel">Confirm password</label>
+                    <input id="passwordConfirm" type="password" data-i18n-placeholder="register.pass.confirmPlaceholder"
+                        placeholder="Repeat your password" required>
+                    <span id="toggleConfirmPassword"
+                        style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);">⌣</span>
+                    <span class="error" id="passwordConfirmError"></span>
+                </div>
 
-        <hr class="signup-divisor">
+                <hr class="signup-divisor">
 
-        <p class="signup-secao-titulo" data-i18n="register.section.photo">Profile photo (optional)</p>
+                <p class="signup-secao-titulo" data-i18n="register.section.photo">Profile photo (optional)</p>
 
-        <div class="field">
-        <div class="signup-foto-row">
-            <div class="signup-foto-av" id="signupFotoAv">👤</div>
-            <div>
-                <label class="signup-foto-btn" id="signupFotoBtnLabel">
-                    <span id="signupFotoBtnTexto" data-i18n="register.photo.add">Add photo</span>
-                    <input type="file" id="signupFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
-                </label>
-                <div class="signup-upload-status" id="signupFotoErro" style="display:none; color:var(--danger);"></div>
+                <div class="field">
+                    <div class="signup-foto-row">
+                        <div class="signup-foto-av" id="signupFotoAv">👤</div>
+                        <div>
+                            <label class="signup-foto-btn" id="signupFotoBtnLabel">
+                                <span id="signupFotoBtnTexto" data-i18n="register.photo.add">Add photo</span>
+                                <input type="file" id="signupFotoInput" accept="image/jpeg,image/png,image/webp"
+                                    style="display:none">
+                            </label>
+                            <div class="signup-upload-status" id="signupFotoErro"
+                                style="display:none; color:var(--danger);"></div>
+                        </div>
+                    </div>
+                </div>
+                <input class="cta" id="submit" type="submit" data-i18n-value="register.submit" value="Create Account" style="margin-bottom: 10px;">
+                <div id="buttonDiv"></div>
+                <div class="signup-upload-status" id="uploadStatus" style="display:none; text-align:center;"></div>
+                <div class="login" style="margin-top: 10px;"><a href="login.html" data-i18n="register.hasAccount">Already have an account? Click
+                        here.</a></div>
+
             </div>
-        </div>
-        </div>
 
-        <input class="cta" id="submit" type="submit" data-i18n-value="register.submit" value="Create Account">
-        <div class="signup-upload-status" id="uploadStatus" style="display:none; text-align:center;"></div>
-        <div class="login"><a href="login.html" data-i18n="register.hasAccount">Already have an account? Click here.</a></div>
-        </div>
-
-        <div id="verificationPanel" style="display:none; flex-direction:column; gap:18px;">
-            <p data-i18n="register.verify.sent">We sent a 6-digit code to your email. Enter it to activate your account.</p>
-            <div class="field">
-                <label for="verificationCode" data-i18n="register.verify.label">Email verification code</label>
-                <input id="verificationCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" disabled>
+            <div id="verificationPanel" style="display:none; flex-direction:column; gap:18px;">
+                <p data-i18n="register.verify.sent">We sent a 6-digit code to your email. Enter it to activate your
+                    account.</p>
+                <div class="field">
+                    <label for="verificationCode" data-i18n="register.verify.label">Email verification code</label>
+                    <input id="verificationCode" type="text" inputmode="numeric" autocomplete="one-time-code"
+                        maxlength="6" disabled>
+                </div>
+                <span class="error" id="verificationError" style="display:none;"></span>
+                <button class="cta" id="verifyButton" type="button" data-i18n="register.verify.submit">Verify
+                    email</button>
+                <button id="resendCodeButton" type="button"
+                    style="background:none;border:0;color:var(--primary);cursor:pointer;"
+                    data-i18n="register.verify.resend">Send a new code</button>
+                <span class="signup-upload-status" id="verificationStatus" style="display:none;"></span>
             </div>
-            <span class="error" id="verificationError" style="display:none;"></span>
-            <button class="cta" id="verifyButton" type="button" data-i18n="register.verify.submit">Verify email</button>
-            <button id="resendCodeButton" type="button" style="background:none;border:0;color:var(--primary);cursor:pointer;" data-i18n="register.verify.resend">Send a new code</button>
-            <span class="signup-upload-status" id="verificationStatus" style="display:none;"></span>
-        </div>
 
-    </form>
+        </form>
 
-    <footer data-i18n="footer">
-    © 2026 Diartrip — Intelligent Travel Planning
-    </footer>
-<script>
-    const form = document.getElementById("signupForm")
-    const nameInput = document.getElementById("name")
-    const emailInput = document.getElementById("email")
-    const passwordInput = document.getElementById("password")
-    const passwordConfirmInput = document.getElementById("passwordConfirm")
-    const togglePassword = document.getElementById("togglePassword")
-    const toggleConfirmPassword = document.getElementById("toggleConfirmPassword")
+        <footer data-i18n="footer">
+            © 2026 Diartrip — Intelligent Travel Planning
+        </footer>
+        <script src="https://accounts.google.com/gsi/client" async></script>
+        <script>
+            function inicializarGoogle() {
+                google.accounts.id.initialize({
+                    client_id: DIARTRIP_GOOGLE_CLIENT_ID,
+                    callback: handleCredentialResponse
+                });
 
-    const nameError = document.getElementById("nameError")
-    const emailError = document.getElementById("emailError")
-    const passwordError = document.getElementById("passwordError")
-    const passwordConfirmError = document.getElementById("passwordConfirmError")
-    const submitBtn = document.getElementById("submit")
-    const uploadStatus = document.getElementById("uploadStatus")
-    const signupFields = document.getElementById("signupFields")
-    const verificationPanel = document.getElementById("verificationPanel")
-    const verificationCode = document.getElementById("verificationCode")
-    const verificationError = document.getElementById("verificationError")
-    const verificationStatus = document.getElementById("verificationStatus")
-    const verifyButton = document.getElementById("verifyButton")
-    const resendCodeButton = document.getElementById("resendCodeButton")
-
-    function toggleVer(input, botao) {
-        if (input.type === "password") {
-            input.type = "text"
-            botao.textContent = "👁"
-        } else {
-            input.type = "password"
-            botao.textContent = "⌣"
-        }
-    }
-    togglePassword.addEventListener("click", () => toggleVer(passwordInput, togglePassword))
-    toggleConfirmPassword.addEventListener("click", () => toggleVer(passwordConfirmInput, toggleConfirmPassword))
-
-    // ── Foto de perfil (opcional) ──
-    // Reaproveita o mesmo endpoint de upload já usado em perfil.html
-    // (PATCH /usuarios/{id}/foto) — só que aqui a conta ainda não existe no
-    // momento da escolha da foto, então o upload de fato só acontece DEPOIS
-    // de criar a conta e fazer login, logo antes de ir para o lobby.
-    let fotoSelecionada = null
-    const fotoInput = document.getElementById("signupFotoInput")
-    const fotoAv = document.getElementById("signupFotoAv")
-    const fotoBtnTexto = document.getElementById("signupFotoBtnTexto")
-    const fotoErro = document.getElementById("signupFotoErro")
-
-    fotoInput.addEventListener("change", (e) => {
-        const file = e.target.files[0]
-        fotoErro.style.display = "none"
-        if (!file) return
-        if (file.size > 5 * 1024 * 1024) {
-            fotoErro.textContent = t("register.photo.tooLarge")
-            fotoErro.style.display = "block"
-            fotoInput.value = ""
-            return
-        }
-        fotoSelecionada = file
-        fotoAv.classList.add("tem-foto")
-        fotoAv.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="">`
-        fotoBtnTexto.textContent = t("register.photo.change")
-    })
-
-    form.addEventListener("submit", async function(e) {
-        e.preventDefault()
-        if (verificationPanel.style.display === "flex") {
-            verifyButton.click()
-            return
-        }
-
-        nameError.textContent = ""
-        emailError.textContent = ""
-        passwordError.textContent = ""
-        passwordConfirmError.textContent = ""
-
-        let valid = true
-
-        if (nameInput.value.trim().length < 3) {
-            nameError.textContent = t("register.err.name")
-            valid = false
-        }
-
-        if (!emailInput.value.includes("@")) {
-            emailError.textContent = t("register.err.email")
-            valid = false
-        }
-
-        const senha = passwordInput.value
-        if (senha.length < 8) {
-            passwordError.textContent = t("register.err.passLen")
-            valid = false
-        } else if (!/[A-Z]/.test(senha)) {
-            passwordError.textContent = t("register.err.passUpper")
-            valid = false
-        } else if (!/[0-9]/.test(senha)) {
-            passwordError.textContent = t("register.err.passNum")
-            valid = false
-        }
-
-        if (passwordConfirmInput.value !== senha) {
-            passwordConfirmError.textContent = t("register.err.passMismatch")
-            valid = false
-        }
-
-        if (!valid) return
-
-        const nome = nameInput.value.trim()
-        const email = emailInput.value.trim()
-
-        submitBtn.disabled = true
-        submitBtn.value = t("register.creating")
-
-        try {
-            const resp = await fetch("/usuarios", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({ nome, email, senha })
-            })
-
-            if (resp.status === 409) {
-                emailError.textContent = t("register.err.emailTaken")
-                return
-            }
-
-            if (!resp.ok) {
-                const dados = await resp.json()
-
-                if (Array.isArray(dados.detail)) {
-                    for (const erro of dados.detail) {
-                        const campo = Array.isArray(erro.loc) ? erro.loc[erro.loc.length - 1] : ""
-                        const msg = (erro.msg || "Erro de validação")
-                            .replace(/^Value error,\s*/i, "")
-                        if (campo === "senha") {
-                            passwordError.textContent = msg
-                        } else if (campo === "email") {
-                            emailError.textContent = msg
-                        } else {
-                            emailError.textContent = msg
-                        }
+                google.accounts.id.renderButton(
+                    document.getElementById("buttonDiv"),
+                    {
+                        theme: "outline",
+                        size: "large",
+                        text: "signin_with",
+                        shape: "rectangular",
+                        width: 280
                     }
-                } else {
-                    emailError.textContent = dados.detail || t("register.err.create")
-                }
-                return
+                );
             }
 
-            signupFields.querySelectorAll("input, button").forEach((control) => {
-                control.disabled = true
-            })
-            verificationCode.disabled = false
-            signupFields.style.display = "none"
-            verificationPanel.style.display = "flex"
-            verificationCode.focus()
-            return
-
-        } catch (err) {
-            emailError.textContent = t("register.err.connect")
-        } finally {
-            submitBtn.disabled = false
-            submitBtn.value = t("register.submit")
-        }
-    })
-
-    async function entrarAposVerificacao() {
-        const email = emailInput.value.trim()
-        const senha = passwordInput.value
-
-            const respLogin = await fetch("/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({ email, senha })
-            })
-
-            if (!respLogin.ok) {
-                nameError.textContent = t("register.err.autoLogin")
-                return
-            }
-
-            const respJson = await respLogin.json()
-            sessionStorage.setItem("id", respJson.usuario_id)
-            sessionStorage.setItem("logado", "1")
-
-            if (fotoSelecionada) {
-                uploadStatus.textContent = t("register.photo.uploading")
-                uploadStatus.style.display = "block"
+            async function handleCredentialResponse(response) {
+                // Mesmo contrato do /login tradicional (ver entrarAposVerificacao()
+                // logo abaixo): cookies httponly setados pelo backend, nunca um
+                // token manuseado aqui — só sessionStorage com id/logado.
                 try {
-                    const fotoForm = new FormData()
-                    fotoForm.append("foto", fotoSelecionada)
-                    await fetch(`/usuarios/${respJson.usuario_id}/foto`, {
-                        method: "PATCH", credentials: "include", body: fotoForm
+                    const resposta = await fetch("/google", {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            credential: response.credential
+                        })
+                    });
+
+                    const dados = await resposta.json().catch(() => ({}));
+
+                    if (!resposta.ok) {
+                        throw new Error(
+                            dados.detail || "Não foi possível entrar com o Google."
+                        );
+                    }
+
+                    sessionStorage.setItem("id", dados.usuario_id);
+                    sessionStorage.setItem("logado", "1");
+
+                    window.location.href = "lobby.html";
+                } catch (erro) {
+                    console.error("Erro no login Google:", erro);
+                    alert(erro.message || "Erro ao realizar login.");
+                }
+            }
+        </script>
+        <script>
+            const form = document.getElementById("signupForm")
+            const nameInput = document.getElementById("name")
+            const emailInput = document.getElementById("email")
+            const passwordInput = document.getElementById("password")
+            const passwordConfirmInput = document.getElementById("passwordConfirm")
+            const togglePassword = document.getElementById("togglePassword")
+            const toggleConfirmPassword = document.getElementById("toggleConfirmPassword")
+
+            const nameError = document.getElementById("nameError")
+            const emailError = document.getElementById("emailError")
+            const passwordError = document.getElementById("passwordError")
+            const passwordConfirmError = document.getElementById("passwordConfirmError")
+            const submitBtn = document.getElementById("submit")
+            const uploadStatus = document.getElementById("uploadStatus")
+            const signupFields = document.getElementById("signupFields")
+            const verificationPanel = document.getElementById("verificationPanel")
+            const verificationCode = document.getElementById("verificationCode")
+            const verificationError = document.getElementById("verificationError")
+            const verificationStatus = document.getElementById("verificationStatus")
+            const verifyButton = document.getElementById("verifyButton")
+            const resendCodeButton = document.getElementById("resendCodeButton")
+
+            function toggleVer(input, botao) {
+                if (input.type === "password") {
+                    input.type = "text"
+                    botao.textContent = "👁"
+                } else {
+                    input.type = "password"
+                    botao.textContent = "⌣"
+                }
+            }
+            togglePassword.addEventListener("click", () => toggleVer(passwordInput, togglePassword))
+            toggleConfirmPassword.addEventListener("click", () => toggleVer(passwordConfirmInput, toggleConfirmPassword))
+
+            // ── Foto de perfil (opcional) ──
+            // Reaproveita o mesmo endpoint de upload já usado em perfil.html
+            // (PATCH /usuarios/{id}/foto) — só que aqui a conta ainda não existe no
+            // momento da escolha da foto, então o upload de fato só acontece DEPOIS
+            // de criar a conta e fazer login, logo antes de ir para o lobby.
+            let fotoSelecionada = null
+            const fotoInput = document.getElementById("signupFotoInput")
+            const fotoAv = document.getElementById("signupFotoAv")
+            const fotoBtnTexto = document.getElementById("signupFotoBtnTexto")
+            const fotoErro = document.getElementById("signupFotoErro")
+
+            fotoInput.addEventListener("change", (e) => {
+                const file = e.target.files[0]
+                fotoErro.style.display = "none"
+                if (!file) return
+                if (file.size > 5 * 1024 * 1024) {
+                    fotoErro.textContent = t("register.photo.tooLarge")
+                    fotoErro.style.display = "block"
+                    fotoInput.value = ""
+                    return
+                }
+                fotoSelecionada = file
+                fotoAv.classList.add("tem-foto")
+                fotoAv.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="">`
+                fotoBtnTexto.textContent = t("register.photo.change")
+            })
+
+            form.addEventListener("submit", async function (e) {
+                e.preventDefault()
+                if (verificationPanel.style.display === "flex") {
+                    verifyButton.click()
+                    return
+                }
+
+                nameError.textContent = ""
+                emailError.textContent = ""
+                passwordError.textContent = ""
+                passwordConfirmError.textContent = ""
+
+                let valid = true
+
+                if (nameInput.value.trim().length < 3) {
+                    nameError.textContent = t("register.err.name")
+                    valid = false
+                }
+
+                if (!emailInput.value.includes("@")) {
+                    emailError.textContent = t("register.err.email")
+                    valid = false
+                }
+
+                const senha = passwordInput.value
+                if (senha.length < 8) {
+                    passwordError.textContent = t("register.err.passLen")
+                    valid = false
+                } else if (!/[A-Z]/.test(senha)) {
+                    passwordError.textContent = t("register.err.passUpper")
+                    valid = false
+                } else if (!/[0-9]/.test(senha)) {
+                    passwordError.textContent = t("register.err.passNum")
+                    valid = false
+                }
+
+                if (passwordConfirmInput.value !== senha) {
+                    passwordConfirmError.textContent = t("register.err.passMismatch")
+                    valid = false
+                }
+
+                if (!valid) return
+
+                const nome = nameInput.value.trim()
+                const email = emailInput.value.trim()
+
+                submitBtn.disabled = true
+                submitBtn.value = t("register.creating")
+
+                try {
+                    const resp = await fetch("/usuarios", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify({ nome, email, senha })
                     })
-                    // Conta já foi criada com sucesso — se o upload da foto
-                    // falhar por qualquer motivo, não bloqueia o cadastro;
-                    // a pessoa pode adicionar a foto depois no perfil.
-                } catch (e) { /* best-effort */ }
+
+                    if (resp.status === 409) {
+                        emailError.textContent = t("register.err.emailTaken")
+                        return
+                    }
+
+                    if (!resp.ok) {
+                        const dados = await resp.json()
+
+                        if (Array.isArray(dados.detail)) {
+                            for (const erro of dados.detail) {
+                                const campo = Array.isArray(erro.loc) ? erro.loc[erro.loc.length - 1] : ""
+                                const msg = (erro.msg || "Erro de validação")
+                                    .replace(/^Value error,\s*/i, "")
+                                if (campo === "senha") {
+                                    passwordError.textContent = msg
+                                } else if (campo === "email") {
+                                    emailError.textContent = msg
+                                } else {
+                                    emailError.textContent = msg
+                                }
+                            }
+                        } else {
+                            emailError.textContent = dados.detail || t("register.err.create")
+                        }
+                        return
+                    }
+
+                    signupFields.querySelectorAll("input, button").forEach((control) => {
+                        control.disabled = true
+                    })
+                    verificationCode.disabled = false
+                    signupFields.style.display = "none"
+                    verificationPanel.style.display = "flex"
+                    verificationCode.focus()
+                    return
+
+                } catch (err) {
+                    emailError.textContent = t("register.err.connect")
+                } finally {
+                    submitBtn.disabled = false
+                    submitBtn.value = t("register.submit")
+                }
+            })
+
+            async function entrarAposVerificacao() {
+                const email = emailInput.value.trim()
+                const senha = passwordInput.value
+
+                const respLogin = await fetch("/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ email, senha })
+                })
+
+                if (!respLogin.ok) {
+                    nameError.textContent = t("register.err.autoLogin")
+                    return
+                }
+
+                const respJson = await respLogin.json()
+                sessionStorage.setItem("id", respJson.usuario_id)
+                sessionStorage.setItem("logado", "1")
+
+                if (fotoSelecionada) {
+                    uploadStatus.textContent = t("register.photo.uploading")
+                    uploadStatus.style.display = "block"
+                    try {
+                        const fotoForm = new FormData()
+                        fotoForm.append("foto", fotoSelecionada)
+                        await fetch(`/usuarios/${respJson.usuario_id}/foto`, {
+                            method: "PATCH", credentials: "include", body: fotoForm
+                        })
+                        // Conta já foi criada com sucesso — se o upload da foto
+                        // falhar por qualquer motivo, não bloqueia o cadastro;
+                        // a pessoa pode adicionar a foto depois no perfil.
+                    } catch (e) { /* best-effort */ }
+                }
+
+                window.location.href = "lobby.html"
             }
 
-            window.location.href = "lobby.html"
-    }
-
-    verifyButton.addEventListener("click", async () => {
-        verificationError.style.display = "none"
-        verificationStatus.style.display = "none"
-        const codigo = verificationCode.value.trim()
-        if (!/^\d{6}$/.test(codigo)) {
-            verificationError.textContent = t("register.verify.invalid")
-            verificationError.style.display = "block"
-            return
-        }
-        verifyButton.disabled = true
-        try {
-            const resp = await fetch("/usuarios/verificar-email", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: emailInput.value.trim(), codigo, senha: passwordInput.value })
+            verifyButton.addEventListener("click", async () => {
+                verificationError.style.display = "none"
+                verificationStatus.style.display = "none"
+                const codigo = verificationCode.value.trim()
+                if (!/^\d{6}$/.test(codigo)) {
+                    verificationError.textContent = t("register.verify.invalid")
+                    verificationError.style.display = "block"
+                    return
+                }
+                verifyButton.disabled = true
+                try {
+                    const resp = await fetch("/usuarios/verificar-email", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email: emailInput.value.trim(), codigo, senha: passwordInput.value })
+                    })
+                    if (!resp.ok) {
+                        const dados = await resp.json()
+                        verificationError.textContent = dados.detail || t("register.verify.error")
+                        verificationError.style.display = "block"
+                        return
+                    }
+                    await entrarAposVerificacao()
+                } catch (err) {
+                    verificationError.textContent = t("register.err.connect")
+                    verificationError.style.display = "block"
+                } finally {
+                    verifyButton.disabled = false
+                }
             })
-            if (!resp.ok) {
-                const dados = await resp.json()
-                verificationError.textContent = dados.detail || t("register.verify.error")
-                verificationError.style.display = "block"
-                return
-            }
-            await entrarAposVerificacao()
-        } catch (err) {
-            verificationError.textContent = t("register.err.connect")
-            verificationError.style.display = "block"
-        } finally {
-            verifyButton.disabled = false
-        }
-    })
 
-    resendCodeButton.addEventListener("click", async () => {
-        resendCodeButton.disabled = true
-        verificationStatus.style.display = "none"
-        try {
-            const resp = await fetch("/usuarios/reenviar-codigo", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: emailInput.value.trim() })
+            resendCodeButton.addEventListener("click", async () => {
+                resendCodeButton.disabled = true
+                verificationStatus.style.display = "none"
+                try {
+                    const resp = await fetch("/usuarios/reenviar-codigo", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email: emailInput.value.trim() })
+                    })
+                    if (!resp.ok) throw new Error()
+                    verificationStatus.textContent = t("register.verify.resent")
+                    verificationStatus.style.display = "block"
+                } catch (err) {
+                    verificationError.textContent = t("register.verify.error")
+                    verificationError.style.display = "block"
+                } finally {
+                    resendCodeButton.disabled = false
+                }
             })
-            if (!resp.ok) throw new Error()
-            verificationStatus.textContent = t("register.verify.resent")
-            verificationStatus.style.display = "block"
-        } catch (err) {
-            verificationError.textContent = t("register.verify.error")
-            verificationError.style.display = "block"
-        } finally {
-            resendCodeButton.disabled = false
-        }
-    })
-</script>
+        </script>
 </body>
+
 </html>

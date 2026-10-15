@@ -11,68 +11,160 @@
 <script src="../static/confirm-modal.js"></script>
 <script src="../static/viagem-status.js"></script>
 <style>
-/* Mini feed (aba Momentos) — mesmas classes de curtir/comentar do Feed
-   global (backend/frontend/lobby-pags/feed.html), reaproveitadas aqui pra
-   não duplicar a UI de post/curtida/comentário em dois lugares. */
-.post-acoes { display: flex; gap: 8px; margin-top: 10px; }
-.btn-curtir, .btn-comentar {
-    display: flex; align-items: center; gap: 5px;
-    background: none; border: 1px solid var(--border); border-radius: 20px;
-    color: var(--text-muted); font-size: 13px; padding: 5px 12px !important; height: auto !important;
-    cursor: pointer; font-family: inherit; transition: background 0.2s, border-color 0.2s;
-}
-.btn-curtir:hover, .btn-comentar:hover { background: var(--surface-2); border-color: var(--border-strong); }
-.btn-curtir.curtido { color: var(--danger); border-color: rgba(var(--danger-rgb),0.35); }
-.btn-curtir:disabled { opacity: 0.6; cursor: not-allowed; }
-.feed-comentarios { margin-top: 10px; }
-.feed-coments-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
-.feed-coment { display: flex; gap: 8px; align-items: flex-start; }
-.feed-cav {
-    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
-    background: var(--gradient); display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 700; color: #fff;
-}
-.feed-cav img { width: 100%; height: 100%; object-fit: cover; }
-.feed-ctxt { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
-.feed-cnome { font-weight: 700; color: var(--text); margin-right: 4px; }
-.feed-coment-input { display: flex; gap: 6px; align-items: flex-end; margin-top: 4px; }
-.feed-coment-input input {
-    flex: 1; padding: 8px 14px; border-radius: 20px; border: 1px solid var(--border);
-    background: var(--surface-2); color: var(--text); font-size: 13px; font-family: inherit; transition: border 0.2s;
-}
-.feed-coment-input input:focus { outline: none; border-color: var(--primary); background: var(--surface); }
-.feed-coment-input button {
-    background: none; border: none; padding: 0 4px !important; height: auto !important;
-    color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0; white-space: nowrap;
-}
-.feed-coment-input button:hover { color: var(--accent); }
+/* .post-acoes/.btn-curtir/.btn-comentar/.feed-coment* (curtir/comentar do
+   mini feed da aba Momentos) agora vivem em static/style.css —
+   componente compartilhado com feed.html e comunidade.html. */
 
-/* Aba "Custos da viagem" — reaproveita .trip-card-expanded/.dashboard-grid/
-   .btn-salvar-gasto/.msg-erro-gasto já usados nas abas Overview/Gastos. */
-.busca-custo-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 14px; margin-top: 10px; }
-.busca-custo-form label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+/* ===================== Aba "Custos da viagem" ===================== */
+/* Reaproveita tokens e componentes já existentes (.trip-card-expanded,
+   .dashboard-grid/.dashboard-card/.stat-row, .btn-salvar-gasto,
+   .msg-erro-gasto, .btn-del-gasto, .gasto-item) — só o necessário é novo
+   aqui: o layout da busca e dos cards de resultado/opção salva. */
+
+.custo-section-sub { font-size: 13px; color: var(--text-muted); margin: -12px 0 20px; line-height: 1.5; }
+
+.custo-stat-icon {
+    width: 30px; height: 30px; border-radius: var(--radius-sm); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 15px;
+}
+.dashboard-card h3 .custo-stat-icon.neutro { background: var(--primary-soft); }
+.dashboard-card h3 .custo-stat-icon.pendente { background: var(--warning-soft); }
+.dashboard-card h3 .custo-stat-icon.pago { background: var(--success-soft); }
+
+/* Formulário de busca — agrupado em seções com rótulo, igual ao padrão já
+   usado na config. de comunidades (.settings-section-label). */
+.custo-form-secao { margin-bottom: 18px; }
+.custo-form-secao:last-of-type { margin-bottom: 0; }
+.custo-form-label-secao {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-muted);
+    text-transform: uppercase; margin: 0 0 10px;
+}
+.busca-custo-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+.busca-custo-form > div { display: flex; flex-direction: column; }
+.busca-custo-form label { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
 .busca-custo-form input, .busca-custo-form select {
-    width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 14px; outline: none; font-family: inherit;
+    width: 100%; box-sizing: border-box; height: 42px; padding: 0 12px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+    color: var(--text); font-size: 14px; outline: none; font-family: inherit; transition: border-color 0.2s;
 }
-.custo-resultados { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
-.custo-card {
-    border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
-    background: var(--surface-2); display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+.busca-custo-form select[multiple] { height: auto; padding: 8px 12px; }
+.busca-custo-form input:focus, .busca-custo-form select:focus { border-color: var(--primary); }
+.custo-estrelas-opcoes { display: flex; gap: 10px; flex-wrap: wrap; }
+.custo-estrela-chip {
+    display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary);
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill);
+    padding: 7px 14px; cursor: pointer; transition: border-color 0.2s, color 0.2s;
 }
-.custo-card-img { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--surface); }
-.custo-card-info { flex: 1; min-width: 200px; }
-.custo-card-titulo { font-size: 15px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
-.custo-card-sub { font-size: 13px; color: var(--text-muted); margin: 0 0 2px; }
-.custo-card-preco { font-size: 16px; font-weight: 700; color: var(--primary); white-space: nowrap; }
-.custo-card-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.custo-estrela-chip:has(input:checked) { border-color: var(--primary); color: var(--text); background: var(--primary-soft); }
+.custo-estrela-chip input { width: auto !important; height: auto !important; accent-color: var(--primary); }
+.custo-busca-acoes { display: flex; align-items: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
+.custo-busca-acoes .btn-salvar-gasto { width: auto; min-width: 200px; }
+.custo-link-busca { font-size: 13px; color: var(--primary); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.custo-link-busca:hover { color: var(--accent); text-decoration: underline; }
+
+/* Cards de resultado (busca) — linguagem visual compartilhada entre voo e
+   hospedagem, com estrutura própria pra cada um (pedido explícito). */
+.custo-resultados { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+.custo-resultados-header { font-size: 13px; color: var(--text-muted); margin: 18px 0 0; }
+
+.voo-card {
+    border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface);
+    padding: 16px 18px; transition: border-color 0.2s;
+}
+.voo-card:hover { border-color: var(--border-strong); }
+.voo-card-topo { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.voo-card-logo { width: 24px; height: 24px; object-fit: contain; flex-shrink: 0; border-radius: 4px; }
+.voo-card-cia { font-size: 14px; font-weight: 700; color: var(--text); }
+.voo-card-tipo { font-size: 12px; color: var(--text-muted); }
+.voo-card-preco { margin-left: auto; font-size: 20px; font-weight: 700; color: var(--text); white-space: nowrap; }
+.voo-card-rota { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.voo-card-ponto { flex: 1; min-width: 90px; }
+.voo-card-hora { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.2; }
+.voo-card-aeroporto { font-size: 12px; color: var(--text-muted); }
+.voo-card-meio { flex: 1.4; min-width: 120px; text-align: center; }
+.voo-card-duracao { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.voo-card-linha { height: 2px; background: var(--border); border-radius: var(--radius-pill); position: relative; }
+.voo-card-linha::before, .voo-card-linha::after {
+    content: ""; position: absolute; top: 50%; transform: translateY(-50%);
+    width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted);
+}
+.voo-card-linha::before { left: 0; } .voo-card-linha::after { right: 0; }
+.voo-card-escalas { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.voo-card-rodape { display: flex; justify-content: flex-end; margin-top: 14px; }
+
+.hotel-card {
+    border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface);
+    padding: 14px; display: flex; gap: 16px; transition: border-color 0.2s;
+}
+.hotel-card:hover { border-color: var(--border-strong); }
+.hotel-card-img-box {
+    width: 128px; height: 96px; border-radius: var(--radius-sm); flex-shrink: 0; overflow: hidden;
+    background: var(--surface-2); display: flex; align-items: center; justify-content: center;
+}
+.hotel-card-img-box img { width: 100%; height: 100%; object-fit: cover; }
+.hotel-card-img-placeholder { font-size: 26px; color: var(--text-muted); }
+.hotel-card-corpo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.hotel-card-nome { font-size: 15px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+.hotel-card-meta { font-size: 13px; color: var(--text-muted); margin: 0 0 8px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.hotel-card-avaliacao { color: var(--warning); font-weight: 700; }
+.hotel-card-comodidades { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.hotel-chip {
+    font-size: 11px; color: var(--text-secondary); background: var(--surface-2);
+    border-radius: var(--radius-pill); padding: 3px 10px;
+}
+.hotel-card-rodape { margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.hotel-card-precos { line-height: 1.3; }
+.hotel-card-preco-noite { font-size: 18px; font-weight: 700; color: var(--text); }
+.hotel-card-preco-total { font-size: 12px; color: var(--text-muted); }
+.hotel-card-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Opções salvas — lista no mesmo espírito de .gasto-item (lista financeira
+   já existente na aba Gastos), não um grid de cards novo. */
+.opcao-custo-item {
+    display: flex; align-items: center; gap: 14px; padding: 14px 0;
+    border-bottom: 1px solid var(--border); flex-wrap: wrap;
+}
+.opcao-custo-item:last-child { border-bottom: none; }
+.opcao-custo-emoji { font-size: 20px; flex-shrink: 0; }
+.opcao-custo-info { flex: 1; min-width: 180px; }
+.opcao-custo-titulo { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 3px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.opcao-custo-meta { font-size: 12px; color: var(--text-muted); }
+.opcao-custo-preco { font-size: 16px; font-weight: 700; color: var(--text); white-space: nowrap; }
+.opcao-custo-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+
 .custo-badge {
-    font-size: 11px; font-weight: 700; border-radius: 6px; padding: 3px 9px; white-space: nowrap;
+    font-size: 11px; font-weight: 700; border-radius: var(--radius-sm); padding: 3px 9px;
+    white-space: nowrap; border: 1px solid transparent;
 }
-.custo-badge.salva { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
-.custo-badge.orcamento { background: rgba(139,92,246,0.12); color: #8b5cf6; border: 1px solid rgba(139,92,246,0.3); }
-.custo-badge.paga { background: rgba(var(--success-rgb,34,197,94),0.12); color: var(--success, #22c55e); border: 1px solid rgba(var(--success-rgb,34,197,94),0.3); }
-.custo-badge.descartada { background: var(--danger-soft); color: var(--danger); border: 1px solid transparent; }
+.custo-badge.salva { background: var(--surface-3); color: var(--text-muted); border-color: var(--border); }
+.custo-badge.orcamento { background: var(--warning-soft); color: var(--warning); }
+.custo-badge.paga { background: var(--success-soft); color: var(--success); }
+.custo-badge.descartada { background: var(--danger-soft); color: var(--danger); }
+
+.btn-marcar-pago {
+    height: 36px !important; padding: 0 14px;
+    border: 1px solid rgba(var(--success-rgb),0.35); border-radius: var(--radius-sm);
+    background: var(--success-soft); color: var(--success); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background 0.2s;
+}
+.btn-marcar-pago:hover { background: rgba(var(--success-rgb),0.25); }
+
+.custo-vazio {
+    text-align: center; padding: 36px 20px; color: var(--text-muted); font-size: 14px;
+}
+.custo-vazio-icon { font-size: 28px; margin-bottom: 8px; opacity: 0.7; }
+
+@media (max-width: 900px) {
+    .voo-card-rota { flex-direction: column; align-items: stretch; text-align: center; }
+    .voo-card-linha { transform: rotate(90deg); width: 40px; margin: 6px auto; }
+    .hotel-card { flex-direction: column; }
+    .hotel-card-img-box { width: 100%; height: 160px; }
+}
+@media (max-width: 600px) {
+    .opcao-custo-preco { order: 3; width: 100%; text-align: left; }
+    .custo-busca-acoes { flex-direction: column; align-items: stretch; }
+    .custo-busca-acoes .btn-salvar-gasto { width: 100%; }
+}
 </style>
 </head>
 <body>
@@ -258,7 +350,7 @@
                             <input id="explorarLimite" type="number" min="1" step="1" style="width:153px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; outline:none;">
                         </div>
                     </div>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; width: 153px;">
                         <button id="btnPublicarExplorar" onclick="publicarViagem()" style="background:var(--gradient); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.explore.publish">📢 Tornar viagem pública</button>
                         <button id="btnDespublicarExplorar" onclick="despublicarViagem()" style="display:none; background:var(--danger-soft); color:var(--danger); border:1px solid rgba(var(--danger-rgb),0.25); border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.explore.unpublish">Tornar privada</button>
                     </div>
@@ -321,122 +413,167 @@
             <div id="tab-custos" class="tab-content">
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.costs.summaryTitle">💰 Resumo financeiro</h2>
+                    <p class="custo-section-sub" data-i18n="viagem.costs.summaryDesc">Acompanhe o orçamento da viagem junto com as passagens e hospedagens que você está planejando.</p>
                     <div class="dashboard-grid">
                         <div class="dashboard-card">
-                            <h3 data-i18n="viagem.tab.overview.budget">💰 Orçamento</h3>
+                            <h3><span class="custo-stat-icon neutro">$</span> <span data-i18n="viagem.tab.overview.budget">Orçamento</span></h3>
                             <div class="stat-row"><span class="stat-label" data-i18n="viagem.tab.overview.budget.total">Orçamento Total</span><span class="stat-value" id="custosOrcamentoTotal">R$ 0,00</span></div>
                             <div class="stat-row"><span class="stat-label" data-i18n="viagem.tab.overview.totalSpent">Total Gasto</span><span class="stat-value" id="custosTotalConsumido">R$ 0,00</span></div>
                             <div class="stat-row"><span class="stat-label" data-i18n="viagem.tab.overview.remaining">Restante</span><span class="stat-value" id="custosOrcamentoRestante">R$ 0,00</span></div>
                         </div>
                         <div class="dashboard-card">
-                            <h3 data-i18n="viagem.costs.planned">🗒️ Planejado (ainda não pago)</h3>
+                            <h3><span class="custo-stat-icon pendente">🕮</span> <span data-i18n="viagem.costs.planned">Planejado (ainda não pago)</span></h3>
                             <div class="stat-row"><span class="stat-label" data-i18n="viagem.costs.plannedFlights">✈️ Passagens</span><span class="stat-value" id="custosPlanejadoVoos">R$ 0,00</span></div>
                             <div class="stat-row"><span class="stat-label" data-i18n="viagem.costs.plannedLodging">🏨 Hospedagem</span><span class="stat-value" id="custosPlanejadoHospedagem">R$ 0,00</span></div>
                         </div>
                         <div class="dashboard-card">
-                            <h3 data-i18n="viagem.costs.actualSpend">✅ Já pago, por categoria</h3>
+                            <h3><span class="custo-stat-icon pago">✔</span> <span data-i18n="viagem.costs.actualSpend">Já pago, por categoria</span></h3>
                             <div class="stat-row"><span class="stat-label" data-i18n="viagem.cat.transport">🚗 Transporte</span><span class="stat-value" id="custosGastoTransporte">R$ 0,00</span></div>
                             <div class="stat-row"><span class="stat-label" data-i18n="viagem.cat.lodging">🏨 Hospedagem</span><span class="stat-value" id="custosGastoHospedagem">R$ 0,00</span></div>
                         </div>
                     </div>
-                    <p style="font-size:12px; color:var(--text-muted); margin:12px 0 0;" data-i18n="viagem.costs.summaryNote">"Planejado" é só uma estimativa das opções que você marcou com "Adicionar ao orçamento" — não é somado ao restante até ser efetivamente registrado como pago.</p>
+                    <p class="custo-section-sub" style="margin:16px 0 0;" data-i18n="viagem.costs.summaryNote">"Planejado" é só uma estimativa das opções que você marcou com "Adicionar ao orçamento" — não é somado ao restante até ser efetivamente registrado como pago.</p>
                 </div>
 
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.costs.searchFlights">✈️ Buscar passagens</h2>
-                    <div class="busca-custo-form">
-                        <div><label data-i18n="viagem.costs.origin">Origem (aeroporto)</label><input id="vooOrigem" maxlength="3" placeholder="GRU" style="text-transform:uppercase;"></div>
-                        <div><label data-i18n="viagem.costs.destination">Destino (aeroporto)</label><input id="vooDestino" maxlength="3" placeholder="CDG" style="text-transform:uppercase;"></div>
-                        <div><label data-i18n="viagem.costs.departDate">Ida</label><input id="vooDataIda" type="date"></div>
-                        <div><label data-i18n="viagem.costs.returnDateOptional">Volta (opcional)</label><input id="vooDataVolta" type="date"></div>
-                        <div><label data-i18n="viagem.costs.adults">Adultos</label><input id="vooAdultos" type="number" min="1" max="9" value="1"></div>
-                        <div><label data-i18n="viagem.costs.children">Crianças</label><input id="vooCriancas" type="number" min="0" max="8" value="0"></div>
-                        <div>
-                            <label data-i18n="viagem.costs.class">Classe</label>
-                            <select id="vooClasse">
-                                <option value="" data-i18n="viagem.costs.any">Qualquer</option>
-                                <option value="economy" data-i18n="viagem.costs.economy">Econômica</option>
-                                <option value="premium_economy" data-i18n="viagem.costs.premiumEconomy">Econômica premium</option>
-                                <option value="business" data-i18n="viagem.costs.business">Executiva</option>
-                                <option value="first" data-i18n="viagem.costs.first">Primeira classe</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label data-i18n="viagem.costs.maxStops">Escalas</label>
-                            <select id="vooMaxEscalas">
-                                <option value="" data-i18n="viagem.costs.any">Qualquer</option>
-                                <option value="0" data-i18n="viagem.costs.nonstop">Sem escala</option>
-                                <option value="1" data-i18n="viagem.costs.upTo1Stop">Até 1 escala</option>
-                                <option value="2" data-i18n="viagem.costs.upTo2Stops">Até 2 escalas</option>
-                            </select>
-                        </div>
-                        <div><label data-i18n="viagem.costs.maxPrice">Preço máximo (opcional)</label><input id="vooPrecoMax" type="number" min="0" step="0.01"></div>
-                        <div>
-                            <label data-i18n="viagem.costs.sortBy">Ordenar por</label>
-                            <select id="vooOrdenar">
-                                <option value="" data-i18n="viagem.costs.relevance">Relevância</option>
-                                <option value="preco" data-i18n="viagem.costs.price">Preço</option>
-                                <option value="duracao" data-i18n="viagem.costs.duration">Duração</option>
-                            </select>
-                        </div>
-                        <div style="grid-column:1/-1;">
-                            <label data-i18n="viagem.costs.airlinesOptional">Companhias preferidas (opcional, nenhuma selecionada = todas)</label>
-                            <select id="vooCompanhias" multiple size="5"></select>
+                    <p class="custo-section-sub" data-i18n="viagem.costs.searchFlightsDesc">Pesquise voos reais via Google Flights e salve as melhores opções pra comparar depois.</p>
+
+                    <div class="custo-form-secao">
+                        <p class="custo-form-label-secao" data-i18n="viagem.costs.routeAndDates">Rota e datas</p>
+                        <div class="busca-custo-form">
+                            <div><label data-i18n="viagem.costs.origin">Origem (aeroporto)</label><input id="vooOrigem" maxlength="3" placeholder="GRU" style="text-transform:uppercase;"></div>
+                            <div><label data-i18n="viagem.costs.destination">Destino (aeroporto)</label><input id="vooDestino" maxlength="3" placeholder="CDG" style="text-transform:uppercase;"></div>
+                            <div><label data-i18n="viagem.costs.departDate">Ida</label><input id="vooDataIda" type="date"></div>
+                            <div><label data-i18n="viagem.costs.returnDateOptional">Volta (opcional)</label><input id="vooDataVolta" type="date"></div>
                         </div>
                     </div>
-                    <button class="btn-salvar-gasto" style="margin-top:12px;" onclick="buscarVoosCusto()" data-i18n="viagem.costs.searchFlightsBtn">🔎 Buscar passagens</button>
-                    <span class="msg-erro-gasto" id="vooBuscaErro"></span>
-                    <div id="voosResultadoLink" style="margin-top:10px;"></div>
+
+                    <div class="custo-form-secao">
+                        <p class="custo-form-label-secao" data-i18n="viagem.costs.passengersAndPrefs">Passageiros e preferências</p>
+                        <div class="busca-custo-form">
+                            <div><label data-i18n="viagem.costs.adults">Adultos</label><input id="vooAdultos" type="number" min="1" max="9" value="1"></div>
+                            <div><label data-i18n="viagem.costs.children">Crianças</label><input id="vooCriancas" type="number" min="0" max="8" value="0"></div>
+                            <div>
+                                <label data-i18n="viagem.costs.class">Classe</label>
+                                <select id="vooClasse">
+                                    <option value="" data-i18n="viagem.costs.any">Qualquer</option>
+                                    <option value="economy" data-i18n="viagem.costs.economy">Econômica</option>
+                                    <option value="premium_economy" data-i18n="viagem.costs.premiumEconomy">Econômica premium</option>
+                                    <option value="business" data-i18n="viagem.costs.business">Executiva</option>
+                                    <option value="first" data-i18n="viagem.costs.first">Primeira classe</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label data-i18n="viagem.costs.maxStops">Escalas</label>
+                                <select id="vooMaxEscalas">
+                                    <option value="" data-i18n="viagem.costs.any">Qualquer</option>
+                                    <option value="0" data-i18n="viagem.costs.nonstop">Sem escala</option>
+                                    <option value="1" data-i18n="viagem.costs.upTo1Stop">Até 1 escala</option>
+                                    <option value="2" data-i18n="viagem.costs.upTo2Stops">Até 2 escalas</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="custo-form-secao">
+                        <p class="custo-form-label-secao" data-i18n="viagem.costs.priceAndSort">Preço e ordenação</p>
+                        <div class="busca-custo-form">
+                            <div><label data-i18n="viagem.costs.maxPrice">Preço máximo (opcional)</label><input id="vooPrecoMax" type="number" min="0" step="0.01"></div>
+                            <div>
+                                <label data-i18n="viagem.costs.sortBy">Ordenar por</label>
+                                <select id="vooOrdenar">
+                                    <option value="" data-i18n="viagem.costs.relevance">Relevância</option>
+                                    <option value="preco" data-i18n="viagem.costs.price">Preço</option>
+                                    <option value="duracao" data-i18n="viagem.costs.duration">Duração</option>
+                                </select>
+                            </div>
+                            <div style="grid-column:span 2;">
+                                <label for="vooCompanhias" data-i18n="viagem.costs.airlinesOptional">Companhias preferidas (opcional, nenhuma selecionada = todas)</label>
+                                <select id="vooCompanhias" multiple size="4"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="custo-busca-acoes">
+                        <button class="btn-salvar-gasto" onclick="buscarVoosCusto()" data-i18n="viagem.costs.searchFlightsBtn">⌕ Buscar passagens</button>
+                        <span class="msg-erro-gasto" id="vooBuscaErro"></span>
+                        <div id="voosResultadoLink"></div>
+                    </div>
                     <div id="voosResultado" class="custo-resultados"></div>
                 </div>
 
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.costs.searchLodging">🏨 Buscar hospedagem</h2>
-                    <div class="busca-custo-form">
-                        <div style="grid-column:1/-1;"><label data-i18n="viagem.costs.destinationCity">Destino / região</label><input id="hotelDestino" maxlength="150" placeholder="Paris"></div>
-                        <div><label data-i18n="viagem.costs.checkIn">Check-in</label><input id="hotelCheckin" type="date"></div>
-                        <div><label data-i18n="viagem.costs.checkOut">Check-out</label><input id="hotelCheckout" type="date"></div>
-                        <div><label data-i18n="viagem.costs.adults">Adultos</label><input id="hotelAdultos" type="number" min="1" max="9" value="2"></div>
-                        <div><label data-i18n="viagem.costs.children">Crianças</label><input id="hotelCriancas" type="number" min="0" max="8" value="0"></div>
-                        <div><label data-i18n="viagem.costs.minPrice">Preço mín./noite (opcional)</label><input id="hotelPrecoMin" type="number" min="0" step="0.01"></div>
-                        <div><label data-i18n="viagem.costs.maxPrice">Preço máx./noite (opcional)</label><input id="hotelPrecoMax" type="number" min="0" step="0.01"></div>
-                        <div>
-                            <label data-i18n="viagem.costs.minRating">Avaliação mínima</label>
-                            <select id="hotelAvaliacaoMin">
-                                <option value="" data-i18n="viagem.costs.any">Qualquer</option>
-                                <option value="3.5">3.5+</option>
-                                <option value="4.0">4.0+</option>
-                                <option value="4.5">4.5+</option>
-                            </select>
+                    <h2 data-i18n="viagem.costs.searchLodging">合 Buscar hospedagem</h2>
+                    <p class="custo-section-sub" data-i18n="viagem.costs.searchLodgingDesc">Pesquise hospedagens reais via Google Hotels e salve as que fizerem sentido pro orçamento.</p>
+
+                    <div class="custo-form-secao">
+                        <p class="custo-form-label-secao" data-i18n="viagem.costs.destinationAndDates">Destino e datas</p>
+                        <div class="busca-custo-form">
+                            <div style="grid-column:span 2;"><label data-i18n="viagem.costs.destinationCity">Destino / região</label><input id="hotelDestino" maxlength="150" placeholder="Paris"></div>
+                            <div><label data-i18n="viagem.costs.checkIn">Check-in</label><input id="hotelCheckin" type="date"></div>
+                            <div><label data-i18n="viagem.costs.checkOut">Check-out</label><input id="hotelCheckout" type="date"></div>
                         </div>
-                        <div>
-                            <label data-i18n="viagem.costs.sortBy">Ordenar por</label>
-                            <select id="hotelOrdenar">
-                                <option value="" data-i18n="viagem.costs.relevance">Relevância</option>
-                                <option value="preco" data-i18n="viagem.costs.price">Preço</option>
-                                <option value="avaliacao" data-i18n="viagem.costs.rating">Avaliação</option>
-                            </select>
+                    </div>
+
+                    <div class="custo-form-secao">
+                        <p class="custo-form-label-secao" data-i18n="viagem.costs.guestsAndPrice">Hóspedes e preço</p>
+                        <div class="busca-custo-form">
+                            <div><label data-i18n="viagem.costs.adults">Adultos</label><input id="hotelAdultos" type="number" min="1" max="9" value="2"></div>
+                            <div><label data-i18n="viagem.costs.children">Crianças</label><input id="hotelCriancas" type="number" min="0" max="8" value="0"></div>
+                            <div><label data-i18n="viagem.costs.minPrice">Preço mín./noite (opcional)</label><input id="hotelPrecoMin" type="number" min="0" step="0.01"></div>
+                            <div><label data-i18n="viagem.costs.maxPrice">Preço máx./noite (opcional)</label><input id="hotelPrecoMax" type="number" min="0" step="0.01"></div>
                         </div>
-                        <div style="grid-column:1/-1;">
-                            <label data-i18n="viagem.costs.starRating">Classificação por estrelas (opcional)</label>
-                            <div id="hotelEstrelasBox" style="display:flex; gap:14px; flex-wrap:wrap;">
-                                <label style="display:flex; align-items:center; gap:4px; font-size:13px;"><input type="checkbox" value="2" class="hotel-estrela-chk">2★</label>
-                                <label style="display:flex; align-items:center; gap:4px; font-size:13px;"><input type="checkbox" value="3" class="hotel-estrela-chk">3★</label>
-                                <label style="display:flex; align-items:center; gap:4px; font-size:13px;"><input type="checkbox" value="4" class="hotel-estrela-chk">4★</label>
-                                <label style="display:flex; align-items:center; gap:4px; font-size:13px;"><input type="checkbox" value="5" class="hotel-estrela-chk">5★</label>
+                    </div>
+
+                    <div class="custo-form-secao">
+                        <p class="custo-form-label-secao" data-i18n="viagem.costs.qualityAndSort">Qualidade e ordenação</p>
+                        <div class="busca-custo-form">
+                            <div>
+                                <label data-i18n="viagem.costs.minRating">Avaliação mínima</label>
+                                <select id="hotelAvaliacaoMin">
+                                    <option value="" data-i18n="viagem.costs.any">Qualquer</option>
+                                    <option value="3.5">3.5+</option>
+                                    <option value="4.0">4.0+</option>
+                                    <option value="4.5">4.5+</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label data-i18n="viagem.costs.sortBy">Ordenar por</label>
+                                <select id="hotelOrdenar">
+                                    <option value="" data-i18n="viagem.costs.relevance">Relevância</option>
+                                    <option value="preco" data-i18n="viagem.costs.price">Preço</option>
+                                    <option value="avaliacao" data-i18n="viagem.costs.rating">Avaliação</option>
+                                </select>
+                            </div>
+                            <div style="grid-column:span 2;">
+                                <label data-i18n="viagem.costs.starRating">Classificação por estrelas (opcional)</label>
+                                <div class="custo-estrelas-opcoes" id="hotelEstrelasBox">
+                                    <label class="custo-estrela-chip"><input type="checkbox" value="2" class="hotel-estrela-chk">2★</label>
+                                    <label class="custo-estrela-chip"><input type="checkbox" value="3" class="hotel-estrela-chk">3★</label>
+                                    <label class="custo-estrela-chip"><input type="checkbox" value="4" class="hotel-estrela-chk">4★</label>
+                                    <label class="custo-estrela-chip"><input type="checkbox" value="5" class="hotel-estrela-chk">5★</label>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <button class="btn-salvar-gasto" style="margin-top:12px;" onclick="buscarHoteisCusto()" data-i18n="viagem.costs.searchLodgingBtn">🔎 Buscar hospedagem</button>
-                    <span class="msg-erro-gasto" id="hotelBuscaErro"></span>
-                    <div id="hoteisResultadoLink" style="margin-top:10px;"></div>
+
+                    <div class="custo-busca-acoes">
+                        <button class="btn-salvar-gasto" onclick="buscarHoteisCusto()" data-i18n="viagem.costs.searchLodgingBtn">⌕ Buscar hospedagem</button>
+                        <span class="msg-erro-gasto" id="hotelBuscaErro"></span>
+                        <div id="hoteisResultadoLink"></div>
+                    </div>
                     <div id="hoteisResultado" class="custo-resultados"></div>
                 </div>
 
                 <div class="trip-card-expanded">
                     <h2 data-i18n="viagem.costs.savedOptions">📋 Opções salvas</h2>
+                    <p class="custo-section-sub" data-i18n="viagem.costs.savedOptionsDesc">O que você já salvou, adicionou ao orçamento ou registrou como pago nesta viagem.</p>
                     <div id="opcoesCustoLista">
-                        <p style="color:var(--text-muted); font-size:14px;" data-i18n="viagem.costs.noSavedOptions">Nenhuma opção salva ainda.</p>
+                        <div class="custo-vazio">
+                            <div class="custo-vazio-icon">⛱</div>
+                            <p data-i18n="viagem.costs.noSavedOptions">Nenhuma opção salva ainda. Busque passagens ou hospedagem acima e salve as melhores opções.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1246,7 +1383,7 @@ const COMPANHIAS_CUSTO = [
 function preencherCompanhiasSelect() {
     const sel = document.getElementById("vooCompanhias")
     if (!sel || sel.options.length) return
-    sel.innerHTML = COMPANHIAS_CUSTO.map(c => `<option value="${escapeAtr(c)}">${escapeHtml(c)}</option>`).join("")
+    sel.innerHTML = COMPANHIAS_CUSTO.map(c => `<option value="${escapeAtr(c)}" style="color: white">${escapeHtml(c)}</option>`).join("")
 }
 
 function formatarMoeda(valor) {
@@ -1301,7 +1438,7 @@ async function buscarVoosCusto() {
 
     const lista = document.getElementById("voosResultado")
     const linkBox = document.getElementById("voosResultadoLink")
-    lista.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t('common.loading')}</p>`
+    lista.innerHTML = `<p class="custo-resultados-header">${t('common.loading')}</p>`
     linkBox.innerHTML = ""
 
     const resp = await fetch(`/serpapi/voos?${params.toString()}`, { credentials: "include" })
@@ -1316,24 +1453,39 @@ async function buscarVoosCusto() {
     _voosEncontrados = dados.voos || []
 
     if (dados.link_busca) {
-        linkBox.innerHTML = `<a href="${escapeAtr(dados.link_busca)}" target="_blank" rel="noopener" class="btn-foto-post">${t('viagem.costs.viewOnGoogleFlights')}</a>`
+        linkBox.innerHTML = `<a href="${escapeAtr(dados.link_busca)}" target="_blank" rel="noopener" class="custo-link-busca">${t('viagem.costs.viewOnGoogleFlights')}</a>`
     }
 
     if (!_voosEncontrados.length) {
-        lista.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t('viagem.costs.noResults')}</p>`
+        lista.innerHTML = `<div class="custo-vazio"><div class="custo-vazio-icon">✈︎</div><p>${t('viagem.costs.noResults')}</p></div>`
         return
     }
 
-    lista.innerHTML = _voosEncontrados.map((v, i) => `
-        <div class="custo-card">
-            ${v.companhia_logo ? `<img class="custo-card-img" src="${escapeAtr(v.companhia_logo)}" alt="">` : ""}
-            <div class="custo-card-info">
-                <p class="custo-card-titulo">${escapeHtml(v.companhia_principal || t('viagem.costs.unknownAirline'))} ${v.tipo ? `· ${escapeHtml(v.tipo)}` : ""}</p>
-                <p class="custo-card-sub">${escapeHtml(v.partida.aeroporto_id || "?")} ${escapeHtml(v.partida.horario || "")} → ${escapeHtml(v.chegada.aeroporto_id || "?")} ${escapeHtml(v.chegada.horario || "")}</p>
-                <p class="custo-card-sub">${v.escalas === 0 ? t('viagem.costs.nonstop') : `${v.escalas} ${t('viagem.costs.stops')}`} ${v.duracao_total_min ? `· ${Math.floor(v.duracao_total_min / 60)}h${v.duracao_total_min % 60}m` : ""}</p>
+    lista.innerHTML = `<p class="custo-resultados-header">${_voosEncontrados.length} ${t('viagem.costs.resultsFound')}</p>` +
+    _voosEncontrados.map((v, i) => `
+        <div class="voo-card">
+            <div class="voo-card-topo">
+                ${v.companhia_logo ? `<img class="voo-card-logo" src="${escapeAtr(v.companhia_logo)}" alt="">` : ""}
+                <span class="voo-card-cia">${escapeHtml(v.companhia_principal || t('viagem.costs.unknownAirline'))}</span>
+                ${v.tipo ? `<span class="voo-card-tipo">· ${escapeHtml(v.tipo)}</span>` : ""}
+                <span class="voo-card-preco">${formatarMoeda(v.preco)}</span>
             </div>
-            <div class="custo-card-preco">${formatarMoeda(v.preco)}</div>
-            <div class="custo-card-acoes">
+            <div class="voo-card-rota">
+                <div class="voo-card-ponto">
+                    <div class="voo-card-hora">${escapeHtml(v.partida.horario || "—")}</div>
+                    <div class="voo-card-aeroporto">${escapeHtml(v.partida.aeroporto_id || "?")}</div>
+                </div>
+                <div class="voo-card-meio">
+                    <div class="voo-card-duracao">${v.duracao_total_min ? `${Math.floor(v.duracao_total_min / 60)}h${v.duracao_total_min % 60}m` : ""}</div>
+                    <div class="voo-card-linha"></div>
+                    <div class="voo-card-escalas">${v.escalas === 0 ? t('viagem.costs.nonstop') : `${v.escalas} ${t('viagem.costs.stops')}`}</div>
+                </div>
+                <div class="voo-card-ponto" style="text-align:right;">
+                    <div class="voo-card-hora">${escapeHtml(v.chegada.horario || "—")}</div>
+                    <div class="voo-card-aeroporto">${escapeHtml(v.chegada.aeroporto_id || "?")}</div>
+                </div>
+            </div>
+            <div class="voo-card-rodape">
                 <button class="btn-foto-post" onclick="salvarOpcaoVoo(${i})">${t('viagem.costs.saveOption')}</button>
             </div>
         </div>
@@ -1392,7 +1544,7 @@ async function buscarHoteisCusto() {
 
     const lista = document.getElementById("hoteisResultado")
     const linkBox = document.getElementById("hoteisResultadoLink")
-    lista.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t('common.loading')}</p>`
+    lista.innerHTML = `<p class="custo-resultados-header">${t('common.loading')}</p>`
     linkBox.innerHTML = ""
 
     const resp = await fetch(`/serpapi/hoteis?${params.toString()}`, { credentials: "include" })
@@ -1407,26 +1559,37 @@ async function buscarHoteisCusto() {
     _hoteisEncontrados = dados.hoteis || []
 
     if (dados.link_busca) {
-        linkBox.innerHTML = `<a href="${escapeAtr(dados.link_busca)}" target="_blank" rel="noopener" class="btn-foto-post">${t('viagem.costs.viewOnGoogleHotels')}</a>`
+        linkBox.innerHTML = `<a href="${escapeAtr(dados.link_busca)}" target="_blank" rel="noopener" class="custo-link-busca">${t('viagem.costs.viewOnGoogleHotels')}</a>`
     }
 
     if (!_hoteisEncontrados.length) {
-        lista.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t('viagem.costs.noResults')}</p>`
+        lista.innerHTML = `<div class="custo-vazio"><div class="custo-vazio-icon">合</div><p>${t('viagem.costs.noResults')}</p></div>`
         return
     }
 
-    lista.innerHTML = _hoteisEncontrados.map((hl, i) => `
-        <div class="custo-card">
-            ${hl.imagem ? `<img class="custo-card-img" src="${escapeAtr(hl.imagem)}" alt="">` : ""}
-            <div class="custo-card-info">
-                <p class="custo-card-titulo">${escapeHtml(hl.nome || "")}</p>
-                <p class="custo-card-sub">${hl.avaliacao ? `⭐ ${hl.avaliacao} (${hl.num_avaliacoes ?? 0})` : t('viagem.costs.noRating')} ${hl.classificacao_estrelas ? `· ${escapeHtml(hl.classificacao_estrelas)}` : ""}</p>
-                <p class="custo-card-sub">${hl.preco_total ? `${t('viagem.costs.totalStay')}: ${formatarMoeda(hl.preco_total)}` : ""}</p>
+    lista.innerHTML = `<p class="custo-resultados-header">${_hoteisEncontrados.length} ${t('viagem.costs.resultsFound')}</p>` +
+    _hoteisEncontrados.map((hl, i) => `
+        <div class="hotel-card">
+            <div class="hotel-card-img-box">
+                ${hl.imagem ? `<img src="${escapeAtr(hl.imagem)}" alt="" loading="lazy">` : `<span class="hotel-card-img-placeholder">合</span>`}
             </div>
-            <div class="custo-card-preco">${hl.preco_por_noite ? `${formatarMoeda(hl.preco_por_noite)}<div style="font-size:11px;color:var(--text-muted);font-weight:400;">${t('viagem.costs.perNight')}</div>` : ""}</div>
-            <div class="custo-card-acoes">
-                ${hl.link ? `<a href="${escapeAtr(hl.link)}" target="_blank" rel="noopener" class="btn-foto-post">${t('viagem.costs.viewLink')}</a>` : ""}
-                <button class="btn-foto-post" onclick="salvarOpcaoHospedagem(${i})">${t('viagem.costs.saveOption')}</button>
+            <div class="hotel-card-corpo">
+                <p class="hotel-card-nome">${escapeHtml(hl.nome || "")}</p>
+                <div class="hotel-card-meta">
+                    ${hl.avaliacao ? `<span class="hotel-card-avaliacao">✮ ${hl.avaliacao}</span><span>(${hl.num_avaliacoes ?? 0})</span>` : `<span>${t('viagem.costs.noRating')}</span>`}
+                    ${hl.classificacao_estrelas ? `<span>· ${escapeHtml(hl.classificacao_estrelas)}</span>` : ""}
+                </div>
+                ${hl.comodidades && hl.comodidades.length ? `<div class="hotel-card-comodidades">${hl.comodidades.slice(0, 4).map(a => `<span class="hotel-chip">${escapeHtml(a)}</span>`).join("")}</div>` : ""}
+                <div class="hotel-card-rodape">
+                    <div class="hotel-card-precos">
+                        ${hl.preco_por_noite ? `<div class="hotel-card-preco-noite">${formatarMoeda(hl.preco_por_noite)} <span style="font-size:12px;font-weight:400;color:var(--text-muted);">${t('viagem.costs.perNight')}</span></div>` : ""}
+                        ${hl.preco_total ? `<div class="hotel-card-preco-total">${t('viagem.costs.totalStay')}: ${formatarMoeda(hl.preco_total)}</div>` : ""}
+                    </div>
+                    <div class="hotel-card-acoes">
+                        ${hl.link ? `<a href="${escapeAtr(hl.link)}" target="_blank" rel="noopener" class="btn-foto-post">${t('viagem.costs.viewLink')}</a>` : ""}
+                        <button class="btn-foto-post" onclick="salvarOpcaoHospedagem(${i})">${t('viagem.costs.saveOption')}</button>
+                    </div>
+                </div>
             </div>
         </div>
     `).join("")
@@ -1462,12 +1625,12 @@ async function carregarOpcoesCusto() {
     const lista = document.getElementById("opcoesCustoLista")
 
     if (!opcoes.length) {
-        lista.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t('viagem.costs.noSavedOptions')}</p>`
+        lista.innerHTML = `<div class="custo-vazio"><div class="custo-vazio-icon">🧳</div><p>${t('viagem.costs.noSavedOptions')}</p></div>`
         return
     }
 
     const badgeTexto = { salva: t('viagem.costs.statusSaved'), orcamento: t('viagem.costs.statusBudgeted'), paga: t('viagem.costs.statusPaid'), descartada: t('viagem.costs.statusDiscarded') }
-    const emoji = o => o.tipo === "voo" ? "✈️" : "🏨"
+    const emoji = o => o.tipo === "voo" ? "✈︎" : "合"
 
     lista.innerHTML = opcoes.map(o => {
         let acoes = ""
@@ -1475,21 +1638,22 @@ async function carregarOpcoesCusto() {
             if (o.status === "salva") {
                 acoes += `<button class="btn-foto-post" onclick="adicionarOpcaoAoOrcamento(${o.id_opcao})">${t('viagem.costs.addToBudget')}</button>`
             }
-            acoes += `<button class="btn-salvar-gasto" onclick="marcarOpcaoComoPaga(${o.id_opcao})">${t('viagem.costs.markAsPaid')}</button>`
+            acoes += `<button class="btn-marcar-pago" onclick="marcarOpcaoComoPaga(${o.id_opcao})">${t('viagem.costs.markAsPaid')}</button>`
             acoes += `<button class="btn-foto-post" onclick="descartarOpcaoCusto(${o.id_opcao})">${t('viagem.costs.discard')}</button>`
         }
         if (o.status !== "paga") {
-            acoes += `<button style="background:var(--danger-soft);border:none;border-radius:6px;padding:6px 10px;color:var(--danger);font-size:12px;cursor:pointer;" onclick="excluirOpcaoCusto(${o.id_opcao})">🗑</button>`
+            acoes += `<button class="btn-del-gasto" onclick="excluirOpcaoCusto(${o.id_opcao})">🗑</button>`
         }
         const periodo = (o.data_ida && o.data_volta) ? `${o.data_ida} → ${o.data_volta}` : (o.data_ida || "")
         return `
-        <div class="custo-card">
-            <div class="custo-card-info">
-                <p class="custo-card-titulo">${emoji(o)} ${escapeHtml(o.nome)} <span class="custo-badge ${o.status}">${badgeTexto[o.status] || o.status}</span></p>
-                <p class="custo-card-sub">${o.origem ? `${escapeHtml(o.origem)} → ` : ""}${o.destino ? escapeHtml(o.destino) : ""}${periodo ? ` · ${escapeHtml(periodo)}` : ""}</p>
+        <div class="opcao-custo-item">
+            <span class="opcao-custo-emoji">${emoji(o)}</span>
+            <div class="opcao-custo-info">
+                <p class="opcao-custo-titulo">${escapeHtml(o.nome)} <span class="custo-badge ${o.status}">${badgeTexto[o.status] || o.status}</span></p>
+                <p class="opcao-custo-meta">${o.origem ? `${escapeHtml(o.origem)} → ` : ""}${o.destino ? escapeHtml(o.destino) : ""}${periodo ? ` · ${escapeHtml(periodo)}` : ""}</p>
             </div>
-            <div class="custo-card-preco">${formatarMoeda(o.preco)}</div>
-            <div class="custo-card-acoes">${acoes}</div>
+            <div class="opcao-custo-preco">${formatarMoeda(o.preco)}</div>
+            <div class="opcao-custo-acoes">${acoes}</div>
         </div>
     `}).join("")
 }
@@ -1609,12 +1773,23 @@ document.getElementById("chatGrupoInput").addEventListener("keydown", e => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviarMsgGrupo() }
 })
 
+// carregarRoteiro() é chamado de vários lugares (troca de aba, criar/editar/
+// excluir item, gerar com IA, mover, troca de idioma) — sem controle de
+// ordem, duas chamadas concorrentes podiam fazer a resposta mais ANTIGA
+// chegar por último e sobrescrever a lista com dado desatualizado (ex.:
+// mover um item rápido e trocar de aba logo em seguida). _roteiroCargaSeq
+// garante que só a resposta da chamada mais recente é aplicada ao DOM.
+let _roteiroCargaSeq = 0
+
 async function carregarRoteiro() {
+    const minhaSeq = ++_roteiroCargaSeq
     const resp = await fetch(`/grupos/${idGrupo}/roteiros`, {
         credentials: "include"
     })
+    if (minhaSeq !== _roteiroCargaSeq) return // uma chamada mais nova já está em andamento/concluída
     if (!resp.ok) return
     const itens = await resp.json()
+    if (minhaSeq !== _roteiroCargaSeq) return
     const lista = document.getElementById("roteiroLista")
     atualizarBotaoRoteiroIA(itens.length > 0)
 
@@ -1675,14 +1850,36 @@ function formatarTituloRoteiro(titulo) {
     return (titulo || "").replace(/^dia\s+\d+\s*·\s*\d{1,2}:\d{2}\s*[—\-–]\s*/i, "")
 }
 
+// Evita que um duplo-clique (ou clique em ▲/▼ de dois itens em sequência,
+// antes do primeiro terminar) dispare duas trocas de ordem sobrepostas —
+// os botões já ficam desabilitados visualmente enquanto uma troca está em
+// andamento, e esse flag é a garantia real contra o clique duplo.
+let _roteiroMovendo = false
+
 async function moverRoteiroItem(id, direcao) {
-    const resp = await fetch(`/roteiros/${id}/mover`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ direcao })
-    })
-    if (resp.ok) carregarRoteiro()
+    if (_roteiroMovendo) return
+    _roteiroMovendo = true
+    document.querySelectorAll('#roteiroLista button').forEach(b => b.disabled = true)
+    try {
+        const resp = await fetch(`/roteiros/${id}/mover`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ direcao })
+        })
+        if (!resp.ok) {
+            const e = await resp.json().catch(() => ({}))
+            alert(e.detail || t('viagem.itinerary.moveError'))
+        }
+    } catch (e) {
+        alert(t('viagem.itinerary.moveError'))
+    } finally {
+        _roteiroMovendo = false
+        // Sempre recarrega a partir do servidor, mesmo quando a troca falhou
+        // — os botões ficaram desabilitados no clique, então só um reload
+        // real (sucesso ou não) os destrava de volta com o estado correto.
+        await carregarRoteiro()
+    }
 }
 
 let roteiroTemItens = false

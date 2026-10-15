@@ -261,23 +261,19 @@ function perguntarDestino() {
 
     input.addEventListener("input", () => {
         setTimeout(async () => {
-            console.log(input.value.trim())
             if (input.value.trim() === "") { sugEl.innerHTML = ""; return }
             try {
                 const resp = await fetch(`/geocode/autocomplete?text=${encodeURIComponent(input.value)}`, { method: "GET", credentials: "include" })
                 if (!resp.ok) return
                 const dadosResp = await resp.json()
                 mostrarCidades(dadosResp.features || [])
-            } catch (e) { console.log(e) }
+            } catch (e) { console.error(e) }
         }, 300)
     })
 
     function mostrarCidades(array) {
         sugEl.innerHTML = ""
-        
-         console.log(array)
         array.forEach(item => {
-            
             const props = item.properties
             const cidade = props.city || props.town || props.village || props.name || ""
             if (!cidade) return

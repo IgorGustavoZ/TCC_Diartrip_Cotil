@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,39 +9,100 @@
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <title>Diartrip - Login</title>
     <link rel="shortcut icon" href="imagens/favicon-diartrip.png" type="image/x-icon">
+    <script src="static/config.js"></script>
     <script src="static/i18n.js"></script>
 </head>
+
 <body>
     <header>
-        <a href="index.html"><div class="logo"><img src="imagens/logo-diartrip.png" alt=""></div></a>
+        <a href="index.html">
+            <div class="logo"><img src="imagens/logo-diartrip.png" alt=""></div>
+        </a>
     </header>
-    <section style="padding:100px 20px; max-width:600px; max-height: 550px; margin:auto; position: relative;">
+    <section style="padding:100px 20px; max-width:600px; margin:auto; position: relative;">
         <h2 class="section-title titulo" style="margin-bottom:20px;" data-i18n="login.title">Login</h2>
-        <form id="signupForm" style="display:flex; flex-direction:column; gap:22px; background:var(--surface); padding:40px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow-md); position:relative;">
+        <form id="signupForm"
+            style="display:flex; flex-direction:column; gap:22px; background:var(--surface); padding:40px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow-md); position:relative;">
 
             <div class="field">
                 <label data-i18n="login.email.label">Email</label>
-                <input id="email" type="email" data-i18n-placeholder="login.email.placeholder" placeholder="Enter your email" required>
+                <input id="email" type="email" data-i18n-placeholder="login.email.placeholder"
+                    placeholder="Enter your email" required>
             </div>
 
             <div class="field" style="position:relative">
                 <label data-i18n="login.pass.label">Password</label>
-                <input id="password" type="password" data-i18n-placeholder="login.pass.placeholder" placeholder="Enter your password" required>
-                <span class="togglePassword" style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);">⌣</span>
+                <input id="password" type="password" data-i18n-placeholder="login.pass.placeholder"
+                    placeholder="Enter your password" required>
+                <span class="togglePassword"
+                    style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);">⌣</span>
             </div>
+            <!-- <span>Esqueci minha senha</span> -->
 
-            <span class="error" id="submitError" style="display: none;" data-i18n="login.error">Could not log in, please try again.</span>
+            <span class="error" id="submitError" style="display: none;" data-i18n="login.error">Could not log in, please
+                try again.</span>
 
             <button class="cta" id="submit" type="submit" data-i18n="login.submit">Sign In</button>
 
-            <div class="login"><a href="form.html" data-i18n="login.noAccount">Don't have an account? Click here.</a></div>
+            <div id="buttonDiv"></div>
+
+            <div class="login"><a href="form.html" data-i18n="login.noAccount">Don't have an account? Click here.</a>
+            </div>
 
         </form>
     </section>
     <footer data-i18n="footer">
-    © 2026 Diartrip — Intelligent Travel Planning
+        © 2026 Diartrip — Intelligent Travel Planning
     </footer>
 
+    <script
+    src="https://accounts.google.com/gsi/client"
+    async
+    ></script>
+    <script>
+        // O token do Google (response.credential) é só repassado pro backend
+        // em /google — a validação de assinatura/audiência/expiração
+        // acontece sempre no servidor (utils oficiais do Google), nunca aqui.
+        // O sucesso segue o MESMO contrato do /login tradicional: cookies
+        // httponly setados pelo backend + sessionStorage com id/logado.
+        async function handleCredentialResponse(response) {
+            submitError.style.display = "none"
+            try {
+                const resp = await fetch("/google", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ credential: response.credential })
+                })
+                const dados = await resp.json().catch(() => ({}))
+                if (!resp.ok) {
+                    submitError.textContent = dados.detail || t("login.error")
+                    submitError.style.display = "block"
+                    return
+                }
+                sessionStorage.setItem("id", dados.usuario_id)
+                sessionStorage.setItem("logado", "1")
+                window.location.href = "lobby.html"
+            } catch (erro) {
+                submitError.textContent = t("login.error")
+                submitError.style.display = "block"
+            }
+        }
+
+        window.onload = function () {
+            google.accounts.id.initialize({
+                client_id: DIARTRIP_GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse
+            });
+
+            google.accounts.id.renderButton(
+                document.getElementById("buttonDiv"),
+                { theme: "outline", size: "large", text: "signin_with", width: 280 }
+            );
+
+            google.accounts.id.prompt();
+        };
+    </script>
     <script>
         const togglePassword = document.querySelector(".togglePassword")
         const emailInput = document.getElementById("email")
@@ -98,4 +160,5 @@
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
 </body>
+
 </html>
