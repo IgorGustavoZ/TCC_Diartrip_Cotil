@@ -22,6 +22,10 @@
    aqui: o layout da busca e dos cards de resultado/opção salva. */
 
 .custo-section-sub { font-size: 13px; color: var(--text-muted); margin: -12px 0 20px; line-height: 1.5; }
+.auto-fill-hint {
+    font-size: 12px; color: var(--primary); margin-top: 8px; display: flex;
+    align-items: center; gap: 4px;
+}
 
 .custo-stat-icon {
     width: 30px; height: 30px; border-radius: var(--radius-sm); flex-shrink: 0;
@@ -374,9 +378,9 @@
                                 <input id="gastoValor" type="number" min="0.01" step="0.01" data-i18n-placeholder="viagem.value.placeholder" placeholder="Ex: 150.00">
                             </div>
                             <div>
-                                <label data-i18n="viagem.category">Categoria</label>
+                                <label for="gastoCategoria" data-i18n="viagem.category">Categoria</label>
                                 <select id="gastoCategoria">
-                                    <option value="transporte" data-i18n="viagem.cat.transport">🚗 Transporte</option>
+                                    <option value="transporte" data-i18n="viagem.cat.transporte">🚗 Transporte</option>
                                     <option value="alimentacao" data-i18n="viagem.cat.food">🍽️ Alimentação</option>
                                     <option value="hospedagem" data-i18n="viagem.cat.lodging">🏨 Hospedagem</option>
                                     <option value="lazer" data-i18n="viagem.cat.leisure">🎭 Lazer</option>
@@ -447,6 +451,7 @@
                             <div><label data-i18n="viagem.costs.departDate">Ida</label><input id="vooDataIda" type="date"></div>
                             <div><label data-i18n="viagem.costs.returnDateOptional">Volta (opcional)</label><input id="vooDataVolta" type="date"></div>
                         </div>
+                        <span class="auto-fill-hint" id="vooDatasAutoHint" style="display:none;" data-i18n="viagem.costs.autoFilledDates">🔄 Datas preenchidas com as datas da viagem — você pode alterar.</span>
                     </div>
 
                     <div class="custo-form-secao">
@@ -514,6 +519,8 @@
                             <div><label data-i18n="viagem.costs.checkIn">Check-in</label><input id="hotelCheckin" type="date"></div>
                             <div><label data-i18n="viagem.costs.checkOut">Check-out</label><input id="hotelCheckout" type="date"></div>
                         </div>
+                        <span class="auto-fill-hint" id="hotelDestinoAutoHint" style="display:none;" data-i18n="viagem.costs.autoFilledDestination">🔄 Destino preenchido com o destino da viagem — você pode alterar.</span>
+                        <span class="auto-fill-hint" id="hotelDatasAutoHint" style="display:none;" data-i18n="viagem.costs.autoFilledDates">🔄 Datas preenchidas com as datas da viagem — você pode alterar.</span>
                     </div>
 
                     <div class="custo-form-secao">
@@ -792,6 +799,62 @@ async function carregarGrupo() {
     aplicarSomenteLeitura()
     carregarDashboard()
     carregarGastos()
+    preencherCustosAutomaticamente()
+}
+
+// Aproveita destino/datas já cadastrados na viagem pra poupar o usuário de
+// digitar de novo na busca de passagens/hospedagem. Só roda uma vez por
+// carregamento de página (_custosAutoPreenchido) — sem isso, reabrir a aba
+// Custos depois de o usuário já ter editado um campo manualmente apagaria
+// a edição dele. Como cada viagem é uma página própria (viagem.html?id=X),
+// trocar de viagem já é um reload completo — nunca mistura dados de duas
+// viagens diferentes.
+let _custosAutoPreenchido = false
+
+function preencherCustosAutomaticamente() {
+    if (_custosAutoPreenchido || !grupoAtual) return
+    _custosAutoPreenchido = true
+
+    const destino = (grupoAtual.destino_principal || "").trim()
+    const dataInicio = grupoAtual.data_inicio
+    const dataFim = grupoAtual.data_fim
+    const datasValidas = !!(dataInicio && dataFim && dataFim > dataInicio)
+
+    const campoDestino = document.getElementById("hotelDestino")
+    if (destino && !campoDestino.value.trim()) {
+        campoDestino.value = destino
+        mostrarDicaAutoPreenchido("hotelDestinoAutoHint")
+    }
+
+    // Hospedagem sem pelo menos 1 noite (data_fim > data_inicio) não faz
+    // sentido buscar — deixa os campos livres pro usuário decidir as datas.
+    if (datasValidas) {
+        const checkin = document.getElementById("hotelCheckin")
+        const checkout = document.getElementById("hotelCheckout")
+        if (!checkin.value && !checkout.value) {
+            checkin.value = dataInicio
+            checkout.value = dataFim
+            mostrarDicaAutoPreenchido("hotelDatasAutoHint")
+        }
+
+        const vooIda = document.getElementById("vooDataIda")
+        const vooVolta = document.getElementById("vooDataVolta")
+        if (!vooIda.value && !vooVolta.value) {
+            vooIda.value = dataInicio
+            vooVolta.value = dataFim
+            mostrarDicaAutoPreenchido("vooDatasAutoHint")
+        }
+    }
+    // Aeroporto de origem/destino do voo ficam sempre manuais: não existe
+    // esse dado cadastrado em nenhum lugar (nem na viagem, nem no perfil do
+    // usuário) nem uma forma confiável de adivinhar o aeroporto a partir do
+    // nome da cidade — uma cidade pode ter mais de um aeroporto, e "chutar"
+    // um deles silenciosamente seria pior do que deixar em branco.
+}
+
+function mostrarDicaAutoPreenchido(id) {
+    const el = document.getElementById(id)
+    if (el) el.style.display = "flex"
 }
 
 // Aplica (ou desfaz) o modo somente leitura das partes ESTÁTICAS da página. As partes
@@ -1799,11 +1862,19 @@ async function carregarRoteiro() {
     }
 
     const dias = itens.map(r => diaDoItem(r.titulo))
-
+    // As setas ▲▼ agora operam sobre a LISTA INTEIRA (índice real no array
+    // já ordenado por `ordem`), não mais por dia — pedido explícito: a
+    // reordenação deve ser linear, incluindo itens manuais, sem reiniciar o
+    // limite a cada dia/bloco de 3. O agrupamento por dia continua existindo
+    // só pro cabeçalho visual abaixo; ele não limita mais o que pode subir
+    // ou descer (ver moverRoteiroItem(), que trata o cruzamento de dia).
     lista.innerHTML = itens.map((r, i) => {
+        const ehPrimeiro = i === 0
+        const ehUltimo = i === itens.length - 1
         const ehPrimeiroDoDia = i === 0 || dias[i - 1] !== dias[i]
-        const ehUltimoDoDia = i === itens.length - 1 || dias[i + 1] !== dias[i]
-        return `
+        const cabecalhoDia = (ehPrimeiroDoDia && dias[i] !== null) ? `
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;color:var(--text-muted);text-transform:uppercase;margin:${i === 0 ? "0" : "18px"} 0 10px;">${t('viagem.itinerary.dayLabel')} ${dias[i]}</div>` : ""
+        return `${cabecalhoDia}
         <div id="ritem-${r.id_roteiro}" style="border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:10px;background:var(--surface-2);">
             <div style="display:flex;align-items:flex-start;gap:12px;">
                 <div style="width:28px;height:28px;border-radius:8px;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${i + 1}</div>
@@ -1817,8 +1888,8 @@ async function carregarRoteiro() {
                 ${isAdmin && !viagemPassada ? `
                 <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;align-items:center;">
                     <div style="display:flex;flex-direction:column;gap:2px;">
-                        <button onclick="moverRoteiroItem(${r.id_roteiro},'cima')" ${ehPrimeiroDoDia ? "disabled" : ""} title="${t('viagem.itinerary.moveUp')}" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 8px;color:var(--text-secondary);font-size:11px;cursor:${ehPrimeiroDoDia ? "default" : "pointer"};opacity:${ehPrimeiroDoDia ? "0.4" : "1"};">▲</button>
-                        <button onclick="moverRoteiroItem(${r.id_roteiro},'baixo')" ${ehUltimoDoDia ? "disabled" : ""} title="${t('viagem.itinerary.moveDown')}" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 8px;color:var(--text-secondary);font-size:11px;cursor:${ehUltimoDoDia ? "default" : "pointer"};opacity:${ehUltimoDoDia ? "0.4" : "1"};">▼</button>
+                        <button onclick="moverRoteiroItem(${r.id_roteiro},'cima')" ${ehPrimeiro ? "disabled" : ""} title="${t('viagem.itinerary.moveUp')}" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 8px;color:var(--text-secondary);font-size:11px;cursor:${ehPrimeiro ? "default" : "pointer"};opacity:${ehPrimeiro ? "0.4" : "1"};">▲</button>
+                        <button onclick="moverRoteiroItem(${r.id_roteiro},'baixo')" ${ehUltimo ? "disabled" : ""} title="${t('viagem.itinerary.moveDown')}" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 8px;color:var(--text-secondary);font-size:11px;cursor:${ehUltimo ? "default" : "pointer"};opacity:${ehUltimo ? "0.4" : "1"};">▼</button>
                     </div>
                     <button onclick="iniciarEdicaoRoteiro(${r.id_roteiro},'${escapeAtr(r.titulo)}','${escapeAtr(r.descricao)}')" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text-secondary);font-size:12px;cursor:pointer;">${t('viagem.itinerary.edit')}</button>
                     <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:var(--danger-soft);border:none;border-radius:6px;padding:6px 10px;color:var(--danger);font-size:12px;cursor:pointer;">🗑</button>
@@ -1850,26 +1921,116 @@ function formatarTituloRoteiro(titulo) {
     return (titulo || "").replace(/^dia\s+\d+\s*·\s*\d{1,2}:\d{2}\s*[—\-–]\s*/i, "")
 }
 
+// Troca (ou remove) só o prefixo "Dia N ·" de um título, preservando o
+// resto (horário + texto da atividade) exatamente como estava. `novoDia`
+// null remove o prefixo (item passa a não ter dia, como um item manual).
+function _comDiaDefinido(titulo, novoDia) {
+    const semPrefixo = (titulo || "").replace(/^dia\s+\d+\s*[·\-–—]\s*/i, "")
+    return novoDia === null ? semPrefixo : `Dia ${novoDia} · ${semPrefixo}`
+}
+
 // Evita que um duplo-clique (ou clique em ▲/▼ de dois itens em sequência,
 // antes do primeiro terminar) dispare duas trocas de ordem sobrepostas —
 // os botões já ficam desabilitados visualmente enquanto uma troca está em
 // andamento, e esse flag é a garantia real contra o clique duplo.
 let _roteiroMovendo = false
 
+async function _editarTituloRoteiro(id, titulo, descricao) {
+    return fetch(`/roteiros/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ titulo, descricao })
+    })
+}
+
 async function moverRoteiroItem(id, direcao) {
     if (_roteiroMovendo) return
     _roteiroMovendo = true
     document.querySelectorAll('#roteiroLista button').forEach(b => b.disabled = true)
     try {
-        const resp = await fetch(`/roteiros/${id}/mover`, {
+        // A ordenação é da LISTA INTEIRA (todos os dias + itens manuais),
+        // não mais por dia — por isso é preciso buscar a lista atual pra
+        // saber quem é o vizinho real na posição seguinte/anterior.
+        const respLista = await fetch(`/grupos/${idGrupo}/roteiros`, { credentials: "include" })
+        if (!respLista.ok) { alert(t('viagem.itinerary.moveError')); return }
+        const itens = (await respLista.json()).sort((a, b) => a.ordem - b.ordem)
+        const pos = itens.findIndex(i => i.id_roteiro === id)
+        if (pos === -1) return // item não existe mais (ex.: outro admin excluiu)
+        const alvoPos = direcao === "cima" ? pos - 1 : pos + 1
+        if (alvoPos < 0 || alvoPos >= itens.length) return // já no limite, nada a fazer
+
+        const atual = itens[pos]
+        const vizinho = itens[alvoPos]
+        const diaAtual = diaDoItem(atual.titulo)
+        const diaVizinho = diaDoItem(vizinho.titulo)
+
+        if (diaAtual === diaVizinho) {
+            // Mesmo dia (ou ambos sem dia, ex.: dois itens manuais) — troca
+            // simples, igual sempre funcionou: só o /mover de sempre.
+            const resp = await fetch(`/roteiros/${id}/mover`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ direcao })
+            })
+            if (!resp.ok) {
+                const e = await resp.json().catch(() => ({}))
+                alert(e.detail || t('viagem.itinerary.moveError'))
+            }
+            return
+        }
+
+        // Cruza a fronteira de um dia (ou de/para o grupo sem dia dos itens
+        // manuais). O backend (roteiro_service.mover(), não alterado) só
+        // troca a ordem entre itens do MESMO dia — não dá pra pedir uma
+        // troca direta entre dias diferentes. Pra manter a lista linear
+        // (pedido explícito) sem tocar no backend, o item que cruza passa a
+        // pertencer ao dia que ocupava aquela posição, usando só os
+        // endpoints que já existem (editar + mover), em 3 passos:
+        //   1. retitula o vizinho pro dia do item atual — ambos passam a
+        //      contar como "mesmo dia" pro backend, e já são adjacentes em
+        //      ordem, então continuam vizinhos nesse dia "temporário";
+        //   2. chama o /mover de sempre — agora o backend aceita a troca de
+        //      ordem entre os dois;
+        //   3. retitula o item atual pro dia ORIGINAL do vizinho.
+        // Resultado: os dois trocam de posição E de dia, mantendo cada um
+        // seu próprio horário/texto/descrição — os dias continuam contíguos
+        // na lista. Se o passo 2 falhar, desfaz o passo 1. Se o passo 3
+        // falhar (a troca de posição já aconteceu), tenta mais uma vez antes
+        // de avisar o usuário — a posição está certa, só o rótulo do dia
+        // pode ter ficado desatualizado nesse caso raro.
+        const tituloVizinhoOriginal = vizinho.titulo
+        const tituloAtualOriginal = atual.titulo
+
+        const respRetituloVizinho = await _editarTituloRoteiro(
+            vizinho.id_roteiro, _comDiaDefinido(tituloVizinhoOriginal, diaAtual), vizinho.descricao
+        )
+        if (!respRetituloVizinho.ok) {
+            alert(t('viagem.itinerary.moveError'))
+            return
+        }
+
+        const respMover = await fetch(`/roteiros/${id}/mover`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify({ direcao })
         })
-        if (!resp.ok) {
-            const e = await resp.json().catch(() => ({}))
+        if (!respMover.ok) {
+            await _editarTituloRoteiro(vizinho.id_roteiro, tituloVizinhoOriginal, vizinho.descricao).catch(() => {})
+            const e = await respMover.json().catch(() => ({}))
             alert(e.detail || t('viagem.itinerary.moveError'))
+            return
+        }
+
+        const novoTituloAtual = _comDiaDefinido(tituloAtualOriginal, diaVizinho)
+        let respRetituloAtual = await _editarTituloRoteiro(id, novoTituloAtual, atual.descricao)
+        if (!respRetituloAtual.ok) {
+            respRetituloAtual = await _editarTituloRoteiro(id, novoTituloAtual, atual.descricao).catch(() => null)
+        }
+        if (!respRetituloAtual || !respRetituloAtual.ok) {
+            alert(t('viagem.itinerary.moveError'))
         }
     } catch (e) {
         alert(t('viagem.itinerary.moveError'))
@@ -2433,8 +2594,14 @@ async function recusarSolicitacao(id) {
 function escapeHtml(txt) {
     return String(txt).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")
 }
+// Pra uso dentro de onclick="...('${escapeAtr(texto)}')" — texto vira um
+// literal JS de aspas simples, embutido num atributo HTML de aspas duplas.
+// Sem escapar " aqui, um título/descrição da IA com aspas duplas (comum —
+// a IA costuma citar nome de lugar, ex.: Museu "Tal Coisa") fecha o
+// atributo onclick no meio, quebrando o botão (Editar deixa de funcionar
+// pro item afetado — reproduzido e confirmado com conteúdo real da IA).
 function escapeAtr(txt) {
-    return String(txt).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\n/g,"\\n")
+    return String(txt).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\n/g,"\\n").replace(/"/g,"&quot;")
 }
 
 const TABS_VALIDAS = ["geral", "pessoal", "admin", "gastos", "custos", "roteiro", "momentos", "chat", "info"]

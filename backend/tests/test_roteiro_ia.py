@@ -28,9 +28,9 @@ def _fake_grupo(destino="Paris", data_inicio="2026-09-10", data_fim="2026-09-12"
     }
 
 
-def _fake_ia(conteudo: str):
+def _fake_ia(conteudo: str, finish_reason: str = "stop"):
     resp = MagicMock()
-    resp.choices = [MagicMock(message=MagicMock(content=conteudo))]
+    resp.choices = [MagicMock(message=MagicMock(content=conteudo), finish_reason=finish_reason)]
     return resp
 
 
@@ -182,6 +182,80 @@ class TestGerarRoteiroIA:
              patch("services.roteiro_ia_service.geocodificar", return_value=None), \
              patch("services.roteiro_ia_service._client") as mock_client:
             mock_client.chat.completions.create.return_value = _fake_ia(json.dumps({"itens": []}))
+            resp = client_usuario.post("/grupos/10/roteiros/gerar-ia")
+
+        assert resp.status_code == 502
+
+    def test_ia_retorna_json_com_virgula_ausente_retorna_502(self, client_usuario):
+        # Objeto do meio sem a vírgula entre "titulo" e "descricao" — o mesmo
+        # tipo de JSONDecodeError ("Expecting ',' delimiter") visto em produção.
+        json_quebrado = (
+            '{"itens": [{"titulo": "Dia 1 · 09:00 — Café", "descricao": "d1"}, '
+            '{"titulo": "Dia 1 · 12:00 — Almoço" "descricao": "d2"}]}'
+        )
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
+        conn = make_connection(cur)
+
+        with patch("database.get_db", fake_get_db(conn)), \
+             patch("services.roteiro_ia_service.geocodificar", return_value=None), \
+             patch("services.roteiro_ia_service._client") as mock_client:
+            mock_client.chat.completions.create.return_value = _fake_ia(json_quebrado)
+            resp = client_usuario.post("/grupos/10/roteiros/gerar-ia")
+
+        assert resp.status_code == 502
+        # 1ª tentativa falha no parsing, retry tenta de novo (mesma resposta
+        # quebrada no mock) — não é um erro de créditos, então sempre tenta 2x
+        assert mock_client.chat.completions.create.call_count == 2
+
+    def test_ia_com_aspas_dentro_da_descricao_funciona(self, client_usuario):
+        # Aspas duplas DENTRO de uma string JSON, devidamente escapadas pelo
+        # próprio modelo (\") — isso é JSON válido e deve ser aceito normalmente.
+        json_com_aspas = json.dumps({
+            "itens": [
+                {"titulo": 'Dia 1 · 15:00 — Visita ao Museu "Coleção Berardo"',
+                 "descricao": 'Exposição no espaço "Coleção Berardo".'},
+            ]
+        })
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
+        conn = make_connection(cur)
+
+        with patch("database.get_db", fake_get_db(conn)), \
+             patch("services.roteiro_ia_service.geocodificar", return_value=None), \
+             patch("services.roteiro_ia_service._client") as mock_client, \
+             patch("services.roteiro_ia_service.roteiro_service.criar", return_value={"mensagem": "ok", "id": 1}) as mock_criar, \
+             patch("services.roteiro_ia_service.roteiro_service.listar_por_grupo", return_value=[]):
+            mock_client.chat.completions.create.return_value = _fake_ia(json_com_aspas)
+            resp = client_usuario.post("/grupos/10/roteiros/gerar-ia")
+
+        assert resp.status_code == 200
+        titulo_criado = mock_criar.call_args_list[0].args[0].titulo
+        assert titulo_criado == 'Dia 1 · 15:00 — Visita ao Museu "Coleção Berardo"'
+
+    def test_ia_com_texto_extra_antes_e_depois_do_json_funciona(self, client_usuario):
+        # Alguns modelos envolvem o JSON em cercas de markdown ou acrescentam
+        # uma frase — _extrair_json() já lida com isso (find "{" / rfind "}").
+        resposta_com_markdown = f"Aqui está o roteiro:\n```json\n{_JSON_VALIDO}\n```\nEspero que ajude!"
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
+        conn = make_connection(cur)
+
+        with patch("database.get_db", fake_get_db(conn)), \
+             patch("services.roteiro_ia_service.geocodificar", return_value=None), \
+             patch("services.roteiro_ia_service._client") as mock_client, \
+             patch("services.roteiro_ia_service.roteiro_service.criar", return_value={"mensagem": "ok", "id": 1}), \
+             patch("services.roteiro_ia_service.roteiro_service.listar_por_grupo", return_value=[]):
+            mock_client.chat.completions.create.return_value = _fake_ia(resposta_com_markdown)
+            resp = client_usuario.post("/grupos/10/roteiros/gerar-ia")
+
+        assert resp.status_code == 200
+
+    def test_ia_resposta_vazia_retorna_502(self, client_usuario):
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
+        conn = make_connection(cur)
+
+        with patch("database.get_db", fake_get_db(conn)), \
+             patch("services.roteiro_ia_service.geocodificar", return_value=None), \
+             patch("services.roteiro_ia_service._client") as mock_client:
+            mock_client.chat.completions.create.return_value = _fake_ia("")
             resp = client_usuario.post("/grupos/10/roteiros/gerar-ia")
 
         assert resp.status_code == 502
@@ -357,3 +431,71 @@ class TestRaioPorTransporte:
         from services.roteiro_ia_service import _raio_por_transporte
         assert _raio_por_transporte("ônibus") == 5000
         assert _raio_por_transporte(None) == 5000
+
+
+class TestMaxTokensNaoTruncaViagensCurtas:
+    """Reprodução do bug real: viagens curtas (poucos dias) pediam MENOS
+    tokens, mas o prompt pede uma resposta mais DENSA pra elas (3 a 5
+    itens/dia) — a fórmula antiga (400 + 100*dias, teto 1800) dava só 700
+    pra uma viagem de 3 dias, e isso truncava a resposta da IA no meio do
+    JSON (finish_reason="length"), causando o erro de parsing visto em
+    produção (grupo_id=238, 3 dias, "Expecting ',' delimiter"). Confirmado
+    via chamada real à IA: 700 tokens trunca esse caso, 1800 não."""
+
+    def test_nao_reduz_tokens_para_viagens_curtas(self):
+        from services.roteiro_ia_service import _max_tokens_para
+        # Antes: _max_tokens_para(3) == 700. Viagem curta pede a resposta
+        # mais densa (3-5 itens/dia) e não pode receber o menor orçamento.
+        assert _max_tokens_para(1) >= 1500
+        assert _max_tokens_para(3) >= 1500
+        assert _max_tokens_para(7) >= 1500
+        assert _max_tokens_para(14) >= 1500
+
+    def test_resposta_truncada_finish_reason_length_nao_e_aceita_como_sucesso(self, client_usuario):
+        # Mesmo que o trecho recebido pareça um JSON válido por coincidência,
+        # finish_reason="length" indica que o modelo foi cortado pelo limite
+        # de tokens — tratamos como falha explícita (cai no retry), em vez
+        # de arriscar persistir um roteiro parcial/incompleto.
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
+        conn = make_connection(cur)
+
+        with patch("database.get_db", fake_get_db(conn)), \
+             patch("services.roteiro_ia_service.geocodificar", return_value=None), \
+             patch("services.roteiro_ia_service._client") as mock_client:
+            mock_client.chat.completions.create.return_value = _fake_ia(_JSON_VALIDO, finish_reason="length")
+            resp = client_usuario.post("/grupos/10/roteiros/gerar-ia")
+
+        assert resp.status_code == 502
+        assert mock_client.chat.completions.create.call_count == 2  # tenta de novo, não é erro de créditos
+
+    def test_resposta_completa_finish_reason_stop_funciona_normalmente(self, client_usuario):
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
+        conn = make_connection(cur)
+
+        with patch("database.get_db", fake_get_db(conn)), \
+             patch("services.roteiro_ia_service.geocodificar", return_value=None), \
+             patch("services.roteiro_ia_service._client") as mock_client, \
+             patch("services.roteiro_ia_service.roteiro_service.criar", return_value={"mensagem": "ok", "id": 1}), \
+             patch("services.roteiro_ia_service.roteiro_service.listar_por_grupo", return_value=[]):
+            mock_client.chat.completions.create.return_value = _fake_ia(_JSON_VALIDO, finish_reason="stop")
+            resp = client_usuario.post("/grupos/10/roteiros/gerar-ia")
+
+        assert resp.status_code == 200
+        assert mock_client.chat.completions.create.call_count == 1
+
+    def test_pede_response_format_json_object(self, client_usuario):
+        # Verificado (fora do mock) que o provedor atual aceita esse campo;
+        # garante que a chamada real sempre peça esse modo, como defesa
+        # extra contra texto fora do JSON.
+        cur = make_cursor(rows=[(1,), {"cargo": "admin"}, _fake_grupo()])
+        conn = make_connection(cur)
+
+        with patch("database.get_db", fake_get_db(conn)), \
+             patch("services.roteiro_ia_service.geocodificar", return_value=None), \
+             patch("services.roteiro_ia_service._client") as mock_client, \
+             patch("services.roteiro_ia_service.roteiro_service.criar", return_value={"mensagem": "ok", "id": 1}), \
+             patch("services.roteiro_ia_service.roteiro_service.listar_por_grupo", return_value=[]):
+            mock_client.chat.completions.create.return_value = _fake_ia(_JSON_VALIDO)
+            client_usuario.post("/grupos/10/roteiros/gerar-ia")
+
+        assert mock_client.chat.completions.create.call_args.kwargs.get("response_format") == {"type": "json_object"}

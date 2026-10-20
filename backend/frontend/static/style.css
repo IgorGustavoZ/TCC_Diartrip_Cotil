@@ -1217,6 +1217,9 @@ option{
     border: 1px solid var(--border); border-radius: var(--radius-sm);
     background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer;
     transition: background 0.2s, color 0.2s;
+    
+    display: flex;
+    align-items: center;
 }
 .btn-foto-post:hover { background: var(--surface-2); color: var(--text); }
 

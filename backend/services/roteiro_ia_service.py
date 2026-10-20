@@ -263,12 +263,21 @@ def _montar_prompt(
 
 def _max_tokens_para(dias: int) -> int:
     """Teto de tokens de saída pedido à IA — limitado pelo saldo de créditos
-    gratuitos da conta OpenRouter, não pela duração da viagem. Pedir mais
-    tokens do que a conta consegue pagar faz a chamada falhar direto com
-    HTTP 402 ("requires more credits"), antes mesmo de gerar qualquer coisa;
-    esse teto fica com margem abaixo do afford observado (~2288) para
-    sobrar espaço mesmo com prompts maiores (mais POIs, mais dias)."""
-    return min(400 + 100 * dias, 1800)
+    gratuitos da conta OpenRouter, não pela duração da viagem.
+
+    Valor fixo em 1800 pra toda viagem de 1 a 14 dias (não escalar por
+    `dias`): a quantidade de itens pedida por dia já CAI conforme a viagem
+    fica mais longa (ver `instrucao_quantidade` acima — 3 a 5 itens/dia pra
+    viagens curtas, 1 a 2 pra longas), então o tamanho total da resposta não
+    cresce de forma proporcional a `dias`. Uma fórmula que dava MENOS tokens
+    pra viagens curtas (ex.: 700 pra 3 dias) truncava exatamente as viagens
+    curtas — que pedem a resposta mais DENSA (3 a 5 itens/dia) — gerando
+    JSON incompleto e falha no parsing (finish_reason="length", reproduzido
+    com dados reais). 1800 foi confirmado suficiente tanto pro cenário mais
+    denso testado (3 dias, com lista real de pontos de interesse) quanto pro
+    mais longo (14 dias) — e já era o teto usado antes pra viagens longas,
+    dentro da margem de crédito observada (~2288 de afford)."""
+    return 1800
 
 
 def _eh_erro_creditos(exc: Exception) -> bool:
@@ -387,8 +396,26 @@ def gerar_com_ia(id_grupo: int, usuario_id: int) -> list:
                     {"role": "user", "content": mensagem_usuario},
                 ],
                 max_tokens=max_tokens,
+                # Defesa extra contra texto fora do JSON (ex.: markdown, uma
+                # frase antes/depois) — verificado que o modelo/provedor
+                # aceita esse parâmetro antes de usar. Não substitui o
+                # parser real (json.loads, via _extrair_json): o SDK ainda
+                # devolve a resposta como string, e esse modo não evita
+                # truncamento por limite de tokens, só reduz ruído ao redor
+                # do JSON quando a resposta termina normalmente.
+                response_format={"type": "json_object"},
             )
-            conteudo = resposta_ia.choices[0].message.content
+            escolha = resposta_ia.choices[0]
+            if escolha.finish_reason == "length":
+                # Mesma falha visível no log original ("Expecting ','
+                # delimiter...") mas com causa explícita: a resposta foi
+                # cortada no limite de tokens antes de fechar o JSON. Vira
+                # uma falha "normal" do loop (cai no retry/erro abaixo), só
+                # com diagnóstico claro em vez de um erro de parsing genérico.
+                raise ValueError(
+                    f"resposta da IA truncada por limite de tokens (max_tokens={max_tokens})"
+                )
+            conteudo = escolha.message.content
             payload = _extrair_json(conteudo)
             itens = _validar_itens(payload)
             break
