@@ -13,6 +13,16 @@ os.environ.setdefault("DB_USER", "root")
 os.environ.setdefault("DB_PASSWORD", "")
 os.environ.setdefault("DB_NAME", "diartrip_test")
 os.environ.setdefault("OPENROUTER_API_KEY", "test-openrouter-key")
+# routes/login.py lê GOOGLE_CLIENT_ID como constante de MÓDULO
+# (`GOOGLE_CLIENT_ID = os.getenv(...)`), avaliada uma única vez na primeira
+# importação — que acontece aqui embaixo, em "from main import app" (linha
+# ~130), antes de qualquer fixture rodar. Setar isso só numa fixture (via
+# monkeypatch.setenv, que roda por teste) não tem efeito nenhum sobre essa
+# constante já congelada; precisa estar aqui, ANTES do import, pra garantir
+# um valor de teste fixo mesmo quando o .env real não tem essa chave (ex.:
+# CI, clone novo) — sem isso os testes "passam" só por acidente, usando o
+# Client ID real de quem roda localmente com um .env já configurado.
+os.environ.setdefault("GOOGLE_CLIENT_ID", "test-client-id.apps.googleusercontent.com")
 os.environ.setdefault("CLOUDINARY_CLOUD_NAME", "test-cloud")
 os.environ.setdefault("CLOUDINARY_API_KEY", "test-api-key")
 os.environ.setdefault("CLOUDINARY_API_SECRET", "test-api-secret")

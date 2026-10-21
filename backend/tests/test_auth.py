@@ -246,7 +246,10 @@ class TestTokenJWT:
         token = pyjwt.encode(
             {"id": 1, "jti": "tamper",
              "exp": datetime.now(timezone.utc) + timedelta(hours=1)},
-            "chave-errada", algorithm=ALGORITHM,
+            # Só precisa ser DIFERENTE da SECRET_KEY real (pra produzir uma
+            # assinatura inválida de propósito) — mas com >=32 bytes, senão
+            # o PyJWT emite InsecureKeyLengthWarning (chave curta pra HS256).
+            "chave-propositalmente-errada-com-pelo-menos-32-bytes", algorithm=ALGORITHM,
         )
         with TestClient(app, raise_server_exceptions=False) as c:
             c.cookies.set("access_token", token)
@@ -328,7 +331,10 @@ class TestSenhaSeguranca:
         token = pyjwt.encode(
             {"id": 1, "jti": "bad",
              "exp": datetime.now(timezone.utc) + timedelta(hours=1)},
-            "chave-errada", algorithm=ALGORITHM,
+            # Só precisa ser DIFERENTE da SECRET_KEY real (pra produzir uma
+            # assinatura inválida de propósito) — mas com >=32 bytes, senão
+            # o PyJWT emite InsecureKeyLengthWarning (chave curta pra HS256).
+            "chave-propositalmente-errada-com-pelo-menos-32-bytes", algorithm=ALGORITHM,
         )
         with pytest.raises(HTTPException) as exc:
             decodificar_token(token)

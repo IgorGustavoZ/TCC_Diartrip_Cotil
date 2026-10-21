@@ -65,7 +65,9 @@ class TestSecurity:
         token = pyjwt.encode(
             {"id": 1, "jti": "bad-sig",
              "exp": datetime.now(timezone.utc) + timedelta(hours=1)},
-            "chave-errada", algorithm=ALGORITHM,
+            # >=32 bytes só pra evitar o InsecureKeyLengthWarning do PyJWT —
+            # só precisa ser diferente da SECRET_KEY real.
+            "chave-propositalmente-errada-com-pelo-menos-32-bytes", algorithm=ALGORITHM,
         )
         with pytest.raises(HTTPException) as exc:
             decodificar_token(token)
