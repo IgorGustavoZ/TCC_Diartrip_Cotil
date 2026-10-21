@@ -158,22 +158,22 @@
             <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
         </a>
         <a href="../lobby.html">
-            <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
+            <div class="menu-item" data-i18n="nav.myTrips">My Trips</div>
         </a>
         <a href="grupos.html">
-            <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
+            <div class="menu-item" data-i18n="nav.groups">Groups</div>
         </a>
         <a href="explorar-viagens.html">
-            <div class="menu-item" data-i18n="nav.explore">✈️ Explore Trips</div>
+            <div class="menu-item" data-i18n="nav.explore">Explore Trips</div>
         </a>
         <a href="feed.html">
-            <div class="menu-item" data-i18n="nav.community">🌎 Feed</div>
+            <div class="menu-item" data-i18n="nav.community">Feed</div>
         </a>
         <a href="perfil.html">
-            <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
+            <div class="menu-item" data-i18n="nav.profile">Profile</div>
         </a>
         <!-- <a href="chat-viagem.html">
-            <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
+            <div class="menu-item" data-i18n="nav.aiChat">AI Chat</div>
         </a> -->
         <a href="chat-viagem.html">
             <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
@@ -190,8 +190,8 @@
             </a>
         </div>
         <div class="tabs-nav">
-            <button class="tab-btn active" onclick="switchTabExplorar(this, 'publicacoes')" data-i18n="explorar.tab.posts">📰 Publicações</button>
-            <button class="tab-btn" onclick="switchTabExplorar(this, 'comunidades')" data-i18n="explorar.tab.comunidades">👥 Comunidades</button>
+            <button class="tab-btn active" onclick="switchTabExplorar(this, 'publicacoes')" data-i18n="explorar.tab.posts">Publicações</button>
+            <button class="tab-btn" onclick="switchTabExplorar(this, 'comunidades')" data-i18n="explorar.tab.comunidades">Comunidades</button>
         </div>
 
         <div id="tabExplorar-publicacoes" class="tab-content active">
@@ -203,17 +203,17 @@
                         <textarea id="postTexto" data-i18n-placeholder="feed.placeholder" placeholder="Share something about your trip..."></textarea>
                         <div class="img-preview-wrap" id="imgPreviewWrap">
                             <img id="imgPreview" src="" alt="">
-                            <button class="btn-rm-img" onclick="removerImagem()">✕</button>
+                            <button class="btn-rm-img" onclick="removerImagem()"></button>
                         </div>
                         <div id="refPreviewWrap"></div>
                         <div class="create-actions">
                             <div style="display:flex; gap:6px; flex-wrap:wrap;">
                                 <label class="btn-foto-post">
-                                    <span data-i18n="feed.photo">📷 Foto</span>
+                                    <span data-i18n="feed.photo">Foto</span>
                                     <input type="file" id="postFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
                                 </label>
-                                <button type="button" class="btn-foto-post" onclick="abrirSeletorViagem()" data-i18n="feed.shareTrip">🧳 Viagem</button>
-                                <button type="button" class="btn-foto-post" onclick="abrirSeletorRoteiro()" data-i18n="feed.shareItinerary">📍 Roteiro</button>
+                                <button type="button" class="btn-foto-post" onclick="abrirSeletorViagem()" data-i18n="feed.shareTrip">Viagem</button>
+                                <button type="button" class="btn-foto-post" onclick="abrirSeletorRoteiro()" data-i18n="feed.shareItinerary">Roteiro</button>
                             </div>
                             <button class="btn-publicar" id="btnPublicar" onclick="publicar()" data-i18n="feed.publish">Publicar</button>
                         </div>
@@ -229,7 +229,7 @@
             <div class="explorar-wrap">
                 <div class="busca-card">
                     <div class="busca-row">
-                        <input id="comunidadeBuscaInput" data-i18n-placeholder="comunidades.searchPlaceholder" placeholder="🔎 Search communities...">
+                        <input id="comunidadeBuscaInput" data-i18n-placeholder="comunidades.searchPlaceholder" placeholder="Search communities...">
                         <button class="btn-buscar" onclick="carregarComunidades()" data-i18n="explorar.searchBtn">Search</button>
                     </div>
                     <button class="btn-nova-comunidade" onclick="abrirModalCriarComunidade()" data-i18n="comunidades.newBtn">+ Criar comunidade</button>
@@ -244,7 +244,7 @@
     <div class="confirm-modal criar-comunidade-modal">
         <div class="seletor-header">
             <h3 style="margin:0;" data-i18n="comunidades.form.title">Create community</h3>
-            <button type="button" class="seletor-fechar" onclick="fecharModalCriarComunidade()">✕</button>
+            <button type="button" class="seletor-fechar" onclick="fecharModalCriarComunidade()"></button>
         </div>
         <p class="criar-comunidade-sub" data-i18n="comunidades.form.subtitle">Create a space for people who share the same travel interests.</p>
 
@@ -275,11 +275,11 @@
             <label data-i18n="comunidades.form.privacyLabel">Privacy</label>
             <div class="privacidade-opcoes">
                 <div class="privacidade-card selecionada" id="privCardPublica" onclick="selecionarPrivacidade('publica')">
-                    <p class="privacidade-card-titulo">🌎 <span data-i18n="comunidades.form.public">Public</span></p>
+                    <p class="privacidade-card-titulo"><span data-i18n="comunidades.form.public">Public</span></p>
                     <p class="privacidade-card-desc" data-i18n="comunidades.form.publicDesc">Anyone can find and join.</p>
                 </div>
                 <div class="privacidade-card" id="privCardPrivada" onclick="selecionarPrivacidade('privada')">
-                    <p class="privacidade-card-titulo">🔒 <span data-i18n="comunidades.form.private">Private</span></p>
+                    <p class="privacidade-card-titulo"><span data-i18n="comunidades.form.private">Private</span></p>
                     <p class="privacidade-card-desc" data-i18n="comunidades.form.privateDesc">Only people with an invite code can join.</p>
                 </div>
             </div>
@@ -297,7 +297,7 @@
     <div class="confirm-modal seletor-modal">
         <div class="seletor-header">
             <h3 id="seletorTitulo" style="margin:0;"></h3>
-            <button type="button" class="seletor-fechar" onclick="fecharSeletor()">✕</button>
+            <button type="button" class="seletor-fechar" onclick="fecharSeletor()"></button>
         </div>
         <div id="seletorCorpo"></div>
     </div>
@@ -433,13 +433,13 @@ async function carregarComunidades() {
         const iniciais = c.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
         const avatar = c.foto_capa
             ? `<div class="av" style="width:48px;height:48px;font-size:18px;"><img src="${c.foto_capa}"></div>`
-            : `<div class="av" style="width:48px;height:48px;font-size:18px;">${iniciais || "👥"}</div>`
+            : `<div class="av" style="width:48px;height:48px;font-size:18px;">${iniciais || ""}</div>`
         return `
         <div class="comunidade-card" style="display:flex; gap:14px;">
             ${avatar}
             <div style="flex:1; min-width:0;">
                 <p class="comunidade-nome" onclick="window.location.href='comunidade.html?id=${c.id_comunidade}'">
-                    ${c.privacidade === 'privada' ? '🔒' : ''} ${escapeHtml(c.nome)}
+                    ${c.privacidade === 'privada' ? '' : ''} ${escapeHtml(c.nome)}
                 </p>
                 <p class="comunidade-meta">
                     ${c.total_membros} ${t('comunidades.members')}${c.categoria ? ` · ${escapeHtml(c.categoria)}` : ''}
@@ -529,7 +529,7 @@ async function abrirSeletorViagem() {
         const periodo = (v.data_inicio && v.data_fim) ? `${v.data_inicio} → ${v.data_fim}` : ""
         return `
         <div class="seletor-item" onclick="selecionarViagem(${i})">
-            <p class="seletor-item-nome">🧳 ${escapeHtml(v.nome_grupo)}</p>
+            <p class="seletor-item-nome">${escapeHtml(v.nome_grupo)}</p>
             <p class="seletor-item-meta">${v.destino_principal ? escapeHtml(v.destino_principal) + " · " : ""}${periodo}${v.limite_participantes != null ? ` · ${v.vagas_ocupadas}/${v.limite_participantes}` : ""}</p>
         </div>`
     }).join("")
@@ -567,7 +567,7 @@ async function abrirSeletorRoteiro() {
 
     corpo.innerHTML = viagens.map((v, i) => `
         <div class="seletor-item" onclick="selecionarRoteiro(${i})">
-            <p class="seletor-item-nome">📍 ${escapeHtml(v.nome_grupo)}</p>
+            <p class="seletor-item-nome">${escapeHtml(v.nome_grupo)}</p>
             <p class="seletor-item-meta">${v.destino_principal ? escapeHtml(v.destino_principal) + " · " : ""}${v.total_itens_roteiro} ${t('feed.shareItinerary.items')}</p>
         </div>
     `).join("")
@@ -592,14 +592,14 @@ function removerReferencia() {
 function renderRefPreview() {
     const wrap = document.getElementById("refPreviewWrap")
     if (!_refSelecionada) { wrap.innerHTML = ""; return }
-    const emoji = _refSelecionada.tipo === "viagem" ? "🧳" : "📍"
+    const emoji = _refSelecionada.tipo === "viagem" ? "" : ""
     wrap.innerHTML = `
         <div class="ref-preview">
             <div class="ref-preview-info">
                 <p class="ref-preview-titulo">${emoji} ${escapeHtml(_refSelecionada.titulo)}</p>
                 ${_refSelecionada.sub ? `<p class="ref-preview-sub">${escapeHtml(_refSelecionada.sub)}</p>` : ""}
             </div>
-            <button type="button" class="ref-preview-rm" onclick="removerReferencia()">✕</button>
+            <button type="button" class="ref-preview-rm" onclick="removerReferencia()"></button>
         </div>
     `
 }
@@ -671,7 +671,7 @@ function montarCardReferencia(p) {
         const resto = r.itens.slice(3)
         const linhaItem = it => `<div class="post-ref-item">• ${escapeHtml(formatarTituloRoteiro(it.titulo))}</div>`
         return `
-        <p class="post-ref-selo">📍 ${t('feed.ref.sharedItinerary')}</p>
+        <p class="post-ref-selo">${t('feed.ref.sharedItinerary')}</p>
         <div class="post-ref-card">
             <p class="post-ref-titulo">${t('feed.ref.fullItinerary')}</p>
             <p class="post-ref-sub">${escapeHtml(r.nome_grupo)}${r.destino_principal ? " · " + escapeHtml(r.destino_principal) : ""} · ${r.total_itens} ${t('feed.shareItinerary.items')}</p>
@@ -724,7 +724,7 @@ async function carregarFeed() {
 
         const jaCurtiu = p.ja_curtiu === 1
         const curtBtn = `<button class="btn-curtir${jaCurtiu ? " curtido" : ""}" onclick="curtir(${p.id_post}, this)">
-            <span class="curtir-icon">${jaCurtiu ? "❤️" : "🤍"}</span>
+            <span class="curtir-icon">${jaCurtiu ? "" : ""}</span>
             <span class="curtir-count">${p.curtidas ?? 0}</span>
         </button>`
 
@@ -754,7 +754,7 @@ async function carregarFeed() {
             <div class="post-acoes">
                 ${curtBtn}
                 <button class="btn-comentar" onclick="toggleComentarios(${p.id_post})">
-                    💬 <span>${nComents}</span>
+                    <span>${nComents}</span>
                 </button>
             </div>
             <div class="feed-comentarios" id="coments-${p.id_post}" style="display:none">
@@ -795,10 +795,10 @@ async function curtir(idPost, btn) {
         const count = btn.querySelector(".curtir-count")
         if (data.curtiu) {
             btn.classList.add("curtido")
-            icon.textContent = "❤️"
+            icon.textContent = ""
         } else {
             btn.classList.remove("curtido")
-            icon.textContent = "🤍"
+            icon.textContent = ""
         }
         count.textContent = data.total_curtidas
     } finally {

@@ -359,22 +359,22 @@
             <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
         </a>
         <a href="../lobby.html">
-            <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
+            <div class="menu-item" data-i18n="nav.myTrips">My Trips</div>
         </a>
         <a href="grupos.html">
-            <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
+            <div class="menu-item" data-i18n="nav.groups">Groups</div>
         </a>
         <a href="explorar-viagens.html">
-            <div class="menu-item" data-i18n="nav.explore">✈️ Explore Trips</div>
+            <div class="menu-item" data-i18n="nav.explore">Explore Trips</div>
         </a>
         <a href="feed.html">
-            <div class="menu-item" data-i18n="nav.community">🌎 Community</div>
+            <div class="menu-item" data-i18n="nav.community">Community</div>
         </a>
         <a href="perfil.html">
-            <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
+            <div class="menu-item" data-i18n="nav.profile">Profile</div>
         </a>
         <!-- <a href="chat-viagem.html">
-            <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
+            <div class="menu-item" data-i18n="nav.aiChat">AI Chat</div>
         </a> -->
         <a href="chat-viagem.html">
             <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
@@ -392,7 +392,7 @@
             <div class="p-header">
                 <div class="p-av-wrap" onclick="clicarFoto()">
                     <div class="p-av-iniciais" id="pAvIniciais">?</div>
-                    <div class="p-av-overlay">📷</div>
+                    <div class="p-av-overlay"></div>
                     <input type="file" id="fotoInput" accept="image/jpeg,image/png,image/webp">
                 </div>
 
@@ -416,11 +416,11 @@
 
                     <div class="p-acoes">
                         <button class="btn-edit-p" id="btnEditarP" style="display:none"
-                                onclick="entrarEdicao()" data-i18n="perfil.edit">✏️ Edit Profile</button>
+                                onclick="entrarEdicao()" data-i18n="perfil.edit">Edit Profile</button>
                         <button class="btn-seguir-p" id="btnSeguir" style="display:none"
                                 onclick="toggleSeguir()"></button>
                         <a href="config.html" class="btn-cfg-p" id="linkConfig" style="display:none"
-                           title="Settings">⚙</a>
+                           title="Settings"></a>
                     </div>
                 </div>
             </div>
@@ -469,7 +469,7 @@
         <img id="cropImg" src="" alt="">
     </div>
     <div class="crop-actions">
-        <button class="btn-crop-ok" id="btnCropOk" onclick="confirmarCrop()" data-i18n="perfil.usePhoto">✓ Usar esta foto</button>
+        <button class="btn-crop-ok" id="btnCropOk" onclick="confirmarCrop()" data-i18n="perfil.usePhoto">Usar esta foto</button>
         <button class="btn-crop-cancel" id="btnCropCancel" onclick="sairCrop()" data-i18n="perfil.cancel">Cancelar</button>
     </div>
     <div class="p-msg-err" id="cropErro" style="display:none; text-align:center; margin-top:8px;"></div>
@@ -478,7 +478,7 @@
 <div class="modal-ov" id="modalOvPost" onclick="fecharModalPost(event)">
     <div class="modal-post">
         <button class="modal-close-btn"
-                onclick="document.getElementById('modalOvPost').classList.remove('ativo')">✕</button>
+                onclick="document.getElementById('modalOvPost').classList.remove('ativo')"></button>
         <div id="modalPostContent"></div>
     </div>
 </div>
@@ -488,7 +488,7 @@
         <div class="modal-users-hdr">
             <p class="modal-users-title" id="modalUsersTitulo"></p>
             <button class="modal-users-close"
-                    onclick="document.getElementById('modalOvUsuarios').classList.remove('ativo')">✕</button>
+                    onclick="document.getElementById('modalOvUsuarios').classList.remove('ativo')"></button>
         </div>
         <div id="modalUsersLista"></div>
     </div>
@@ -663,14 +663,14 @@ async function carregarPosts() {
             cell.appendChild(img)
         } else {
             const txt = document.createElement("div")
-            txt.className = "p-cell-txt"; txt.textContent = "📝"
+            txt.className = "p-cell-txt"; txt.textContent = ""
             cell.appendChild(txt)
         }
 
         const badge = document.createElement("div")
         badge.className = "p-cell-badge"
         badge.id = `badge-${post.id_post}`
-        badge.textContent = `❤ ${post.curtidas ?? 0}`
+        badge.textContent = `${post.curtidas ?? 0}`
         cell.appendChild(badge)
 
         grid.appendChild(cell)
@@ -695,7 +695,7 @@ function abrirPost(post) {
     html += `<div class="modal-post-meta"><span>${data}</span></div>`
     html += `<div class="modal-acoes">
         <button class="modal-btn-curtir${jaCurtiu ? " curtido" : ""}" id="modalBtnCurtir" onclick="curtirModal(${post.id_post})">
-            <span class="curtir-icon">${jaCurtiu ? "❤️" : "🤍"}</span>
+            <span class="curtir-icon">${jaCurtiu ? "" : ""}</span>
             <span class="curtir-count">${curtidas}</span>
         </button>
     </div>`
@@ -737,10 +737,10 @@ async function curtirModal(idPost) {
         const count = btn.querySelector(".curtir-count")
         if (data.curtiu) {
             btn.classList.add("curtido")
-            icon.textContent = "❤️"
+            icon.textContent = ""
         } else {
             btn.classList.remove("curtido")
-            icon.textContent = "🤍"
+            icon.textContent = ""
         }
         count.textContent = data.total_curtidas
         const postObj = _posts.find(p => p.id_post === idPost)
@@ -748,7 +748,7 @@ async function curtirModal(idPost) {
             postObj.curtidas = data.total_curtidas
             postObj.ja_curtiu = data.curtiu ? 1 : 0
             const badge = document.getElementById(`badge-${idPost}`)
-            if (badge) badge.textContent = `❤ ${data.total_curtidas}`
+            if (badge) badge.textContent = `${data.total_curtidas}`
         }
     } finally {
         btn.disabled = false

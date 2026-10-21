@@ -182,25 +182,25 @@
             </div>
         </a>
         <a href="../lobby.html">
-            <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
+            <div class="menu-item" data-i18n="nav.myTrips">My Trips</div>
         </a>
         <a href="grupos.html">
-            <div class="menu-item" data-i18n="nav.groups">🌍 Groups</div>
+            <div class="menu-item" data-i18n="nav.groups">Groups</div>
         </a>
         <a href="explorar-viagens.html">
-            <div class="menu-item" data-i18n="nav.explore">✈️ Explore Trips</div>
+            <div class="menu-item" data-i18n="nav.explore">Explore Trips</div>
         </a>
         <a href="feed.html">
-            <div class="menu-item" data-i18n="nav.community">🌎 Feed</div>
+            <div class="menu-item" data-i18n="nav.community">Feed</div>
         </a>
         <a href="perfil.html">
-            <div class="menu-item" data-i18n="nav.profile">👤 Profile</div>
+            <div class="menu-item" data-i18n="nav.profile">Profile</div>
         </a>
         <a href="chat-viagem.html">
             <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
         </a>
         <!-- <a href="chat-viagem.html">
-            <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
+            <div class="menu-item" data-i18n="nav.aiChat">AI Chat</div>
         </a> -->
         <div class="sidebar-spacer"></div>
         <div class="menu-item menu-item-logout" onclick="performLogout()" data-i18n="nav.logout">Sair</div>
@@ -216,31 +216,31 @@
             </div>
             <div class="trip-actions">
                 <button class="btn-convite" onclick="copiarCodigo()" data-i18n="viagem.copyCode">
-                    📋 Copy invite code
+                    Copy invite code
                 </button>
             </div>
         </div>
 
         <div class="tabs-nav">
-            <button class="tab-btn active" data-tab="geral"    onclick="switchTab(this, 'geral')"   data-i18n="viagem.tab.overview">📊 Overview</button>
-            <button class="tab-btn"        data-tab="pessoal"  onclick="switchTab(this, 'pessoal')" data-i18n="viagem.tab.personal">👤 My Finances</button>
-            <button class="tab-btn"        data-tab="admin"    id="adminTabBtn" style="display:none;" onclick="switchTab(this, 'admin')" data-i18n="viagem.tab.admin">👑 Admin</button>
-            <button class="tab-btn"        data-tab="gastos"   onclick="switchTab(this, 'gastos')"  data-i18n="viagem.tab.expenses">💸 Expenses</button>
-            <button class="tab-btn"        data-tab="custos"   onclick="switchTab(this, 'custos')"  data-i18n="viagem.tab.costs">🧳 Trip Costs</button>
-            <button class="tab-btn"        data-tab="roteiro"  onclick="switchTab(this, 'roteiro')" data-i18n="viagem.tab.itinerary">📋 Itinerary</button>
-            <button class="tab-btn"        data-tab="momentos" onclick="switchTab(this, 'momentos')" data-i18n="viagem.tab.moments">📸 Moments</button>
-            <button class="tab-btn"        data-tab="chat"     onclick="switchTab(this, 'chat')"    data-i18n="viagem.tab.chat">💬 Chat</button>
-            <button class="tab-btn"        data-tab="info"     onclick="switchTab(this, 'info')"    data-i18n="viagem.tab.info">📌 Info</button>
+            <button class="tab-btn active" data-tab="geral"    onclick="switchTab(this, 'geral')"   data-i18n="viagem.tab.overview">Overview</button>
+            <button class="tab-btn"        data-tab="pessoal"  onclick="switchTab(this, 'pessoal')" data-i18n="viagem.tab.personal">My Finances</button>
+            <button class="tab-btn"        data-tab="admin"    id="adminTabBtn" style="display:none;" onclick="switchTab(this, 'admin')" data-i18n="viagem.tab.admin">Admin</button>
+            <button class="tab-btn"        data-tab="gastos"   onclick="switchTab(this, 'gastos')"  data-i18n="viagem.tab.expenses">Expenses</button>
+            <button class="tab-btn"        data-tab="custos"   onclick="switchTab(this, 'custos')"  data-i18n="viagem.tab.costs">Trip Costs</button>
+            <button class="tab-btn"        data-tab="roteiro"  onclick="switchTab(this, 'roteiro')" data-i18n="viagem.tab.itinerary">Itinerary</button>
+            <button class="tab-btn"        data-tab="momentos" onclick="switchTab(this, 'momentos')" data-i18n="viagem.tab.moments">Moments</button>
+            <button class="tab-btn"        data-tab="chat"     onclick="switchTab(this, 'chat')"    data-i18n="viagem.tab.chat">Chat</button>
+            <button class="tab-btn"        data-tab="info"     onclick="switchTab(this, 'info')"    data-i18n="viagem.tab.info">Info</button>
         </div>
 
         <div class="trip-content">
 
             <div id="tab-geral" class="tab-content active">
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.tab.overview.dashboard">📊 Dashboard do Grupo</h2>
+                    <h2 data-i18n="viagem.tab.overview.dashboard">Dashboard do Grupo</h2>
                     <div class="dashboard-grid">
                         <div class="dashboard-card">
-                            <h3 data-i18n="viagem.tab.overview.budget">💰 Orçamento</h3>
+                            <h3 data-i18n="viagem.tab.overview.budget">Orçamento</h3>
                             <div class="stat-row">
                                 <span class="stat-label" data-i18n="viagem.tab.overview.budget.total">Orçamento Total</span>
                                 <span class="stat-value" id="orcamentoTotal">R$ 0,00</span>
@@ -262,7 +262,7 @@
                         </div>
 
                         <div class="dashboard-card">
-                            <h3 data-i18n="viagem.tab.overview.categories">🏷️ Categorias</h3>
+                            <h3 data-i18n="viagem.tab.overview.categories">Categorias</h3>
                             <div class="category-list" id="listaCategorias">
                                 <p style="color:var(--text-muted); font-size:14px; text-align:center;" data-i18n="viagem.tab.overview.noExpenses">Nenhum gasto registrado</p>
                             </div>
@@ -273,10 +273,10 @@
 
             <div id="tab-pessoal" class="tab-content">
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.tab.personal.myView">👤 Minha Visão</h2>
+                    <h2 data-i18n="viagem.tab.personal.myView">Minha Visão</h2>
                     <div class="dashboard-grid">
                         <div class="dashboard-card">
-                            <h3 data-i18n="viagem.tab.personal.myFinances">🏦 Meu Financeiro</h3>
+                            <h3 data-i18n="viagem.tab.personal.myFinances">Meu Financeiro</h3>
                             <div class="stat-row">
                                 <span class="stat-label" data-i18n="viagem.tab.personal.paid">Quanto eu paguei</span>
                                 <span class="stat-value" id="meuTotalPago">R$ 0,00</span>
@@ -288,14 +288,14 @@
                         </div>
 
                         <div class="dashboard-card">
-                            <h3 data-i18n="viagem.tab.personal.recent">📜 Últimos Gastos</h3>
+                            <h3 data-i18n="viagem.tab.personal.recent">Últimos Gastos</h3>
                             <div class="category-list" id="meusGastosRecentes">
                                 <p style="color:var(--text-muted); font-size:14px; text-align:center;" data-i18n="viagem.tab.personal.noRecent">Sem gastos recentes</p>
                             </div>
                         </div>
 
                         <div class="dashboard-card">
-                            <h3 data-i18n="viagem.tab.personal.myBudget">💰 Meu Orçamento</h3>
+                            <h3 data-i18n="viagem.tab.personal.myBudget">Meu Orçamento</h3>
                             <div class="stat-row">
                                 <span class="stat-label" data-i18n="viagem.tab.personal.myBudgetLabel">Orçamento definido</span>
                                 <span class="stat-value" id="meuOrcamentoValor">—</span>
@@ -320,14 +320,14 @@
 
             <div id="tab-admin" class="tab-content">
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.tab.admin.panel">👑 Painel Administrativo</h2>
+                    <h2 data-i18n="viagem.tab.admin.panel">Painel Administrativo</h2>
                     <div class="dashboard-grid">
                         <div class="dashboard-card">
-                            <h3 data-i18n="viagem.tab.admin.ranking">🔥 Ranking de Gastos</h3>
+                            <h3 data-i18n="viagem.tab.admin.ranking">Ranking de Gastos</h3>
                             <div class="category-list" id="rankingGastos"></div>
                         </div>
                         <div class="dashboard-card">
-                            <h3 data-i18n="viagem.tab.admin.stats">📈 Estatísticas</h3>
+                            <h3 data-i18n="viagem.tab.admin.stats">Estatísticas</h3>
                             <div class="stat-row">
                                 <span class="stat-label" data-i18n="viagem.tab.admin.activeMembers">Membros Ativos</span>
                                 <span class="stat-value" id="totalMembros">0</span>
@@ -341,12 +341,12 @@
                 </div>
 
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.manageMembers">👥 Gerenciar Membros</h2>
+                    <h2 data-i18n="viagem.manageMembers">Gerenciar Membros</h2>
                     <div id="adminMembroLista" style="display:flex;flex-direction:column;gap:10px;"></div>
                 </div>
 
                 <div class="trip-card-expanded" id="cardExplorarViagem">
-                    <h2 data-i18n="viagem.explore.panel">✈️ Explorar Viagens</h2>
+                    <h2 data-i18n="viagem.explore.panel">Explorar Viagens</h2>
                     <p style="color:var(--text-muted); font-size:14px; margin:0 0 12px;" id="explorarStatusTexto" data-i18n="viagem.explore.notPublished">Esta viagem ainda não está pública em Explorar Viagens.</p>
                     <div style="display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
                         <div>
@@ -355,21 +355,21 @@
                         </div>
                     </div>
                     <div style="display:flex; gap:10px; flex-wrap:wrap; width: 153px;">
-                        <button id="btnPublicarExplorar" onclick="publicarViagem()" style="background:var(--gradient); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.explore.publish">📢 Tornar viagem pública</button>
+                        <button id="btnPublicarExplorar" onclick="publicarViagem()" style="background:var(--gradient); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.explore.publish">Tornar viagem pública</button>
                         <button id="btnDespublicarExplorar" onclick="despublicarViagem()" style="display:none; background:var(--danger-soft); color:var(--danger); border:1px solid rgba(var(--danger-rgb),0.25); border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.explore.unpublish">Tornar privada</button>
                     </div>
                     <span class="msg-erro-gasto" id="explorarErro" style="display:block; margin-top:8px;"></span>
                 </div>
 
                 <div class="trip-card-expanded" id="cardSolicitacoes">
-                    <h2 data-i18n="viagem.explore.requests">📥 Solicitações de participação</h2>
+                    <h2 data-i18n="viagem.explore.requests">Solicitações de participação</h2>
                     <div id="listaSolicitacoes"><p style="color:var(--text-muted); font-size:14px; text-align:center;" data-i18n="viagem.explore.noRequests">Nenhuma solicitação pendente.</p></div>
                 </div>
             </div>
 
             <div id="tab-gastos" class="tab-content">
                 <div class="trip-card-expanded">
-                    <h2 id="tituloRegistrarGasto" data-i18n="viagem.registerExpense">💸 Registrar Gasto</h2>
+                    <h2 id="tituloRegistrarGasto" data-i18n="viagem.registerExpense">Registrar Gasto</h2>
                     <div class="gastos-layout" id="gastosLayout">
 
                         <div class="form-gasto" id="formGastoBox">
@@ -380,13 +380,13 @@
                             <div>
                                 <label for="gastoCategoria" data-i18n="viagem.category">Categoria</label>
                                 <select id="gastoCategoria">
-                                    <option value="transporte" data-i18n="viagem.cat.transporte">🚗 Transporte</option>
-                                    <option value="alimentacao" data-i18n="viagem.cat.food">🍽️ Alimentação</option>
-                                    <option value="hospedagem" data-i18n="viagem.cat.lodging">🏨 Hospedagem</option>
-                                    <option value="lazer" data-i18n="viagem.cat.leisure">🎭 Lazer</option>
-                                    <option value="compras" data-i18n="viagem.cat.shopping">🛍️ Compras</option>
-                                    <option value="saude" data-i18n="viagem.cat.health">💊 Saúde</option>
-                                    <option value="outro" data-i18n="viagem.cat.other">📦 Outro</option>
+                                    <option value="transporte" data-i18n="viagem.cat.transporte">Transporte</option>
+                                    <option value="alimentacao" data-i18n="viagem.cat.food">Alimentação</option>
+                                    <option value="hospedagem" data-i18n="viagem.cat.lodging">Hospedagem</option>
+                                    <option value="lazer" data-i18n="viagem.cat.leisure">Lazer</option>
+                                    <option value="compras" data-i18n="viagem.cat.shopping">Compras</option>
+                                    <option value="saude" data-i18n="viagem.cat.health">Saúde</option>
+                                    <option value="outro" data-i18n="viagem.cat.other">Outro</option>
                                 </select>
                             </div>
                             <div>
@@ -416,7 +416,7 @@
 
             <div id="tab-custos" class="tab-content">
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.costs.summaryTitle">💰 Resumo financeiro</h2>
+                    <h2 data-i18n="viagem.costs.summaryTitle">Resumo financeiro</h2>
                     <p class="custo-section-sub" data-i18n="viagem.costs.summaryDesc">Acompanhe o orçamento da viagem junto com as passagens e hospedagens que você está planejando.</p>
                     <div class="dashboard-grid">
                         <div class="dashboard-card">
@@ -426,21 +426,21 @@
                             <div class="stat-row"><span class="stat-label" data-i18n="viagem.tab.overview.remaining">Restante</span><span class="stat-value" id="custosOrcamentoRestante">R$ 0,00</span></div>
                         </div>
                         <div class="dashboard-card">
-                            <h3><span class="custo-stat-icon pendente">🕮</span> <span data-i18n="viagem.costs.planned">Planejado (ainda não pago)</span></h3>
-                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.costs.plannedFlights">✈️ Passagens</span><span class="stat-value" id="custosPlanejadoVoos">R$ 0,00</span></div>
-                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.costs.plannedLodging">🏨 Hospedagem</span><span class="stat-value" id="custosPlanejadoHospedagem">R$ 0,00</span></div>
+                            <h3><span class="custo-stat-icon pendente"></span> <span data-i18n="viagem.costs.planned">Planejado (ainda não pago)</span></h3>
+                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.costs.plannedFlights">Passagens</span><span class="stat-value" id="custosPlanejadoVoos">R$ 0,00</span></div>
+                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.costs.plannedLodging">Hospedagem</span><span class="stat-value" id="custosPlanejadoHospedagem">R$ 0,00</span></div>
                         </div>
                         <div class="dashboard-card">
-                            <h3><span class="custo-stat-icon pago">✔</span> <span data-i18n="viagem.costs.actualSpend">Já pago, por categoria</span></h3>
-                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.cat.transport">🚗 Transporte</span><span class="stat-value" id="custosGastoTransporte">R$ 0,00</span></div>
-                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.cat.lodging">🏨 Hospedagem</span><span class="stat-value" id="custosGastoHospedagem">R$ 0,00</span></div>
+                            <h3><span class="custo-stat-icon pago"></span> <span data-i18n="viagem.costs.actualSpend">Já pago, por categoria</span></h3>
+                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.cat.transport">Transporte</span><span class="stat-value" id="custosGastoTransporte">R$ 0,00</span></div>
+                            <div class="stat-row"><span class="stat-label" data-i18n="viagem.cat.lodging">Hospedagem</span><span class="stat-value" id="custosGastoHospedagem">R$ 0,00</span></div>
                         </div>
                     </div>
                     <p class="custo-section-sub" style="margin:16px 0 0;" data-i18n="viagem.costs.summaryNote">"Planejado" é só uma estimativa das opções que você marcou com "Adicionar ao orçamento" — não é somado ao restante até ser efetivamente registrado como pago.</p>
                 </div>
 
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.costs.searchFlights">✈️ Buscar passagens</h2>
+                    <h2 data-i18n="viagem.costs.searchFlights">Buscar passagens</h2>
                     <p class="custo-section-sub" data-i18n="viagem.costs.searchFlightsDesc">Pesquise voos reais via Google Flights e salve as melhores opções pra comparar depois.</p>
 
                     <div class="custo-form-secao">
@@ -451,7 +451,7 @@
                             <div><label data-i18n="viagem.costs.departDate">Ida</label><input id="vooDataIda" type="date"></div>
                             <div><label data-i18n="viagem.costs.returnDateOptional">Volta (opcional)</label><input id="vooDataVolta" type="date"></div>
                         </div>
-                        <span class="auto-fill-hint" id="vooDatasAutoHint" style="display:none;" data-i18n="viagem.costs.autoFilledDates">🔄 Datas preenchidas com as datas da viagem — você pode alterar.</span>
+                        <span class="auto-fill-hint" id="vooDatasAutoHint" style="display:none;" data-i18n="viagem.costs.autoFilledDates">Datas preenchidas com as datas da viagem — você pode alterar.</span>
                     </div>
 
                     <div class="custo-form-secao">
@@ -501,7 +501,7 @@
                     </div>
 
                     <div class="custo-busca-acoes">
-                        <button class="btn-salvar-gasto" onclick="buscarVoosCusto()" data-i18n="viagem.costs.searchFlightsBtn">⌕ Buscar passagens</button>
+                        <button class="btn-salvar-gasto" onclick="buscarVoosCusto()" data-i18n="viagem.costs.searchFlightsBtn">Buscar passagens</button>
                         <span class="msg-erro-gasto" id="vooBuscaErro"></span>
                         <div id="voosResultadoLink"></div>
                     </div>
@@ -509,7 +509,7 @@
                 </div>
 
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.costs.searchLodging">合 Buscar hospedagem</h2>
+                    <h2 data-i18n="viagem.costs.searchLodging">Buscar hospedagem</h2>
                     <p class="custo-section-sub" data-i18n="viagem.costs.searchLodgingDesc">Pesquise hospedagens reais via Google Hotels e salve as que fizerem sentido pro orçamento.</p>
 
                     <div class="custo-form-secao">
@@ -519,8 +519,8 @@
                             <div><label data-i18n="viagem.costs.checkIn">Check-in</label><input id="hotelCheckin" type="date"></div>
                             <div><label data-i18n="viagem.costs.checkOut">Check-out</label><input id="hotelCheckout" type="date"></div>
                         </div>
-                        <span class="auto-fill-hint" id="hotelDestinoAutoHint" style="display:none;" data-i18n="viagem.costs.autoFilledDestination">🔄 Destino preenchido com o destino da viagem — você pode alterar.</span>
-                        <span class="auto-fill-hint" id="hotelDatasAutoHint" style="display:none;" data-i18n="viagem.costs.autoFilledDates">🔄 Datas preenchidas com as datas da viagem — você pode alterar.</span>
+                        <span class="auto-fill-hint" id="hotelDestinoAutoHint" style="display:none;" data-i18n="viagem.costs.autoFilledDestination">Destino preenchido com o destino da viagem — você pode alterar.</span>
+                        <span class="auto-fill-hint" id="hotelDatasAutoHint" style="display:none;" data-i18n="viagem.costs.autoFilledDates">Datas preenchidas com as datas da viagem — você pode alterar.</span>
                     </div>
 
                     <div class="custo-form-secao">
@@ -556,17 +556,17 @@
                             <div style="grid-column:span 2;">
                                 <label data-i18n="viagem.costs.starRating">Classificação por estrelas (opcional)</label>
                                 <div class="custo-estrelas-opcoes" id="hotelEstrelasBox">
-                                    <label class="custo-estrela-chip"><input type="checkbox" value="2" class="hotel-estrela-chk">2★</label>
-                                    <label class="custo-estrela-chip"><input type="checkbox" value="3" class="hotel-estrela-chk">3★</label>
-                                    <label class="custo-estrela-chip"><input type="checkbox" value="4" class="hotel-estrela-chk">4★</label>
-                                    <label class="custo-estrela-chip"><input type="checkbox" value="5" class="hotel-estrela-chk">5★</label>
+                                    <label class="custo-estrela-chip"><input type="checkbox" value="2" class="hotel-estrela-chk">2</label>
+                                    <label class="custo-estrela-chip"><input type="checkbox" value="3" class="hotel-estrela-chk">3</label>
+                                    <label class="custo-estrela-chip"><input type="checkbox" value="4" class="hotel-estrela-chk">4</label>
+                                    <label class="custo-estrela-chip"><input type="checkbox" value="5" class="hotel-estrela-chk">5</label>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="custo-busca-acoes">
-                        <button class="btn-salvar-gasto" onclick="buscarHoteisCusto()" data-i18n="viagem.costs.searchLodgingBtn">⌕ Buscar hospedagem</button>
+                        <button class="btn-salvar-gasto" onclick="buscarHoteisCusto()" data-i18n="viagem.costs.searchLodgingBtn">Buscar hospedagem</button>
                         <span class="msg-erro-gasto" id="hotelBuscaErro"></span>
                         <div id="hoteisResultadoLink"></div>
                     </div>
@@ -574,11 +574,11 @@
                 </div>
 
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.costs.savedOptions">📋 Opções salvas</h2>
+                    <h2 data-i18n="viagem.costs.savedOptions">Opções salvas</h2>
                     <p class="custo-section-sub" data-i18n="viagem.costs.savedOptionsDesc">O que você já salvou, adicionou ao orçamento ou registrou como pago nesta viagem.</p>
                     <div id="opcoesCustoLista">
                         <div class="custo-vazio">
-                            <div class="custo-vazio-icon">⛱</div>
+                            <div class="custo-vazio-icon"></div>
                             <p data-i18n="viagem.costs.noSavedOptions">Nenhuma opção salva ainda. Busque passagens ou hospedagem acima e salve as melhores opções.</p>
                         </div>
                     </div>
@@ -587,10 +587,10 @@
 
             <div id="tab-roteiro" class="tab-content">
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.itineraryTitle">📋 Roteiro da Viagem</h2>
+                    <h2 data-i18n="viagem.itineraryTitle">Roteiro da Viagem</h2>
 
                     <div id="roteiroIaBox" style="display:none; margin-bottom:16px; align-items:center; gap:12px; flex-wrap:wrap;">
-                        <button id="btnGerarRoteiroIA" onclick="gerarRoteiroComIA()" style="background:linear-gradient(135deg,#8b5cf6,#6366f1); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.itinerary.ia.createBtn">✨ Criar roteiro com IA</button>
+                        <button id="btnGerarRoteiroIA" onclick="gerarRoteiroComIA()" style="background:linear-gradient(135deg,#8b5cf6,#6366f1); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.itinerary.ia.createBtn">Criar roteiro com IA</button>
                         <span id="roteiroIaStatus" style="display:none; font-size:13px; color:var(--text-muted);"></span>
                     </div>
 
@@ -608,7 +608,7 @@
 
             <div id="tab-momentos" class="tab-content">
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.momentsTitle">📸 Momentos da Viagem</h2>
+                    <h2 data-i18n="viagem.momentsTitle">Momentos da Viagem</h2>
                     <p style="color:var(--text-muted); font-size:13px; margin:-8px 0 16px;" data-i18n="viagem.momentsDesc">Só quem participa desta viagem vê e publica aqui.</p>
 
                     <div class="create-card" style="margin-bottom:20px;">
@@ -617,11 +617,11 @@
                             <textarea id="momentoTexto" data-i18n-placeholder="viagem.moments.placeholder" placeholder="Compartilhe um momento desta viagem..."></textarea>
                             <div class="img-preview-wrap" id="momentoImgPreviewWrap">
                                 <img id="momentoImgPreview" src="" alt="">
-                                <button class="btn-rm-img" onclick="removerImagemMomento()">✕</button>
+                                <button class="btn-rm-img" onclick="removerImagemMomento()"></button>
                             </div>
                             <div class="create-actions">
                                 <label class="btn-foto-post">
-                                    <span data-i18n="feed.photo">📷 Foto</span>
+                                    <span data-i18n="feed.photo">Foto</span>
                                     <input type="file" id="momentoFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
                                 </label>
                                 <button class="btn-publicar" id="btnPublicarMomento" onclick="publicarMomento()" data-i18n="feed.publish">Publicar</button>
@@ -635,7 +635,7 @@
 
             <div id="tab-chat" class="tab-content">
                 <div class="trip-card-expanded" style="display:flex; flex-direction:column; height:520px; padding:20px;">
-                    <h2 style="margin:0 0 16px; flex-shrink:0;" data-i18n="viagem.groupChat">💬 Chat do Grupo</h2>
+                    <h2 style="margin:0 0 16px; flex-shrink:0;" data-i18n="viagem.groupChat">Chat do Grupo</h2>
                     <div id="chatGrupoMsgs" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:4px;"></div>
                     <div style="display:flex; gap:8px; margin-top:14px; flex-shrink:0;">
                         <input id="chatGrupoInput" data-i18n-placeholder="viagem.chatPlaceholder" placeholder="Escreva uma mensagem..." style="flex:1; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px; outline:none;">
@@ -646,7 +646,7 @@
 
             <div id="tab-info" class="tab-content">
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.infoTitle">📌 Informações da viagem</h2>
+                    <h2 data-i18n="viagem.infoTitle">Informações da viagem</h2>
                     <div class="info-item">
                         <strong data-i18n="viagem.destination">Destino</strong>
                         <span id="infoDestino"></span>
@@ -662,7 +662,7 @@
                 </div>
 
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.inviteTitle">👥 Convidar pessoas</h2>
+                    <h2 data-i18n="viagem.inviteTitle">Convidar pessoas</h2>
                     <p style="color:var(--text-muted); font-size:14px; margin:0 0 4px;" data-i18n="viagem.inviteDesc">Compartilhe este código com seus amigos.</p>
                     <div class="invite-box">
                         <input id="inviteInput" readonly>
@@ -671,7 +671,7 @@
                 </div>
 
                 <div class="trip-card-expanded">
-                    <h2 data-i18n="viagem.aiAssistant">🤖 Assistente IA</h2>
+                    <h2 data-i18n="viagem.aiAssistant">Assistente IA</h2>
                     <p style="color:var(--text-muted); font-size:14px; margin:0 0 12px;" data-i18n="viagem.aiUses">Use o chat da IA no lobby para pedir:</p>
                     <ul style="color:var(--text-secondary); font-size:14px; padding-left:20px; margin:0; line-height:2;">
                         <li data-i18n="viagem.aiFeature1">Roteiros personalizados</li>
@@ -683,7 +683,7 @@
                 </div>
 
                 <div class="trip-card-expanded" id="cardConfigViagem" style="display:none;">
-                    <h2 data-i18n="viagem.settings.title">⚙️ Configurações da viagem</h2>
+                    <h2 data-i18n="viagem.settings.title">Configurações da viagem</h2>
                     <p id="avisoViagemPassada" style="display:none; margin:8px 0 0; font-size:13px; color:var(--text-muted);" data-i18n="viagem.pastReadOnly">Esta viagem já terminou: as configurações estão travadas e não podem mais ser alteradas.</p>
                     <div style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
                         <div>
@@ -720,7 +720,7 @@
                 </div>
 
                 <div class="trip-card-expanded" id="cardCompartilharViagem" style="display:none;">
-                    <h2 data-i18n="viagem.shareTrip.title">🧳 Compartilhar viagem no Feed</h2>
+                    <h2 data-i18n="viagem.shareTrip.title">Compartilhar viagem no Feed</h2>
                     <p id="compartilharViagemAviso" style="color:var(--text-muted); font-size:13px; margin:0 0 12px;" data-i18n="viagem.shareTrip.needsPublic">Torne a viagem pública em Explorar Viagens para poder compartilhá-la no Feed.</p>
                     <div id="compartilharViagemBox" style="display:none;">
                         <textarea id="compartilharViagemTexto" data-i18n-placeholder="viagem.shareTrip.placeholder" placeholder="Conte um pouco sobre a viagem (opcional)..." style="width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:14px; resize:vertical; min-height:70px; outline:none;"></textarea>
@@ -730,10 +730,10 @@
                 </div>
 
                 <div class="trip-card-expanded" style="border:1px solid rgba(var(--danger-rgb),0.3);">
-                    <h2 style="color:var(--danger);" data-i18n="viagem.dangerZone">⚠️ Zona de perigo</h2>
+                    <h2 style="color:var(--danger);" data-i18n="viagem.dangerZone">Zona de perigo</h2>
                     <p style="color:var(--text-muted); font-size:14px; margin:0 0 14px;" id="dangerZoneDesc"></p>
-                    <button id="btnSairViagem" onclick="sairDaViagem()" style="display:none; background:transparent; color:var(--danger); border:1px solid rgba(var(--danger-rgb),0.35); border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.leaveTrip">🚪 Sair da viagem</button>
-                    <button id="btnExcluirViagem" onclick="excluirViagem()" style="display:none; background:var(--danger); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.deleteTrip">🗑 Excluir viagem</button>
+                    <button id="btnSairViagem" onclick="sairDaViagem()" style="display:none; background:transparent; color:var(--danger); border:1px solid rgba(var(--danger-rgb),0.35); border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.leaveTrip">Sair da viagem</button>
+                    <button id="btnExcluirViagem" onclick="excluirViagem()" style="display:none; background:var(--danger); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;" data-i18n="viagem.deleteTrip">Excluir viagem</button>
                 </div>
             </div>
 
@@ -1520,7 +1520,7 @@ async function buscarVoosCusto() {
     }
 
     if (!_voosEncontrados.length) {
-        lista.innerHTML = `<div class="custo-vazio"><div class="custo-vazio-icon">✈︎</div><p>${t('viagem.costs.noResults')}</p></div>`
+        lista.innerHTML = `<div class="custo-vazio"><div class="custo-vazio-icon"></div><p>${t('viagem.costs.noResults')}</p></div>`
         return
     }
 
@@ -1626,7 +1626,7 @@ async function buscarHoteisCusto() {
     }
 
     if (!_hoteisEncontrados.length) {
-        lista.innerHTML = `<div class="custo-vazio"><div class="custo-vazio-icon">合</div><p>${t('viagem.costs.noResults')}</p></div>`
+        lista.innerHTML = `<div class="custo-vazio"><div class="custo-vazio-icon"></div><p>${t('viagem.costs.noResults')}</p></div>`
         return
     }
 
@@ -1634,12 +1634,12 @@ async function buscarHoteisCusto() {
     _hoteisEncontrados.map((hl, i) => `
         <div class="hotel-card">
             <div class="hotel-card-img-box">
-                ${hl.imagem ? `<img src="${escapeAtr(hl.imagem)}" alt="" loading="lazy">` : `<span class="hotel-card-img-placeholder">合</span>`}
+                ${hl.imagem ? `<img src="${escapeAtr(hl.imagem)}" alt="" loading="lazy">` : `<span class="hotel-card-img-placeholder"></span>`}
             </div>
             <div class="hotel-card-corpo">
                 <p class="hotel-card-nome">${escapeHtml(hl.nome || "")}</p>
                 <div class="hotel-card-meta">
-                    ${hl.avaliacao ? `<span class="hotel-card-avaliacao">✮ ${hl.avaliacao}</span><span>(${hl.num_avaliacoes ?? 0})</span>` : `<span>${t('viagem.costs.noRating')}</span>`}
+                    ${hl.avaliacao ? `<span class="hotel-card-avaliacao">${hl.avaliacao}</span><span>(${hl.num_avaliacoes ?? 0})</span>` : `<span>${t('viagem.costs.noRating')}</span>`}
                     ${hl.classificacao_estrelas ? `<span>· ${escapeHtml(hl.classificacao_estrelas)}</span>` : ""}
                 </div>
                 ${hl.comodidades && hl.comodidades.length ? `<div class="hotel-card-comodidades">${hl.comodidades.slice(0, 4).map(a => `<span class="hotel-chip">${escapeHtml(a)}</span>`).join("")}</div>` : ""}
@@ -1688,12 +1688,12 @@ async function carregarOpcoesCusto() {
     const lista = document.getElementById("opcoesCustoLista")
 
     if (!opcoes.length) {
-        lista.innerHTML = `<div class="custo-vazio"><div class="custo-vazio-icon">🧳</div><p>${t('viagem.costs.noSavedOptions')}</p></div>`
+        lista.innerHTML = `<div class="custo-vazio"><div class="custo-vazio-icon"></div><p>${t('viagem.costs.noSavedOptions')}</p></div>`
         return
     }
 
     const badgeTexto = { salva: t('viagem.costs.statusSaved'), orcamento: t('viagem.costs.statusBudgeted'), paga: t('viagem.costs.statusPaid'), descartada: t('viagem.costs.statusDiscarded') }
-    const emoji = o => o.tipo === "voo" ? "✈︎" : "合"
+    const emoji = o => o.tipo === "voo" ? "" : ""
 
     lista.innerHTML = opcoes.map(o => {
         let acoes = ""
@@ -1705,7 +1705,7 @@ async function carregarOpcoesCusto() {
             acoes += `<button class="btn-foto-post" onclick="descartarOpcaoCusto(${o.id_opcao})">${t('viagem.costs.discard')}</button>`
         }
         if (o.status !== "paga") {
-            acoes += `<button class="btn-del-gasto" onclick="excluirOpcaoCusto(${o.id_opcao})">🗑</button>`
+            acoes += `<button class="btn-del-gasto" onclick="excluirOpcaoCusto(${o.id_opcao})"></button>`
         }
         const periodo = (o.data_ida && o.data_volta) ? `${o.data_ida} → ${o.data_volta}` : (o.data_ida || "")
         return `
@@ -1892,7 +1892,7 @@ async function carregarRoteiro() {
                         <button onclick="moverRoteiroItem(${r.id_roteiro},'baixo')" ${ehUltimo ? "disabled" : ""} title="${t('viagem.itinerary.moveDown')}" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 8px;color:var(--text-secondary);font-size:11px;cursor:${ehUltimo ? "default" : "pointer"};opacity:${ehUltimo ? "0.4" : "1"};">▼</button>
                     </div>
                     <button onclick="iniciarEdicaoRoteiro(${r.id_roteiro},'${escapeAtr(r.titulo)}','${escapeAtr(r.descricao)}')" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text-secondary);font-size:12px;cursor:pointer;">${t('viagem.itinerary.edit')}</button>
-                    <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:var(--danger-soft);border:none;border-radius:6px;padding:6px 10px;color:var(--danger);font-size:12px;cursor:pointer;">🗑</button>
+                    <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:var(--danger-soft);border:none;border-radius:6px;padding:6px 10px;color:var(--danger);font-size:12px;cursor:pointer;"></button>
                 </div>` : ""}
             </div>
             <div id="redit-${r.id_roteiro}" style="display:none;margin-top:12px;">
@@ -2244,7 +2244,7 @@ async function carregarMomentos() {
         const imgHtml = p.imagem ? `<img class="post-img" src="${p.imagem}" alt="">` : ""
         const jaCurtiu = p.ja_curtiu === 1
         const curtBtn = `<button class="btn-curtir${jaCurtiu ? " curtido" : ""}" onclick="curtirMomento(${p.id_post}, this)">
-            <span class="curtir-icon">${jaCurtiu ? "❤️" : "🤍"}</span>
+            <span class="curtir-icon">${jaCurtiu ? "" : ""}</span>
             <span class="curtir-count">${p.curtidas ?? 0}</span>
         </button>`
         const nComents = p.comentarios?.length ?? 0
@@ -2271,7 +2271,7 @@ async function carregarMomentos() {
             ${imgHtml}
             <div class="post-acoes">
                 ${curtBtn}
-                <button class="btn-comentar" onclick="toggleComentariosMomento(${p.id_post})">💬 <span>${nComents}</span></button>
+                <button class="btn-comentar" onclick="toggleComentariosMomento(${p.id_post})"><span>${nComents}</span></button>
             </div>
             <div class="feed-comentarios" id="momentoComents-${p.id_post}" style="display:none">
                 <div class="feed-coments-lista" id="momentoListaComents-${p.id_post}">${comentHtml}</div>
@@ -2307,7 +2307,7 @@ async function curtirMomento(idPost, btn) {
         const icon = btn.querySelector(".curtir-icon")
         const count = btn.querySelector(".curtir-count")
         btn.classList.toggle("curtido", data.curtiu)
-        icon.textContent = data.curtiu ? "❤️" : "🤍"
+        icon.textContent = data.curtiu ? "" : ""
         count.textContent = data.total_curtidas
     } finally {
         btn.disabled = false
@@ -2390,7 +2390,7 @@ async function carregarMembrosAdmin() {
             : `<button onclick="promoverMembro(${m.id_usuario})" style="background:var(--warning-soft);color:var(--warning);border:1px solid rgba(var(--warning-rgb),0.25);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.action.promote')}</button>`
 
         const btnRemover = (isMe || isCriador) ? "" :
-            `<button onclick="removerMembro(${m.id_usuario})" title="${escapeAtr(t('viagem.action.remove'))}" style="background:var(--danger-soft);color:var(--danger);border:1px solid rgba(var(--danger-rgb),0.25);border-radius:7px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;">🗑</button>`
+            `<button onclick="removerMembro(${m.id_usuario})" title="${escapeAtr(t('viagem.action.remove'))}" style="background:var(--danger-soft);color:var(--danger);border:1px solid rgba(var(--danger-rgb),0.25);border-radius:7px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;"></button>`
 
         const avatarHtml = m.foto_perfil
             ? `<img src="${escapeAtr(m.foto_perfil)}" alt="" onerror="this.replaceWith(document.createTextNode('${iniciais}'))">`
@@ -2569,8 +2569,8 @@ async function carregarSolicitacoes() {
                 <div style="font-size:14px;font-weight:600;color:var(--text);">${escapeHtml(s.nome)}</div>
                 ${s.mensagem ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${escapeHtml(s.mensagem)}</div>` : ""}
                 <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap;">
-                    ${orcamentoFormatado ? `<span>💰 ${orcamentoFormatado}</span>` : ""}
-                    ${dataFormatada ? `<span>📅 ${dataFormatada}</span>` : ""}
+                    ${orcamentoFormatado ? `<span>${orcamentoFormatado}</span>` : ""}
+                    ${dataFormatada ? `<span>${dataFormatada}</span>` : ""}
                 </div>
             </div>
             <button onclick="aceitarSolicitacao(${s.id_solicitacao})" style="background:var(--gradient);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">${t('viagem.explore.accept')}</button>

@@ -128,11 +128,11 @@
         <a href="../lobby.html">
             <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
         </a>
-        <a href="../lobby.html"><div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div></a>
-        <a href="grupos.html"><div class="menu-item" data-i18n="nav.groups">🌍 Groups</div></a>
-        <a href="explorar-viagens.html"><div class="menu-item" data-i18n="nav.explore">✈️ Explore Trips</div></a>
-        <a href="feed.html"><div class="menu-item" data-i18n="nav.community">🌎 Feed</div></a>
-        <a href="perfil.html"><div class="menu-item" data-i18n="nav.profile">👤 Profile</div></a>
+        <a href="../lobby.html"><div class="menu-item" data-i18n="nav.myTrips">My Trips</div></a>
+        <a href="grupos.html"><div class="menu-item" data-i18n="nav.groups">Groups</div></a>
+        <a href="explorar-viagens.html"><div class="menu-item" data-i18n="nav.explore">Explore Trips</div></a>
+        <a href="feed.html"><div class="menu-item" data-i18n="nav.community">Feed</div></a>
+        <a href="perfil.html"><div class="menu-item" data-i18n="nav.profile">Profile</div></a>
         <a href="chat-viagem.html">
             <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
         </a>
@@ -150,7 +150,7 @@
 
             <div id="painelAdmin" style="display:none;">
                 <div class="trip-card-expanded settings-card">
-                    <h2 data-i18n="comunidades.admin.settingsTitle">⚙️ Configurações da comunidade</h2>
+                    <h2 data-i18n="comunidades.admin.settingsTitle">Configurações da comunidade</h2>
                     <p class="settings-sub" data-i18n="comunidades.admin.settingsSub">Gerencie as informações e a privacidade desta comunidade.</p>
 
                     <div class="settings-section-label" data-i18n="comunidades.admin.infoSection">Informações</div>
@@ -170,11 +170,11 @@
                     <div class="settings-section-label" data-i18n="comunidades.form.privacyLabel">Privacidade</div>
                     <div class="privacidade-opcoes">
                         <div class="privacidade-card" id="editPrivCardPublica" onclick="selecionarEditPrivacidade('publica')">
-                            <p class="privacidade-card-titulo">🌎 <span data-i18n="comunidades.form.public">Pública</span></p>
+                            <p class="privacidade-card-titulo"><span data-i18n="comunidades.form.public">Pública</span></p>
                             <p class="privacidade-card-desc" data-i18n="comunidades.form.publicDesc">Qualquer pessoa pode encontrar e participar.</p>
                         </div>
                         <div class="privacidade-card" id="editPrivCardPrivada" onclick="selecionarEditPrivacidade('privada')">
-                            <p class="privacidade-card-titulo">🔒 <span data-i18n="comunidades.form.private">Privada</span></p>
+                            <p class="privacidade-card-titulo"><span data-i18n="comunidades.form.private">Privada</span></p>
                             <p class="privacidade-card-desc" data-i18n="comunidades.form.privateDesc">Apenas pessoas com código de convite podem participar.</p>
                         </div>
                     </div>
@@ -189,7 +189,7 @@
                 </div>
 
                 <div class="trip-card-expanded" id="cardCodigoConvite" style="display:none;">
-                    <h2 data-i18n="comunidades.admin.inviteTitle">🔑 Código de convite</h2>
+                    <h2 data-i18n="comunidades.admin.inviteTitle">Código de convite</h2>
                     <p style="color:var(--text-muted); font-size:13px; margin:0;" data-i18n="comunidades.admin.inviteDesc">Use este código para convidar pessoas — só existe porque esta comunidade é privada.</p>
                     <div class="codigo-convite-box">
                         <span class="codigo-convite-valor" id="codigoConviteValor">······</span>
@@ -198,9 +198,9 @@
                 </div>
 
                 <div class="trip-card-expanded" style="border:1px solid rgba(var(--danger-rgb),0.3);">
-                    <h2 style="color:var(--danger);" data-i18n="comunidades.admin.dangerTitle">⚠️ Zona de perigo</h2>
+                    <h2 style="color:var(--danger);" data-i18n="comunidades.admin.dangerTitle">Zona de perigo</h2>
                     <p style="color:var(--text-muted); font-size:14px; margin:0 0 14px;" data-i18n="comunidades.admin.dangerDesc">Excluir a comunidade remove permanentemente todos os membros e publicações dela.</p>
-                    <button class="settings-danger-btn" onclick="excluirComunidade()" data-i18n="comunidades.deleteBtn">🗑 Excluir comunidade</button>
+                    <button class="settings-danger-btn" onclick="excluirComunidade()" data-i18n="comunidades.deleteBtn">Excluir comunidade</button>
                 </div>
             </div>
 
@@ -210,17 +210,17 @@
                     <textarea id="postTexto" data-i18n-placeholder="comunidades.postPlaceholder" placeholder="Compartilhe algo com a comunidade..."></textarea>
                     <div class="img-preview-wrap" id="imgPreviewWrap">
                         <img id="imgPreview" src="" alt="">
-                        <button class="btn-rm-img" onclick="removerImagem()">✕</button>
+                        <button class="btn-rm-img" onclick="removerImagem()"></button>
                     </div>
                     <div id="refPreviewWrap"></div>
                     <div class="create-actions">
                         <div style="display:flex; gap:6px; flex-wrap:wrap;">
                             <label class="btn-foto-post">
-                                <span data-i18n="feed.photo">📷 Foto</span>
+                                <span data-i18n="feed.photo">Foto</span>
                                 <input type="file" id="postFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none">
                             </label>
-                            <button type="button" class="btn-foto-post" onclick="abrirSeletorViagem()" data-i18n="feed.shareTrip">🧳 Viagem</button>
-                            <button type="button" class="btn-foto-post" onclick="abrirSeletorRoteiro()" data-i18n="feed.shareItinerary">📍 Roteiro</button>
+                            <button type="button" class="btn-foto-post" onclick="abrirSeletorViagem()" data-i18n="feed.shareTrip">Viagem</button>
+                            <button type="button" class="btn-foto-post" onclick="abrirSeletorRoteiro()" data-i18n="feed.shareItinerary">Roteiro</button>
                         </div>
                         <button class="btn-publicar" id="btnPublicar" onclick="publicar()" data-i18n="feed.publish">Publicar</button>
                     </div>
@@ -236,7 +236,7 @@
     <div class="confirm-modal seletor-modal">
         <div class="seletor-header">
             <h3 id="seletorTitulo" style="margin:0;"></h3>
-            <button type="button" class="seletor-fechar" onclick="fecharSeletor()">✕</button>
+            <button type="button" class="seletor-fechar" onclick="fecharSeletor()"></button>
         </div>
         <div id="seletorCorpo"></div>
     </div>
@@ -265,7 +265,7 @@ document.addEventListener('languageChanged', async () => {
 function avatarComunidadeHtml(c) {
     if (c.foto_capa) return `<img src="${c.foto_capa}" alt="">`
     const iniciais = c.nome.trim().split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
-    return iniciais || "👥"
+    return iniciais || ""
 }
 
 async function carregarComunidade() {
@@ -496,7 +496,7 @@ async function abrirSeletorViagem() {
         const periodo = (v.data_inicio && v.data_fim) ? `${v.data_inicio} → ${v.data_fim}` : ""
         return `
         <div class="seletor-item" onclick="selecionarViagem(${i})">
-            <p class="seletor-item-nome">🧳 ${escapeHtml(v.nome_grupo)}</p>
+            <p class="seletor-item-nome">${escapeHtml(v.nome_grupo)}</p>
             <p class="seletor-item-meta">${v.destino_principal ? escapeHtml(v.destino_principal) + " · " : ""}${periodo}${v.limite_participantes != null ? ` · ${v.vagas_ocupadas}/${v.limite_participantes}` : ""}</p>
         </div>`
     }).join("")
@@ -534,7 +534,7 @@ async function abrirSeletorRoteiro() {
 
     corpo.innerHTML = viagens.map((v, i) => `
         <div class="seletor-item" onclick="selecionarRoteiro(${i})">
-            <p class="seletor-item-nome">📍 ${escapeHtml(v.nome_grupo)}</p>
+            <p class="seletor-item-nome">${escapeHtml(v.nome_grupo)}</p>
             <p class="seletor-item-meta">${v.destino_principal ? escapeHtml(v.destino_principal) + " · " : ""}${v.total_itens_roteiro} ${t('feed.shareItinerary.items')}</p>
         </div>
     `).join("")
@@ -559,14 +559,14 @@ function removerReferencia() {
 function renderRefPreview() {
     const wrap = document.getElementById("refPreviewWrap")
     if (!_refSelecionada) { wrap.innerHTML = ""; return }
-    const emoji = _refSelecionada.tipo === "viagem" ? "🧳" : "📍"
+    const emoji = _refSelecionada.tipo === "viagem" ? "" : ""
     wrap.innerHTML = `
         <div class="ref-preview">
             <div class="ref-preview-info">
                 <p class="ref-preview-titulo">${emoji} ${escapeHtml(_refSelecionada.titulo)}</p>
                 ${_refSelecionada.sub ? `<p class="ref-preview-sub">${escapeHtml(_refSelecionada.sub)}</p>` : ""}
             </div>
-            <button type="button" class="ref-preview-rm" onclick="removerReferencia()">✕</button>
+            <button type="button" class="ref-preview-rm" onclick="removerReferencia()"></button>
         </div>
     `
 }
@@ -606,11 +606,11 @@ function montarCardReferencia(p) {
         const g = p.ref_grupo
         const periodo = (g.data_inicio && g.data_fim) ? `${g.data_inicio} → ${g.data_fim}` : ""
         return `
-        <p class="post-ref-selo" style="font-size:12px; color:var(--text-muted); margin:0 0 8px;">🧳 ${t('feed.ref.sharedTrip')}</p>
+        <p class="post-ref-selo" style="font-size:12px; color:var(--text-muted); margin:0 0 8px;">${t('feed.ref.sharedTrip')}</p>
         <div class="ref-preview" style="margin-top:0;">
             <div class="ref-preview-info">
                 <p class="ref-preview-titulo">${escapeHtml(g.nome_grupo)}</p>
-                <p class="ref-preview-sub">${g.destino_principal ? escapeHtml(g.destino_principal) + " · " : ""}${periodo}${g.limite_participantes != null ? ` · 👥 ${g.vagas_ocupadas}/${g.limite_participantes}` : ""}</p>
+                <p class="ref-preview-sub">${g.destino_principal ? escapeHtml(g.destino_principal) + " · " : ""}${periodo}${g.limite_participantes != null ? ` · ${g.vagas_ocupadas}/${g.limite_participantes}` : ""}</p>
             </div>
             <a class="btn-foto-post" href="explorar-viagens.html?id=${g.id_grupo}">${t('feed.ref.viewTrip')}</a>
         </div>`
@@ -621,7 +621,7 @@ function montarCardReferencia(p) {
         const resto = r.itens.slice(3)
         const linhaItem = it => `<p style="font-size:13px; color:var(--text-secondary); margin:4px 0 0;">• ${escapeHtml(formatarTituloRoteiro(it.titulo))}</p>`
         return `
-        <p class="post-ref-selo" style="font-size:12px; color:var(--text-muted); margin:0 0 8px;">📍 ${t('feed.ref.sharedItinerary')}</p>
+        <p class="post-ref-selo" style="font-size:12px; color:var(--text-muted); margin:0 0 8px;">${t('feed.ref.sharedItinerary')}</p>
         <div class="ref-preview" style="margin-top:0; align-items:flex-start;">
             <div class="ref-preview-info">
                 <p class="ref-preview-titulo">${t('feed.ref.fullItinerary')}</p>
@@ -671,7 +671,7 @@ async function carregarPosts() {
             : ""
         const jaCurtiu = p.ja_curtiu === 1
         const curtBtn = `<button class="btn-curtir${jaCurtiu ? " curtido" : ""}" onclick="curtir(${p.id_post}, this)">
-            <span class="curtir-icon">${jaCurtiu ? "❤️" : "🤍"}</span>
+            <span class="curtir-icon">${jaCurtiu ? "" : ""}</span>
             <span class="curtir-count">${p.curtidas ?? 0}</span>
         </button>`
         const nComents = p.comentarios?.length ?? 0
@@ -699,7 +699,7 @@ async function carregarPosts() {
             ${montarCardReferencia(p)}
             <div class="post-acoes">
                 ${curtBtn}
-                <button class="btn-comentar" onclick="toggleComentarios(${p.id_post})">💬 <span>${nComents}</span></button>
+                <button class="btn-comentar" onclick="toggleComentarios(${p.id_post})"><span>${nComents}</span></button>
             </div>
             <div class="feed-comentarios" id="coments-${p.id_post}" style="display:none">
                 <div class="feed-coments-lista" id="lista-${p.id_post}">${comentHtml}</div>
@@ -735,7 +735,7 @@ async function curtir(idPost, btn) {
         const icon = btn.querySelector(".curtir-icon")
         const count = btn.querySelector(".curtir-count")
         btn.classList.toggle("curtido", data.curtiu)
-        icon.textContent = data.curtiu ? "❤️" : "🤍"
+        icon.textContent = data.curtiu ? "" : ""
         count.textContent = data.total_curtidas
     } finally {
         btn.disabled = false

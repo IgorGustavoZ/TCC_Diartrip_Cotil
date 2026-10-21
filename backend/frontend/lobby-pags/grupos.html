@@ -99,13 +99,13 @@
         <a href="../lobby.html">
             <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
         </a>
-        <a href="../lobby.html"><div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div></a>
-        <a href="grupos.html"><div class="menu-item" data-i18n="nav.groups">🌍 Groups</div></a>
-        <a href="explorar-viagens.html"><div class="menu-item" data-i18n="nav.explore">✈️ Explore Trips</div></a>
-        <a href="feed.html"><div class="menu-item" data-i18n="nav.community">🌎 Feed</div></a>
-        <a href="perfil.html"><div class="menu-item" data-i18n="nav.profile">👤 Profile</div></a>
+        <a href="../lobby.html"><div class="menu-item" data-i18n="nav.myTrips">My Trips</div></a>
+        <a href="grupos.html"><div class="menu-item" data-i18n="nav.groups">Groups</div></a>
+        <a href="explorar-viagens.html"><div class="menu-item" data-i18n="nav.explore">Explore Trips</div></a>
+        <a href="feed.html"><div class="menu-item" data-i18n="nav.community">Feed</div></a>
+        <a href="perfil.html"><div class="menu-item" data-i18n="nav.profile">Profile</div></a>
         <!-- <a href="chat-viagem.html">
-            <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
+            <div class="menu-item" data-i18n="nav.aiChat">AI Chat</div>
         </a> -->
         <a href="chat-viagem.html">
             <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
@@ -120,7 +120,7 @@
         <div class="grupos-wrap">
 
             <div class="entrar-card">
-                <h3 data-i18n="grupos.joinTitle">🔑 Join a group</h3>
+                <h3 data-i18n="grupos.joinTitle">Join a group</h3>
                 <div class="entrar-row">
                     <input id="codigoInput" maxlength="6" data-i18n-placeholder="grupos.joinPlaceholder" placeholder="Invite code (e.g. AB12CD)">
                     <button class="btn-entrar" onclick="entrarGrupo()" data-i18n="grupos.joinBtn">Join</button>
@@ -159,7 +159,7 @@ async function carregarGrupos() {
 
     lista.innerHTML = grupos.map(g => `
         <div class="grupo-card">
-            <div class="grupo-icon">✈</div>
+            <div class="grupo-icon"></div>
             <div class="grupo-info">
                 <p class="grupo-nome">${escapeHtml(g.nome_grupo)}</p>
                 <p class="grupo-destino">${escapeHtml(g.destino_principal || "")}${g.data_inicio ? " · " + g.data_inicio : ""}</p>
@@ -197,7 +197,7 @@ async function entrarGrupo() {
     const data = await resp.json()
 
     if (resp.ok) {
-        msgOk.textContent = data.mensagem + " ✓"
+        msgOk.textContent = data.mensagem
         msgOk.style.display = "block"
         document.getElementById("codigoInput").value = ""
         carregarGrupos()

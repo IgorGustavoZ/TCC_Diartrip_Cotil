@@ -100,11 +100,11 @@
         <a href="../lobby.html">
             <div class="logo"><img src="../imagens/logo-diartrip.png" alt=""></div>
         </a>
-        <a href="../lobby.html"><div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div></a>
-        <a href="grupos.html"><div class="menu-item" data-i18n="nav.groups">🌍 Groups</div></a>
-        <a href="explorar-viagens.html"><div class="menu-item" data-i18n="nav.explore">✈️ Explore Trips</div></a>
-        <a href="feed.html"><div class="menu-item" data-i18n="nav.community">🌎 Feed</div></a>
-        <a href="perfil.html"><div class="menu-item" data-i18n="nav.profile">👤 Profile</div></a>
+        <a href="../lobby.html"><div class="menu-item" data-i18n="nav.myTrips">My Trips</div></a>
+        <a href="grupos.html"><div class="menu-item" data-i18n="nav.groups">Groups</div></a>
+        <a href="explorar-viagens.html"><div class="menu-item" data-i18n="nav.explore">Explore Trips</div></a>
+        <a href="feed.html"><div class="menu-item" data-i18n="nav.community">Feed</div></a>
+        <a href="perfil.html"><div class="menu-item" data-i18n="nav.profile">Profile</div></a>
         <a href="chat-viagem.html">
             <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
         </a>
@@ -119,7 +119,7 @@
 
             <div class="busca-card" id="buscaCard">
                 <div class="busca-row">
-                    <input id="destinoInput" data-i18n-placeholder="explorar.searchPlaceholder" placeholder="🔎 Search destination...">
+                    <input id="destinoInput" data-i18n-placeholder="explorar.searchPlaceholder" placeholder="Search destination...">
                     <button class="btn-buscar" onclick="carregarExplorar()" data-i18n="explorar.searchBtn">Search</button>
                 </div>
             </div>
@@ -156,10 +156,10 @@ function montarCardExplorar(v) {
 
     return `
     <div class="explorar-card" id="explorar-${v.id_grupo}">
-        <p class="explorar-nome">✈︎ ${escapeHtml(v.nome_grupo)}</p>
+        <p class="explorar-nome">${escapeHtml(v.nome_grupo)}</p>
         <p class="explorar-criador">${t('explorar.createdBy')} ${escapeHtml(v.criador)}</p>
         <div class="explorar-meta">
-            ${v.destino_principal ? `<span>✈︎ ${escapeHtml(v.destino_principal)}</span>` : ""}
+            ${v.destino_principal ? `<span>${escapeHtml(v.destino_principal)}</span>` : ""}
             ${periodo ? `<span>${periodo}</span>` : ""}
             <span class="explorar-vagas${cheia ? " cheia" : ""}">${v.vagas_ocupadas}/${v.limite_participantes} ${t('explorar.participants')}</span>
             ${v.orcamento_total != null ? `<span>$ ${t('explorar.budgetTotal')}: R$ ${v.orcamento_total.toLocaleString(getLang(), {minimumFractionDigits:2})}</span>` : ""}

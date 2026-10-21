@@ -24,22 +24,22 @@
             </a>
 
             <a href="lobby.html">
-                <div class="menu-item" data-i18n="nav.myTrips">✈ My Trips</div>
+                <div class="menu-item" data-i18n="nav.myTrips">My Trips</div>
             </a>
             <a href="lobby-pags/grupos.html">
-                <div class="menu-item" data-i18n="nav.groups">🌐︎ Groups</div>
+                <div class="menu-item" data-i18n="nav.groups">Groups</div>
             </a>
             <a href="lobby-pags/explorar-viagens.html">
-                <div class="menu-item" data-i18n="nav.explore">🔍︎ Explore Trips</div>
+                <div class="menu-item" data-i18n="nav.explore">Explore Trips</div>
             </a>
             <a href="lobby-pags/feed.html">
-                <div class="menu-item" data-i18n="nav.community">🗪 Community</div>
+                <div class="menu-item" data-i18n="nav.community">Community</div>
             </a>
             <a href="lobby-pags/perfil.html">
-                <div class="menu-item" data-i18n="nav.profile">⚙ Profile</div>
+                <div class="menu-item" data-i18n="nav.profile">Profile</div>
             </a>
             <!-- <a href="lobby-pags/chat-viagem.html">
-                <div class="menu-item" data-i18n="nav.aiChat">💬 AI Chat</div>
+                <div class="menu-item" data-i18n="nav.aiChat">AI Chat</div>
             </a> -->
             <a href="lobby-pags/chat-viagem.html">
                 <button class="new-trip" data-i18n="nav.newTrip">+ New Trip</button>
@@ -165,7 +165,7 @@
             wrap.innerHTML = `
             <div class="next-trip">
                 <div>
-                    <div class="next-trip-label">✈ ${escapeHtml(t('lobby.nextTrip.label'))}</div>
+                    <div class="next-trip-label">${escapeHtml(t('lobby.nextTrip.label'))}</div>
                     <div class="next-trip-name">${escapeHtml(v.nome_grupo)}</div>
                     <div class="next-trip-meta">${escapeHtml(v.destino_principal || "")} · ${escapeHtml(v.data_inicio || "")} — ${escapeHtml(v.data_fim || "")}</div>
                 </div>
@@ -200,7 +200,7 @@
 
             card.innerHTML = `
             <div class="trip-cover" style="background:${capaPara(viagem.destino_principal)}">
-                <span class="trip-cover-emoji">✈︎</span>
+                <span class="trip-cover-emoji"></span>
             </div>
             <div class="trip-card-body">
                 <strong>${escapeHtml(viagem.nome_grupo)}</strong>
@@ -210,7 +210,7 @@
                 </div>
 
                 <div class="trip-date">
-                    🗓 ${escapeHtml(viagem.data_inicio || "")} — ${escapeHtml(viagem.data_fim || "")}
+                    ${escapeHtml(viagem.data_inicio || "")} — ${escapeHtml(viagem.data_fim || "")}
                 </div>
 
                 <div class="trip-budget" id="budget-${viagem.id_grupo}"></div>

@@ -35,7 +35,7 @@
                 <input id="password" type="password" data-i18n-placeholder="login.pass.placeholder"
                     placeholder="Enter your password" required>
                 <span class="togglePassword"
-                    style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);">⌣</span>
+                    style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);"></span>
             </div>
             <!-- <span>Esqueci minha senha</span> -->
 
@@ -113,10 +113,10 @@
         togglePassword.addEventListener("click", () => {
             if (passwordInput.type === "password") {
                 passwordInput.type = "text"
-                togglePassword.textContent = "👁"
+                togglePassword.textContent = ""
             } else {
                 passwordInput.type = "password"
-                togglePassword.textContent = "⌣"
+                togglePassword.textContent = ""
             }
         })
 

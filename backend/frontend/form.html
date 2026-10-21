@@ -118,7 +118,7 @@
                     <input id="password" type="password" data-i18n-placeholder="register.pass.placeholder"
                         placeholder="Create a password" required>
                     <span id="togglePassword"
-                        style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);">⌣</span>
+                        style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);"></span>
                     <span style="font-size:12px; color:var(--text-muted); margin-top:4px; display:block;"
                         data-i18n="register.pass.hint">
                         Minimum 8 characters, with at least one uppercase letter and one number.
@@ -131,7 +131,7 @@
                     <input id="passwordConfirm" type="password" data-i18n-placeholder="register.pass.confirmPlaceholder"
                         placeholder="Repeat your password" required>
                     <span id="toggleConfirmPassword"
-                        style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);">⌣</span>
+                        style="position:absolute; right:12px; top:45px; cursor:pointer; font-size:14px; color:var(--text-muted);"></span>
                     <span class="error" id="passwordConfirmError"></span>
                 </div>
 
@@ -141,7 +141,7 @@
 
                 <div class="field">
                     <div class="signup-foto-row">
-                        <div class="signup-foto-av" id="signupFotoAv">👤</div>
+                        <div class="signup-foto-av" id="signupFotoAv"></div>
                         <div>
                             <label class="signup-foto-btn" id="signupFotoBtnLabel">
                                 <span id="signupFotoBtnTexto" data-i18n="register.photo.add">Add photo</span>
@@ -263,10 +263,10 @@
             function toggleVer(input, botao) {
                 if (input.type === "password") {
                     input.type = "text"
-                    botao.textContent = "👁"
+                    botao.textContent = ""
                 } else {
                     input.type = "password"
-                    botao.textContent = "⌣"
+                    botao.textContent = ""
                 }
             }
             togglePassword.addEventListener("click", () => toggleVer(passwordInput, togglePassword))
