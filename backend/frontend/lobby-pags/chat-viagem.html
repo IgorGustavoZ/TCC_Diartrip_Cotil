@@ -167,7 +167,7 @@ function addBotBubble(html) {
 function addUserBubble(text) {
     const row = document.createElement("div")
     row.className = "bubble-row user"
-    row.innerHTML = `<div class="bubble-avatar user"></div><div class="bubble">${escapeHtml(text)}</div>`
+    row.innerHTML = `<div class="bubble-avatar user">☺︎</div><div class="bubble">${escapeHtml(text)}</div>`
     msgsEl.appendChild(row)
     msgsEl.scrollTop = msgsEl.scrollHeight
 }

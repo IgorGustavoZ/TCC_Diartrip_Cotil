@@ -671,7 +671,7 @@ async function carregarPosts() {
             : ""
         const jaCurtiu = p.ja_curtiu === 1
         const curtBtn = `<button class="btn-curtir${jaCurtiu ? " curtido" : ""}" onclick="curtir(${p.id_post}, this)">
-            <span class="curtir-icon">${jaCurtiu ? "" : ""}</span>
+            <span class="curtir-icon">${jaCurtiu ? "❤︎" : "♡"}</span>
             <span class="curtir-count">${p.curtidas ?? 0}</span>
         </button>`
         const nComents = p.comentarios?.length ?? 0
@@ -699,7 +699,7 @@ async function carregarPosts() {
             ${montarCardReferencia(p)}
             <div class="post-acoes">
                 ${curtBtn}
-                <button class="btn-comentar" onclick="toggleComentarios(${p.id_post})"><span>${nComents}</span></button>
+                <button class="btn-comentar" onclick="toggleComentarios(${p.id_post})"><span>🗪 ${nComents}</span></button>
             </div>
             <div class="feed-comentarios" id="coments-${p.id_post}" style="display:none">
                 <div class="feed-coments-lista" id="lista-${p.id_post}">${comentHtml}</div>

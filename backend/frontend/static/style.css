@@ -1107,6 +1107,7 @@ option{
     height: 30px !important; padding: 0 10px;
     border: 1px solid rgba(239,68,68,0.35); border-radius: var(--radius-sm);
     background: var(--danger-soft); color: var(--danger); font-size: 12px; cursor: pointer; transition: background 0.2s;
+    
 }
 .btn-del-gasto:hover { background: rgba(239,68,68,0.2); }
 .msg-erro-gasto { font-size: 13px; color: var(--danger); display: none; }
@@ -1217,7 +1218,7 @@ option{
     border: 1px solid var(--border); border-radius: var(--radius-sm);
     background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer;
     transition: background 0.2s, color 0.2s;
-    
+
     display: flex;
     align-items: center;
 }

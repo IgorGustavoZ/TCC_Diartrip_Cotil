@@ -28,6 +28,7 @@ function abrirModalConfirmacao({ titulo, mensagem, textoConfirmar, textoCancelar
     btnConfirmar.disabled = false
 
     document.getElementById("confirmModalIcon").classList.toggle("perigo", tipo === "perigo")
+    document.getElementById("confirmModalIcon").innerHTML = tipo === "perigo" ? "⚠︎" : "🛈"
     btnConfirmar.classList.toggle("perigo", tipo === "perigo")
 
     confirmModalCallback = onConfirmar

@@ -426,12 +426,12 @@
                             <div class="stat-row"><span class="stat-label" data-i18n="viagem.tab.overview.remaining">Restante</span><span class="stat-value" id="custosOrcamentoRestante">R$ 0,00</span></div>
                         </div>
                         <div class="dashboard-card">
-                            <h3><span class="custo-stat-icon pendente"></span> <span data-i18n="viagem.costs.planned">Planejado (ainda não pago)</span></h3>
+                            <h3><span class="custo-stat-icon pendente">🕮</span> <span data-i18n="viagem.costs.planned">Planejado (ainda não pago)</span></h3>
                             <div class="stat-row"><span class="stat-label" data-i18n="viagem.costs.plannedFlights">Passagens</span><span class="stat-value" id="custosPlanejadoVoos">R$ 0,00</span></div>
                             <div class="stat-row"><span class="stat-label" data-i18n="viagem.costs.plannedLodging">Hospedagem</span><span class="stat-value" id="custosPlanejadoHospedagem">R$ 0,00</span></div>
                         </div>
                         <div class="dashboard-card">
-                            <h3><span class="custo-stat-icon pago"></span> <span data-i18n="viagem.costs.actualSpend">Já pago, por categoria</span></h3>
+                            <h3><span class="custo-stat-icon pago">✔</span> <span data-i18n="viagem.costs.actualSpend">Já pago, por categoria</span></h3>
                             <div class="stat-row"><span class="stat-label" data-i18n="viagem.cat.transport">Transporte</span><span class="stat-value" id="custosGastoTransporte">R$ 0,00</span></div>
                             <div class="stat-row"><span class="stat-label" data-i18n="viagem.cat.lodging">Hospedagem</span><span class="stat-value" id="custosGastoHospedagem">R$ 0,00</span></div>
                         </div>
@@ -1203,7 +1203,7 @@ async function carregarDashboard() {
         if (!viagemPassada) {
             cardShare.style.display = ""
             document.getElementById("compartilharViagemAviso").style.display = grupoAtual?.publica ? "none" : ""
-            document.getElementById("compartilharViagemBox").style.display = grupoAtual?.publica ? "block" : "none"
+            document.getElementById("cardCompartilharViagem").style.display = grupoAtual?.publica ? "block" : "none"
         } else {
             cardShare.style.display = "none"
         }
@@ -1377,7 +1377,6 @@ function copiarCodigo() {
     const codigo = document.getElementById("inviteInput").value
     if (!codigo) return
     navigator.clipboard.writeText(codigo)
-    alert(t('common.copied'))
 }
 
 function conectarChatWS() {
@@ -1639,7 +1638,7 @@ async function buscarHoteisCusto() {
             <div class="hotel-card-corpo">
                 <p class="hotel-card-nome">${escapeHtml(hl.nome || "")}</p>
                 <div class="hotel-card-meta">
-                    ${hl.avaliacao ? `<span class="hotel-card-avaliacao">${hl.avaliacao}</span><span>(${hl.num_avaliacoes ?? 0})</span>` : `<span>${t('viagem.costs.noRating')}</span>`}
+                    ${hl.avaliacao ? `<span class="hotel-card-avaliacao">✮ ${hl.avaliacao}</span><span>(${hl.num_avaliacoes ?? 0})</span>` : `<span>${t('viagem.costs.noRating')}</span>`}
                     ${hl.classificacao_estrelas ? `<span>· ${escapeHtml(hl.classificacao_estrelas)}</span>` : ""}
                 </div>
                 ${hl.comodidades && hl.comodidades.length ? `<div class="hotel-card-comodidades">${hl.comodidades.slice(0, 4).map(a => `<span class="hotel-chip">${escapeHtml(a)}</span>`).join("")}</div>` : ""}
@@ -1693,7 +1692,7 @@ async function carregarOpcoesCusto() {
     }
 
     const badgeTexto = { salva: t('viagem.costs.statusSaved'), orcamento: t('viagem.costs.statusBudgeted'), paga: t('viagem.costs.statusPaid'), descartada: t('viagem.costs.statusDiscarded') }
-    const emoji = o => o.tipo === "voo" ? "" : ""
+    const emoji = o => o.tipo === "voo" ? "✈︎" : "合"
 
     lista.innerHTML = opcoes.map(o => {
         let acoes = ""
@@ -1705,7 +1704,7 @@ async function carregarOpcoesCusto() {
             acoes += `<button class="btn-foto-post" onclick="descartarOpcaoCusto(${o.id_opcao})">${t('viagem.costs.discard')}</button>`
         }
         if (o.status !== "paga") {
-            acoes += `<button class="btn-del-gasto" onclick="excluirOpcaoCusto(${o.id_opcao})"></button>`
+            acoes += `<button class="btn-del-gasto" onclick="excluirOpcaoCusto(${o.id_opcao})">🗑</button>`
         }
         const periodo = (o.data_ida && o.data_volta) ? `${o.data_ida} → ${o.data_volta}` : (o.data_ida || "")
         return `
@@ -1892,7 +1891,7 @@ async function carregarRoteiro() {
                         <button onclick="moverRoteiroItem(${r.id_roteiro},'baixo')" ${ehUltimo ? "disabled" : ""} title="${t('viagem.itinerary.moveDown')}" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 8px;color:var(--text-secondary);font-size:11px;cursor:${ehUltimo ? "default" : "pointer"};opacity:${ehUltimo ? "0.4" : "1"};">▼</button>
                     </div>
                     <button onclick="iniciarEdicaoRoteiro(${r.id_roteiro},'${escapeAtr(r.titulo)}','${escapeAtr(r.descricao)}')" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text-secondary);font-size:12px;cursor:pointer;">${t('viagem.itinerary.edit')}</button>
-                    <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:var(--danger-soft);border:none;border-radius:6px;padding:6px 10px;color:var(--danger);font-size:12px;cursor:pointer;"></button>
+                    <button onclick="deletarRoteiroItem(${r.id_roteiro})" style="background:var(--danger-soft);border:none;border-radius:6px;padding:6px 10px;color:var(--danger);font-size:12px;cursor:pointer;">🗑</button>
                 </div>` : ""}
             </div>
             <div id="redit-${r.id_roteiro}" style="display:none;margin-top:12px;">
@@ -2244,7 +2243,7 @@ async function carregarMomentos() {
         const imgHtml = p.imagem ? `<img class="post-img" src="${p.imagem}" alt="">` : ""
         const jaCurtiu = p.ja_curtiu === 1
         const curtBtn = `<button class="btn-curtir${jaCurtiu ? " curtido" : ""}" onclick="curtirMomento(${p.id_post}, this)">
-            <span class="curtir-icon">${jaCurtiu ? "" : ""}</span>
+            <span class="curtir-icon">${jaCurtiu ? "❤︎" : "♡"}</span>
             <span class="curtir-count">${p.curtidas ?? 0}</span>
         </button>`
         const nComents = p.comentarios?.length ?? 0
@@ -2271,7 +2270,7 @@ async function carregarMomentos() {
             ${imgHtml}
             <div class="post-acoes">
                 ${curtBtn}
-                <button class="btn-comentar" onclick="toggleComentariosMomento(${p.id_post})"><span>${nComents}</span></button>
+                <button class="btn-comentar" onclick="toggleComentariosMomento(${p.id_post})"><span>🗪 ${nComents}</span></button>
             </div>
             <div class="feed-comentarios" id="momentoComents-${p.id_post}" style="display:none">
                 <div class="feed-coments-lista" id="momentoListaComents-${p.id_post}">${comentHtml}</div>
@@ -2307,7 +2306,7 @@ async function curtirMomento(idPost, btn) {
         const icon = btn.querySelector(".curtir-icon")
         const count = btn.querySelector(".curtir-count")
         btn.classList.toggle("curtido", data.curtiu)
-        icon.textContent = data.curtiu ? "" : ""
+        icon.textContent = data.curtiu ? "❤︎" : "♡"
         count.textContent = data.total_curtidas
     } finally {
         btn.disabled = false

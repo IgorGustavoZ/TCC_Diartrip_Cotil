@@ -159,7 +159,7 @@ async function carregarGrupos() {
 
     lista.innerHTML = grupos.map(g => `
         <div class="grupo-card">
-            <div class="grupo-icon"></div>
+            <div class="grupo-icon">✈︎</div>
             <div class="grupo-info">
                 <p class="grupo-nome">${escapeHtml(g.nome_grupo)}</p>
                 <p class="grupo-destino">${escapeHtml(g.destino_principal || "")}${g.data_inicio ? " · " + g.data_inicio : ""}</p>

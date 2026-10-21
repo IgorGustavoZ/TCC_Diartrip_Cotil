@@ -724,7 +724,7 @@ async function carregarFeed() {
 
         const jaCurtiu = p.ja_curtiu === 1
         const curtBtn = `<button class="btn-curtir${jaCurtiu ? " curtido" : ""}" onclick="curtir(${p.id_post}, this)">
-            <span class="curtir-icon">${jaCurtiu ? "" : ""}</span>
+            <span class="curtir-icon">${jaCurtiu ? "❤︎" : "♡"}</span>
             <span class="curtir-count">${p.curtidas ?? 0}</span>
         </button>`
 
@@ -754,7 +754,7 @@ async function carregarFeed() {
             <div class="post-acoes">
                 ${curtBtn}
                 <button class="btn-comentar" onclick="toggleComentarios(${p.id_post})">
-                    <span>${nComents}</span>
+                    <span>🗪 ${nComents}</span>
                 </button>
             </div>
             <div class="feed-comentarios" id="coments-${p.id_post}" style="display:none">
@@ -795,10 +795,10 @@ async function curtir(idPost, btn) {
         const count = btn.querySelector(".curtir-count")
         if (data.curtiu) {
             btn.classList.add("curtido")
-            icon.textContent = ""
+            icon.textContent = "❤︎"
         } else {
             btn.classList.remove("curtido")
-            icon.textContent = ""
+            icon.textContent = "♡"
         }
         count.textContent = data.total_curtidas
     } finally {
